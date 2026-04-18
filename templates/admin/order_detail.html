@@ -1,0 +1,134 @@
+{% extends 'admin/base.html' %}
+{% block title %}Order {{ order.order_number }}{% endblock %}
+{% block page_icon %}fas fa-receipt{% endblock %}
+{% block page_title %}Order #{{ order.order_number }}{% endblock %}
+
+{% block content %}
+<div class="breadcrumb">
+  <a href="{{ url_for('admin.orders') }}">Orders</a>
+  <span class="sep">/</span>
+  <span class="current">#{{ order.order_number }}</span>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 320px;gap:20px;align-items:start">
+  <div>
+    <!-- Items -->
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-header"><h3>Order Items</h3></div>
+      <div class="table-container">
+        <table>
+          <thead><tr><th>Product</th><th>Price</th><th>Qty</th><th>Total</th></tr></thead>
+          <tbody>
+            {% for item in order.items %}
+            <tr>
+              <td>
+                <div style="font-weight:600">{{ item.product.name }}</div>
+                <div style="font-size:12px;color:var(--text-3)">{{ item.product.flavor }} · {{ item.product.weight }}</div>
+              </td>
+              <td>₹{{ "{:,.0f}".format(item.price) }}</td>
+              <td>{{ item.quantity }}</td>
+              <td><strong>₹{{ "{:,.0f}".format(item.total) }}</strong></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div style="padding:16px 20px;border-top:1px solid var(--border)">
+        <div style="display:flex;justify-content:flex-end">
+          <div style="min-width:220px">
+            <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:14px">
+              <span>Subtotal</span><span>₹{{ "{:,.0f}".format(order.total_amount) }}</span>
+            </div>
+            {% if order.discount_amount > 0 %}
+            <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:14px;color:var(--success)">
+              <span>Discount{% if order.coupon_code %} ({{ order.coupon_code }}){% endif %}</span>
+              <span>-₹{{ "{:,.0f}".format(order.discount_amount) }}</span>
+            </div>
+            {% endif %}
+            <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:14px">
+              <span>Delivery</span>
+              <span>{{ '₹' + "{:,.0f}".format(order.delivery_charge) if order.delivery_charge > 0 else 'Free' }}</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:18px;font-weight:700;border-top:2px solid var(--border);padding-top:10px">
+              <span>Total</span><span>₹{{ "{:,.0f}".format(order.final_amount) }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Customer + Address -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div class="card">
+        <div class="card-header"><h3>Customer Info</h3></div>
+        <div class="card-body">
+          <p style="font-weight:600;font-size:16px;margin-bottom:6px">{{ order.user.name }}</p>
+          <p style="color:var(--text-3);font-size:14px"><i class="fas fa-envelope"></i> {{ order.user.email }}</p>
+          <p style="color:var(--text-3);font-size:14px;margin-top:4px"><i class="fas fa-phone"></i> {{ order.user.phone or '—' }}</p>
+          <a href="{{ url_for('admin.users') }}" class="btn btn-secondary btn-sm" style="margin-top:12px">View Profile</a>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h3>Delivery Address</h3></div>
+        <div class="card-body" style="font-size:14px;line-height:1.8">
+          {% if order.address_snapshot %}
+          {% set addr = order.address_snapshot | from_json %}
+          <p><strong>{{ addr.full_name }}</strong></p>
+          <p>{{ addr.address_line1 }}{% if addr.address_line2 %}, {{ addr.address_line2 }}{% endif %}</p>
+          <p>{{ addr.city }}, {{ addr.state }} - {{ addr.pincode }}</p>
+          <p style="color:var(--text-3)"><i class="fas fa-phone"></i> {{ addr.phone }}</p>
+          {% else %}
+          <p style="color:var(--text-3)">Address not available</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sidebar -->
+  <div>
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-header"><h3>Order Status</h3></div>
+      <div class="card-body">
+        <div style="margin-bottom:16px">
+          <span class="status status-{{ order.status }}" style="font-size:14px;padding:6px 14px">{{ order.status }}</span>
+        </div>
+        <form method="post" action="{{ url_for('admin.update_order_status', id=order.id) }}">
+          <div class="form-group" style="margin-bottom:12px">
+            <label>Update Status</label>
+            <select name="status" class="form-control">
+              {% for s in status_choices %}
+              <option value="{{ s }}" {{ 'selected' if s == order.status }}>{{ s }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary btn-sm" style="width:100%">
+            <i class="fas fa-save"></i> Update Status
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><h3>Payment Info</h3></div>
+      <div class="card-body" style="font-size:14px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:10px">
+          <span style="color:var(--text-3)">Method</span><strong>{{ order.payment_method }}</strong>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:10px">
+          <span style="color:var(--text-3)">Status</span>
+          <span class="badge {{ 'badge-active' if order.payment_status == 'Paid' else 'badge-inactive' }}">{{ order.payment_status }}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:10px">
+          <span style="color:var(--text-3)">Placed On</span><span>{{ order.created_at.strftime('%d %b %Y, %H:%M') }}</span>
+        </div>
+        {% if order.coupon_code %}
+        <div style="display:flex;justify-content:space-between">
+          <span style="color:var(--text-3)">Coupon</span><strong style="color:var(--success)">{{ order.coupon_code }}</strong>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

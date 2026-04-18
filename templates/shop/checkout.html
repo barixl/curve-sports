@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+{% block title %}Checkout — Nutrabay{% endblock %}
+
+{% block content %}
+<div class="container" style="padding:32px 0">
+  <h1 style="font-family:var(--font-head);font-size:32px;margin-bottom:8px">
+    <i class="fas fa-lock" style="color:var(--primary)"></i> Checkout
+  </h1>
+  <p style="color:var(--text-3);margin-bottom:28px">Complete your order securely</p>
+
+  <form method="post" id="checkoutForm">
+  <div class="checkout-grid">
+    <div>
+      <!-- Delivery Address -->
+      <div class="form-card">
+        <h3><span style="background:var(--primary);color:white;width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:14px">1</span> Delivery Address</h3>
+
+        {% if addresses %}
+        <div style="margin-bottom:16px">
+          {% for addr in addresses %}
+          <label class="address-card" style="cursor:pointer;display:block">
+            <div style="display:flex;align-items:flex-start;gap:12px">
+              <input type="radio" name="address_id" value="{{ addr.id }}" {{ 'checked' if loop.first or addr.is_default }} style="margin-top:3px">
+              <div>
+                <strong>{{ addr.full_name }}</strong>
+                <span style="background:var(--bg);font-size:11px;padding:2px 8px;border-radius:4px;margin-left:8px">{{ 'Default' if addr.is_default else '' }}</span>
+                <p style="font-size:14px;color:var(--text-2);margin-top:4px">
+                  {{ addr.address_line1 }}{% if addr.address_line2 %}, {{ addr.address_line2 }}{% endif %}<br>
+                  {{ addr.city }}, {{ addr.state }} — {{ addr.pincode }}<br>
+                  <i class="fas fa-phone fa-xs"></i> {{ addr.phone }}
+                </p>
+              </div>
+            </div>
+          </label>
+          {% endfor %}
+        </div>
+        <div style="margin-bottom:12px">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:600;color:var(--primary)">
+            <input type="checkbox" name="new_address" id="newAddrToggle" value="on" onchange="toggleNewAddr(this)">
+            <i class="fas fa-plus-circle"></i> Add a new address
+          </label>
+        </div>
+        {% endif %}
+
+        <div id="newAddrForm" style="{{ 'display:none' if addresses else '' }}">
+          <div class="form-grid">
+            <div class="form-group"><label>Full Name *</label><input type="text" name="full_name" class="form-control" placeholder="John Doe"></div>
+            <div class="form-group"><label>Phone *</label><input type="text" name="phone" class="form-control" placeholder="10-digit mobile number"></div>
+            <div class="form-group full"><label>Address Line 1 *</label><input type="text" name="address_line1" class="form-control" placeholder="House No., Street Name, Area"></div>
+            <div class="form-group full"><label>Address Line 2</label><input type="text" name="address_line2" class="form-control" placeholder="Landmark (optional)"></div>
+            <div class="form-group"><label>City *</label><input type="text" name="city" class="form-control" placeholder="Mumbai"></div>
+            <div class="form-group"><label>State *</label>
+              <select name="state" class="form-control">
+                <option value="">Select State</option>
+                {% for s in ['Andhra Pradesh','Arunachal Pradesh','Assam','Bihar','Chhattisgarh','Goa','Gujarat','Haryana','Himachal Pradesh','Jharkhand','Karnataka','Kerala','Madhya Pradesh','Maharashtra','Manipur','Meghalaya','Mizoram','Nagaland','Odisha','Punjab','Rajasthan','Sikkim','Tamil Nadu','Telangana','Tripura','Uttar Pradesh','Uttarakhand','West Bengal','Delhi','Jammu & Kashmir','Ladakh'] %}
+                <option>{{ s }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="form-group"><label>PIN Code *</label><input type="text" name="pincode" class="form-control" placeholder="400001" maxlength="6"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Payment Method -->
+      <div class="form-card">
+        <h3><span style="background:var(--primary);color:white;width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:14px">2</span> Payment Method</h3>
+        <label class="payment-option">
+          <input type="radio" name="payment_method" value="COD" checked>
+          <i class="fas fa-money-bill-wave fa-lg" style="color:var(--success)"></i>
+          <div><strong>Cash on Delivery</strong><br><small style="color:var(--text-3)">Pay when you receive your order</small></div>
+        </label>
+        <label class="payment-option">
+          <input type="radio" name="payment_method" value="UPI">
+          <i class="fas fa-mobile-alt fa-lg" style="color:#3b82f6"></i>
+          <div><strong>UPI</strong><br><small style="color:var(--text-3)">GPay, PhonePe, Paytm, BHIM</small></div>
+        </label>
+        <label class="payment-option">
+          <input type="radio" name="payment_method" value="Card">
+          <i class="fas fa-credit-card fa-lg" style="color:#8b5cf6"></i>
+          <div><strong>Credit / Debit Card</strong><br><small style="color:var(--text-3)">Visa, Mastercard, Rupay</small></div>
+        </label>
+        <label class="payment-option">
+          <input type="radio" name="payment_method" value="Net Banking">
+          <i class="fas fa-university fa-lg" style="color:var(--accent)"></i>
+          <div><strong>Net Banking</strong><br><small style="color:var(--text-3)">All major banks supported</small></div>
+        </label>
+      </div>
+    </div>
+
+    <!-- Order Summary -->
+    <div>
+      <div class="order-summary">
+        <h3>Order Summary</h3>
+        {% for item in items %}
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--border)">
+          <div style="width:48px;height:48px;background:var(--bg);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">
+            {{ item.product.category.icon if item.product.category else '📦' }}
+          </div>
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:600">{{ item.product.name[:38] }}{% if item.product.name|length > 38 %}...{% endif %}</div>
+            <div style="font-size:12px;color:var(--text-3)">Qty: {{ item.qty }}</div>
+          </div>
+          <div style="font-weight:700;font-size:14px">₹{{ "{:,.0f}".format(item.total) }}</div>
+        </div>
+        {% endfor %}
+
+        <div class="summary-row"><span>Subtotal</span><span>₹{{ "{:,.0f}".format(subtotal) }}</span></div>
+        {% if coupon_discount > 0 %}
+        <div class="summary-row"><span>Discount</span><span class="green">−₹{{ "{:,.0f}".format(coupon_discount) }}</span></div>
+        {% endif %}
+        <div class="summary-row">
+          <span>Delivery</span>
+          <span>{% if delivery > 0 %}₹{{ "{:,.0f}".format(delivery) }}{% else %}<span class="green">FREE</span>{% endif %}</span>
+        </div>
+        <div class="summary-row total"><span>Total</span><span>₹{{ "{:,.0f}".format(grand_total) }}</span></div>
+
+        <button type="submit" class="btn btn-primary btn-block" style="margin-top:16px;padding:16px">
+          <i class="fas fa-check-circle"></i> Place Order
+        </button>
+        <p style="font-size:12px;color:var(--text-3);text-align:center;margin-top:10px">
+          <i class="fas fa-shield-alt"></i> Secured by SSL encryption
+        </p>
+      </div>
+    </div>
+  </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleNewAddr(cb) {
+  document.getElementById('newAddrForm').style.display = cb.checked ? '' : 'none';
+}
+</script>
+{% endblock %}

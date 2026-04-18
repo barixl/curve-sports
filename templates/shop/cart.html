@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+{% block title %}Shopping Cart — Nutrabay{% endblock %}
+
+{% block content %}
+<div class="container" style="padding:32px 0">
+  <h1 style="font-family:var(--font-head);font-size:32px;margin-bottom:24px">
+    <i class="fas fa-shopping-cart" style="color:var(--primary)"></i> Shopping Cart
+  </h1>
+
+  {% if items %}
+  <div class="cart-grid">
+    <!-- Cart Items -->
+    <div>
+      <div class="cart-items">
+        {% for item in items %}
+        <div class="cart-item">
+          <!-- Product Image -->
+          <div style="width:90px;height:90px;background:#fafafa;border-radius:8px;display:flex;align-items:center;justify-content:center;overflow:hidden">
+            {% if item.product.image and not item.product.image.endswith('.svg') %}
+              <img src="{{ url_for('static', filename='images/products/' + item.product.image) }}"
+                   style="width:80px;height:80px;object-fit:contain">
+            {% else %}
+              <svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg" style="width:80px;height:80px">
+                <rect width="80" height="80" rx="8" fill="{{ ['#fee2e2','#dbeafe','#dcfce7','#fef3c7','#ede9fe','#fce7f3','#ccfbf1','#ffedd5'][item.product.id % 8] }}"/>
+                <text x="40" y="45" text-anchor="middle" font-size="32">{{ item.product.category.icon if item.product.category else '📦' }}</text>
+              </svg>
+            {% endif %}
+          </div>
+
+          <!-- Details -->
+          <div>
+            <div class="cart-item-name">
+              <a href="{{ url_for('shop.product_detail', slug=item.product.slug) }}">{{ item.product.name }}</a>
+            </div>
+            <div class="cart-item-meta">{{ item.product.flavor }}{% if item.product.flavor and item.product.weight %} · {% endif %}{{ item.product.weight }}</div>
+            <div class="cart-qty">
+              <form action="{{ url_for('cart.update_cart') }}" method="post" style="display:flex;align-items:center;gap:6px">
+                <input type="hidden" name="product_id" value="{{ item.product.id }}">
+                <button type="submit" name="qty" value="{{ item.qty - 1 }}"
+                        style="width:28px;height:28px;border:1px solid var(--border);background:white;border-radius:4px;cursor:pointer;font-size:16px">−</button>
+                <span style="width:32px;text-align:center;font-weight:700">{{ item.qty }}</span>
+                <button type="submit" name="qty" value="{{ item.qty + 1 }}"
+                        style="width:28px;height:28px;border:1px solid var(--border);background:white;border-radius:4px;cursor:pointer;font-size:16px">+</button>
+              </form>
+              <a href="{{ url_for('cart.remove_from_cart', product_id=item.product.id) }}"
+                 class="cart-remove" style="margin-left:12px">
+                <i class="fas fa-trash-alt"></i> Remove
+              </a>
+            </div>
+          </div>
+
+          <!-- Price -->
+          <div class="cart-item-price">
+            <div class="price">₹{{ "{:,.0f}".format(item.total) }}</div>
+            {% if item.product.original_price and item.product.original_price > item.product.price %}
+            <div style="font-size:12px;color:var(--text-3);text-decoration:line-through">
+              ₹{{ "{:,.0f}".format(item.product.original_price * item.qty) }}
+            </div>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Order Summary -->
+    <div class="order-summary">
+      <h3>Order Summary</h3>
+      <div class="summary-row">
+        <span>Subtotal ({{ items|length }} items)</span>
+        <span>₹{{ "{:,.0f}".format(subtotal) }}</span>
+      </div>
+      {% if coupon_discount > 0 %}
+      <div class="summary-row">
+        <span>Coupon Discount <small style="color:var(--success)">({{ coupon_code }})</small></span>
+        <span class="green">−₹{{ "{:,.0f}".format(coupon_discount) }}</span>
+      </div>
+      {% endif %}
+      <div class="summary-row">
+        <span>Delivery Charge</span>
+        <span>{{ '₹' + "{:,.0f}".format(delivery) if delivery > 0 else '<span class="green">FREE</span>' | safe }}</span>
+      </div>
+      {% if delivery > 0 %}
+      <div style="background:#fff5f5;border-radius:6px;padding:10px;font-size:13px;margin-bottom:12px;color:var(--primary)">
+        <i class="fas fa-info-circle"></i> Add ₹{{ "{:,.0f}".format(499 - subtotal) }} more for FREE delivery!
+      </div>
+      {% endif %}
+      <div class="summary-row total">
+        <span>Total</span>
+        <span>₹{{ "{:,.0f}".format(grand_total) }}</span>
+      </div>
+
+      <!-- Coupon -->
+      {% if coupon_code %}
+      <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px 14px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:13px;color:var(--success)"><i class="fas fa-tag"></i> <strong>{{ coupon_code }}</strong> applied!</span>
+        <a href="{{ url_for('cart.remove_coupon') }}" style="font-size:12px;color:var(--danger)">Remove</a>
+      </div>
+      {% else %}
+      <form action="{{ url_for('cart.apply_coupon') }}" method="post" class="coupon-box">
+        <input type="text" name="coupon_code" placeholder="Enter coupon code" style="text-transform:uppercase">
+        <button type="submit" class="btn btn-dark btn-sm">Apply</button>
+      </form>
+      {% endif %}
+
+      <a href="{{ url_for('cart.checkout') }}" class="btn btn-primary btn-block" style="margin-top:8px">
+        <i class="fas fa-lock"></i> Proceed to Checkout
+      </a>
+      <a href="{{ url_for('shop.products') }}" class="btn btn-block" style="background:var(--bg);color:var(--text);margin-top:10px">
+        <i class="fas fa-arrow-left"></i> Continue Shopping
+      </a>
+    </div>
+  </div>
+
+  {% else %}
+  <div class="empty-state">
+    <i class="fas fa-shopping-cart"></i>
+    <h3>Your cart is empty</h3>
+    <p>Looks like you haven't added anything to your cart yet.</p>
+    <a href="{{ url_for('shop.products') }}" class="btn btn-primary">Start Shopping</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

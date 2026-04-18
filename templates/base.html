@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}Nutrabay - India's Authentic Supplement Store{% endblock %}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+{% block extra_css %}{% endblock %}
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="top-bar">
+  <div class="container">
+    <div class="top-bar-inner">
+      <span><i class="fas fa-shield-alt"></i> 100% Authentic Products</span>
+      <span><i class="fas fa-truck"></i> Free Delivery on orders above ₹499</span>
+      <span><i class="fas fa-tag"></i> Use code NUTRABAY5 for 5% off</span>
+    </div>
+  </div>
+</div>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="container">
+    <div class="header-inner">
+      <a href="{{ url_for('shop.index') }}" class="logo">
+        <span class="logo-text">NUTRABAY</span><span class="logo-dot">™</span>
+      </a>
+
+      <form class="search-bar" action="{{ url_for('shop.search') }}" method="get">
+        <input type="text" name="q" placeholder="Search for products, brands..." 
+               value="{{ request.args.get('q','') }}" autocomplete="off">
+        <button type="submit"><i class="fas fa-search"></i></button>
+      </form>
+
+      <nav class="header-actions">
+        {% if current_user.is_authenticated %}
+          <div class="dropdown">
+            <a href="#" class="action-btn"><i class="fas fa-user"></i> {{ current_user.name.split()[0] }} <i class="fas fa-chevron-down fa-xs"></i></a>
+            <div class="dropdown-menu">
+              <a href="{{ url_for('auth.profile') }}"><i class="fas fa-user-circle"></i> My Profile</a>
+              <a href="{{ url_for('auth.profile') }}#orders"><i class="fas fa-box"></i> My Orders</a>
+              <a href="{{ url_for('shop.wishlist') }}"><i class="fas fa-heart"></i> Wishlist</a>
+              {% if current_user.is_admin %}
+              <a href="{{ url_for('admin.dashboard') }}"><i class="fas fa-tachometer-alt"></i> Admin Panel</a>
+              {% endif %}
+              <hr>
+              <a href="{{ url_for('auth.logout') }}"><i class="fas fa-sign-out-alt"></i> Logout</a>
+            </div>
+          </div>
+        {% else %}
+          <a href="{{ url_for('auth.login') }}" class="action-btn"><i class="fas fa-user"></i> Login / Register</a>
+        {% endif %}
+        <a href="{{ url_for('shop.wishlist') }}" class="action-btn"><i class="fas fa-heart"></i></a>
+        <a href="{{ url_for('cart.cart') }}" class="action-btn cart-btn">
+          <i class="fas fa-shopping-cart"></i>
+          <span class="cart-count" id="cart-count">0</span>
+        </a>
+      </nav>
+    </div>
+  </div>
+
+  <!-- NAV BAR -->
+  <nav class="main-nav">
+    <div class="container">
+      <ul class="nav-list">
+        <li class="nav-item has-mega">
+          <a href="{{ url_for('shop.products') }}">Categories <i class="fas fa-chevron-down fa-xs"></i></a>
+          <div class="mega-menu">
+            <div class="mega-inner">
+              {% for cat in categories_nav %}
+              <a href="{{ url_for('shop.products', category=cat.slug) }}" class="mega-item">
+                <span class="mega-icon">{{ cat.icon }}</span>
+                <span>{{ cat.name }}</span>
+              </a>
+              {% endfor %}
+            </div>
+          </div>
+        </li>
+        <li><a href="{{ url_for('shop.products', sort='newest') }}">New Arrivals</a></li>
+        <li><a href="{{ url_for('shop.products') }}?bestseller=1">Bestsellers</a></li>
+        <li><a href="{{ url_for('shop.products', sort='price_asc') }}">Offers</a></li>
+      </ul>
+    </div>
+  </nav>
+</header>
+
+<!-- FLASH MESSAGES -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  <div class="flash-container">
+    {% for category, message in messages %}
+    <div class="flash flash-{{ category }}">
+      <span>{{ message }}</span>
+      <button onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+{% endwith %}
+
+<!-- MAIN CONTENT -->
+<main>{% block content %}{% endblock %}</main>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-col">
+        <div class="footer-logo">NUTRABAY™</div>
+        <p>India's most trusted authentic supplement store. We guarantee 100% genuine products sourced directly from manufacturers.</p>
+        <div class="social-links">
+          <a href="#"><i class="fab fa-instagram"></i></a>
+          <a href="#"><i class="fab fa-facebook"></i></a>
+          <a href="#"><i class="fab fa-youtube"></i></a>
+          <a href="#"><i class="fab fa-twitter"></i></a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4>Quick Links</h4>
+        <ul>
+          <li><a href="{{ url_for('shop.index') }}">Home</a></li>
+          <li><a href="{{ url_for('shop.products') }}">Products</a></li>
+          <li><a href="{{ url_for('auth.profile') }}">My Account</a></li>
+          <li><a href="{{ url_for('cart.cart') }}">Cart</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Categories</h4>
+        <ul>
+          <li><a href="{{ url_for('shop.products', category='whey-protein') }}">Whey Protein</a></li>
+          <li><a href="{{ url_for('shop.products', category='creatine') }}">Creatine</a></li>
+          <li><a href="{{ url_for('shop.products', category='pre-workout') }}">Pre Workout</a></li>
+          <li><a href="{{ url_for('shop.products', category='multivitamins') }}">Vitamins</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Support</h4>
+        <ul>
+          <li><a href="#">Help Center</a></li>
+          <li><a href="#">Track Order</a></li>
+          <li><a href="#">Return Policy</a></li>
+          <li><a href="#">Privacy Policy</a></li>
+        </ul>
+        <div class="footer-contact">
+          <p><i class="fas fa-envelope"></i> support@nutrabay.com</p>
+          <p><i class="fas fa-phone"></i> +91-999-999-9999</p>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2024 Nutrabay Clone. Built with Flask.</p>
+      <div class="payment-icons">
+        <span>VISA</span><span>MC</span><span>UPI</span><span>COD</span>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+// Fetch cart count
+async function updateCartCount() {
+  try {
+    const r = await fetch('/cart/count');
+    const d = await r.json();
+    document.getElementById('cart-count').textContent = d.count;
+  } catch(e) {}
+}
+updateCartCount();
+
+// Auto-dismiss flashes
+setTimeout(() => {
+  document.querySelectorAll('.flash').forEach(el => el.remove());
+}, 5000);
+</script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}Admin{% endblock %} | Nutrabay Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+{% block extra_css %}{% endblock %}
+</head>
+<body>
+<div class="admin-layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="sidebar-logo">NUTRABAY<span>™</span></div>
+      <div class="sidebar-subtitle">Admin Panel</div>
+    </div>
+    <nav class="sidebar-nav">
+      <h6>Main</h6>
+      <a href="{{ url_for('admin.dashboard') }}" class="{{ 'active' if request.endpoint == 'admin.dashboard' }}">
+        <i class="fas fa-tachometer-alt"></i> Dashboard
+      </a>
+      <h6>Catalog</h6>
+      <a href="{{ url_for('admin.products') }}" class="{{ 'active' if 'product' in request.endpoint }}">
+        <i class="fas fa-box"></i> Products
+      </a>
+      <a href="{{ url_for('admin.categories') }}" class="{{ 'active' if 'categor' in request.endpoint }}">
+        <i class="fas fa-tags"></i> Categories
+      </a>
+      <a href="{{ url_for('admin.brands') }}" class="{{ 'active' if 'brand' in request.endpoint }}">
+        <i class="fas fa-certificate"></i> Brands
+      </a>
+      <a href="{{ url_for('admin.banners') }}" class="{{ 'active' if 'banner' in request.endpoint }}">
+        <i class="fas fa-images"></i> Banners
+      </a>
+      <h6>Commerce</h6>
+      <a href="{{ url_for('admin.orders') }}" class="{{ 'active' if 'order' in request.endpoint }}">
+        <i class="fas fa-shopping-cart"></i> Orders
+      </a>
+      <a href="{{ url_for('admin.coupons') }}" class="{{ 'active' if 'coupon' in request.endpoint }}">
+        <i class="fas fa-ticket-alt"></i> Coupons
+      </a>
+      <h6>People</h6>
+      <a href="{{ url_for('admin.users') }}" class="{{ 'active' if 'user' in request.endpoint }}">
+        <i class="fas fa-users"></i> Users
+      </a>
+      <a href="{{ url_for('admin.reviews') }}" class="{{ 'active' if 'review' in request.endpoint }}">
+        <i class="fas fa-star"></i> Reviews
+      </a>
+      <h6>Reports</h6>
+      <a href="{{ url_for('admin.reports') }}" class="{{ 'active' if 'report' in request.endpoint }}">
+        <i class="fas fa-chart-bar"></i> Analytics
+      </a>
+      <a href="{{ url_for('admin.settings') }}" class="{{ 'active' if 'setting' in request.endpoint }}">
+        <i class="fas fa-cog"></i> Settings
+      </a>
+      <hr style="border-color:rgba(255,255,255,0.08);margin:12px 8px;">
+      <a href="{{ url_for('shop.index') }}" target="_blank">
+        <i class="fas fa-external-link-alt"></i> View Store
+      </a>
+      <a href="{{ url_for('auth.logout') }}">
+        <i class="fas fa-sign-out-alt"></i> Logout
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="sidebar-avatar">{{ current_user.name[0].upper() }}</div>
+        <div class="sidebar-user-info">
+          <div class="name">{{ current_user.name }}</div>
+          <div class="role">Administrator</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main-content">
+    <header class="admin-header">
+      <div class="page-title">
+        <i class="{% block page_icon %}fas fa-home{% endblock %}"></i>
+        {% block page_title %}Dashboard{% endblock %}
+      </div>
+      <div class="admin-header-right">
+        <a href="{{ url_for('shop.index') }}" target="_blank" class="btn btn-secondary btn-sm">
+          <i class="fas fa-external-link-alt"></i> View Store
+        </a>
+        <a href="{{ url_for('auth.logout') }}" class="btn btn-secondary btn-sm">
+          <i class="fas fa-sign-out-alt"></i> Logout
+        </a>
+      </div>
+    </header>
+
+    <div class="admin-page">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="flash-container">
+          {% for category, message in messages %}
+          <div class="flash flash-{{ category }}">
+            <span>{{ message }}</span>
+            <button onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
+          </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+      {% endwith %}
+
+      {% block content %}{% endblock %}
+    </div>
+  </div>
+</div>
+
+<script>
+setTimeout(() => {
+  document.querySelectorAll('.flash').forEach(el => {
+    el.style.transition = 'opacity 0.3s';
+    el.style.opacity = '0';
+    setTimeout(() => el.remove(), 300);
+  });
+}, 4000);
+</script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

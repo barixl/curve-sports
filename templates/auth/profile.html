@@ -1,0 +1,206 @@
+{% extends 'base.html' %}
+{% block title %}My Profile — Nutrabay{% endblock %}
+
+{% block content %}
+<div class="container" style="padding:32px 0">
+  <div class="profile-grid">
+
+    <!-- Sidebar -->
+    <aside class="profile-sidebar">
+      <div class="profile-header">
+        <div class="profile-avatar">{{ current_user.name[0].upper() }}</div>
+        <div class="profile-name">{{ current_user.name }}</div>
+        <div class="profile-email">{{ current_user.email }}</div>
+      </div>
+      <nav class="profile-nav">
+        <a href="#profile" class="active"><i class="fas fa-user"></i> My Profile</a>
+        <a href="#orders"><i class="fas fa-box"></i> My Orders</a>
+        <a href="#addresses"><i class="fas fa-map-marker-alt"></i> Addresses</a>
+        <a href="{{ url_for('shop.wishlist') }}"><i class="fas fa-heart"></i> Wishlist</a>
+        <a href="{{ url_for('auth.logout') }}" style="color:var(--danger)"><i class="fas fa-sign-out-alt"></i> Logout</a>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <div>
+
+      <!-- Profile Info Card -->
+      <div id="profile" style="background:white;border-radius:var(--radius);padding:28px;box-shadow:var(--shadow);margin-bottom:24px">
+        <h2 style="font-family:var(--font-head);font-size:22px;margin-bottom:20px;display:flex;align-items:center;gap:10px">
+          <i class="fas fa-user" style="color:var(--primary)"></i> Profile Information
+        </h2>
+        <form method="post">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Full Name</label>
+              <input type="text" name="name" class="form-group" value="{{ current_user.name }}"
+                     style="padding:10px 14px;border:2px solid var(--border);border-radius:8px;font-size:14px;width:100%">
+            </div>
+            <div class="form-group">
+              <label>Phone Number</label>
+              <input type="tel" name="phone" value="{{ current_user.phone or '' }}"
+                     style="padding:10px 14px;border:2px solid var(--border);border-radius:8px;font-size:14px;width:100%">
+            </div>
+            <div class="form-group full">
+              <label>Email Address</label>
+              <input type="email" value="{{ current_user.email }}" disabled
+                     style="padding:10px 14px;border:2px solid var(--border);border-radius:8px;font-size:14px;width:100%;background:var(--bg);color:var(--text-3)">
+            </div>
+          </div>
+
+          <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--border)">
+            <h3 style="font-size:16px;font-weight:700;margin-bottom:16px;color:var(--text-2)">Change Password</h3>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Current Password</label>
+                <input type="password" name="current_password"
+                       style="padding:10px 14px;border:2px solid var(--border);border-radius:8px;font-size:14px;width:100%" placeholder="Current password">
+              </div>
+              <div class="form-group">
+                <label>New Password</label>
+                <input type="password" name="new_password" minlength="6"
+                       style="padding:10px 14px;border:2px solid var(--border);border-radius:8px;font-size:14px;width:100%" placeholder="Leave blank to keep current">
+              </div>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="margin-top:20px">
+            <i class="fas fa-save"></i> Save Changes
+          </button>
+        </form>
+      </div>
+
+      <!-- Orders -->
+      <div id="orders" style="background:white;border-radius:var(--radius);padding:28px;box-shadow:var(--shadow);margin-bottom:24px">
+        <h2 style="font-family:var(--font-head);font-size:22px;margin-bottom:20px;display:flex;align-items:center;gap:10px">
+          <i class="fas fa-box" style="color:var(--primary)"></i> My Orders
+        </h2>
+
+        {% if orders %}
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Order #</th><th>Date</th><th>Items</th><th>Total</th><th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for order in orders %}
+              <tr>
+                <td><strong style="color:var(--primary)">{{ order.order_number }}</strong></td>
+                <td style="color:var(--text-3);font-size:13px">{{ order.created_at.strftime('%d %b %Y') }}</td>
+                <td>
+                  {% for item in order.items[:2] %}
+                  <div style="font-size:13px">{{ item.product.name[:30] }}{% if item.product.name|length > 30 %}...{% endif %} ×{{ item.quantity }}</div>
+                  {% endfor %}
+                  {% if order.items|length > 2 %}
+                  <div style="font-size:12px;color:var(--text-3)">+{{ order.items|length - 2 }} more</div>
+                  {% endif %}
+                </td>
+                <td><strong>₹{{ "{:,.0f}".format(order.final_amount) }}</strong></td>
+                <td><span class="status status-{{ order.status }}">{{ order.status }}</span></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div style="text-align:center;padding:40px">
+          <i class="fas fa-box-open" style="font-size:48px;color:var(--border);display:block;margin-bottom:12px"></i>
+          <p style="color:var(--text-3)">You haven't placed any orders yet.</p>
+          <a href="{{ url_for('shop.products') }}" class="btn btn-primary btn-sm" style="margin-top:12px">Start Shopping</a>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Addresses -->
+      <div id="addresses" style="background:white;border-radius:var(--radius);padding:28px;box-shadow:var(--shadow)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+          <h2 style="font-family:var(--font-head);font-size:22px;display:flex;align-items:center;gap:10px;margin:0">
+            <i class="fas fa-map-marker-alt" style="color:var(--primary)"></i> Saved Addresses
+          </h2>
+          <button onclick="document.getElementById('addAddrForm').style.display='block';this.style.display='none'" class="btn btn-primary btn-sm">
+            <i class="fas fa-plus"></i> Add Address
+          </button>
+        </div>
+
+        <!-- Add Address Form -->
+        <div id="addAddrForm" style="display:none;background:var(--bg);border-radius:var(--radius);padding:20px;margin-bottom:20px">
+          <h4 style="margin-bottom:16px;font-family:var(--font-head)">New Address</h4>
+          <form method="post" action="{{ url_for('auth.add_address') }}">
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Full Name *</label>
+                <input type="text" name="full_name" required style="padding:10px 14px;border:2px solid var(--border);border-radius:8px;font-size:14px;width:100%">
+              </div>
+              <div class="form-group">
+                <label>Phone *</label>
+                <input type="tel" name="phone" required style="padding:10px 14px;border:2px solid var(--border);border-radius:8px;font-size:14px;width:100%">
+              </div>
+              <div class="form-group full">
+                <label>Address Line 1 *</label>
+                <input type="text" name="address_line1" required style="padding:10px 14px;border:2px solid var(--border);border-radius:8px;font-size:14px;width:100%">
+              </div>
+              <div class="form-group full">
+                <label>Address Line 2</label>
+                <input type="text" name="address_line2" style="padding:10px 14px;border:2px solid var(--border);border-radius:8px;font-size:14px;width:100%">
+              </div>
+              <div class="form-group">
+                <label>City *</label>
+                <input type="text" name="city" required style="padding:10px 14px;border:2px solid var(--border);border-radius:8px;font-size:14px;width:100%">
+              </div>
+              <div class="form-group">
+                <label>State *</label>
+                <input type="text" name="state" required style="padding:10px 14px;border:2px solid var(--border);border-radius:8px;font-size:14px;width:100%">
+              </div>
+              <div class="form-group">
+                <label>PIN Code *</label>
+                <input type="text" name="pincode" required maxlength="6" style="padding:10px 14px;border:2px solid var(--border);border-radius:8px;font-size:14px;width:100%">
+              </div>
+              <div class="form-group" style="display:flex;align-items:center;gap:8px;padding-top:28px">
+                <input type="checkbox" name="is_default" id="defaultAddr" style="accent-color:var(--primary)">
+                <label for="defaultAddr">Set as default</label>
+              </div>
+            </div>
+            <div style="display:flex;gap:10px;margin-top:16px">
+              <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-save"></i> Save Address</button>
+              <button type="button" onclick="this.closest('#addAddrForm').style.display='none'" class="btn btn-sm" style="background:var(--bg)">Cancel</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Existing Addresses -->
+        {% if addresses %}
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px">
+          {% for addr in addresses %}
+          <div style="border:2px solid {{ 'var(--primary)' if addr.is_default else 'var(--border)' }};border-radius:var(--radius);padding:16px;position:relative">
+            {% if addr.is_default %}
+            <span style="position:absolute;top:10px;right:10px;background:var(--primary);color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px">DEFAULT</span>
+            {% endif %}
+            <p style="font-weight:700;margin-bottom:6px">{{ addr.full_name }}</p>
+            <p style="font-size:13px;color:var(--text-2);line-height:1.7">
+              {{ addr.address_line1 }}{% if addr.address_line2 %}, {{ addr.address_line2 }}{% endif %}<br>
+              {{ addr.city }}, {{ addr.state }} — {{ addr.pincode }}<br>
+              <i class="fas fa-phone fa-xs"></i> {{ addr.phone }}
+            </p>
+            <form method="post" action="{{ url_for('auth.delete_address', id=addr.id) }}" style="margin-top:10px"
+                  onsubmit="return confirm('Delete this address?')">
+              <button type="submit" style="background:none;border:none;color:var(--danger);font-size:13px;cursor:pointer;padding:0">
+                <i class="fas fa-trash-alt"></i> Remove
+              </button>
+            </form>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div style="text-align:center;padding:32px;color:var(--text-3)">
+          <i class="fas fa-map-marker-alt" style="font-size:36px;display:block;margin-bottom:10px;color:var(--border)"></i>
+          No saved addresses yet.
+        </div>
+        {% endif %}
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

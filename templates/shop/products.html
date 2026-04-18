@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+{% block title %}
+  {% if selected_cat %}{{ selected_cat.name }}{% elif search %}Search: {{ search }}{% else %}All Products{% endif %} — Nutrabay
+{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top:24px">
+  <!-- Breadcrumb -->
+  <div class="breadcrumb">
+    <a href="{{ url_for('shop.index') }}">Home</a>
+    <i class="fas fa-chevron-right fa-xs"></i>
+    {% if selected_cat %}
+      <a href="{{ url_for('shop.products') }}">Products</a>
+      <i class="fas fa-chevron-right fa-xs"></i>
+      <span>{{ selected_cat.name }}</span>
+    {% else %}
+      <span>Products{% if search %}: "{{ search }}"{% endif %}</span>
+    {% endif %}
+  </div>
+
+  <div class="shop-layout">
+    <!-- FILTERS SIDEBAR -->
+    <aside class="filter-sidebar">
+      <h3 style="font-family:var(--font-head);font-size:20px;margin-bottom:20px;display:flex;align-items:center;gap:8px">
+        <i class="fas fa-sliders-h" style="color:var(--primary)"></i> Filters
+      </h3>
+
+      <form method="get" id="filterForm">
+        {% if search %}<input type="hidden" name="q" value="{{ search }}">{% endif %}
+        <input type="hidden" name="sort" value="{{ sort }}">
+
+        <!-- Categories -->
+        <div class="filter-section">
+          <h4>Category</h4>
+          {% for cat in categories %}
+          <label class="filter-item">
+            <input type="radio" name="category" value="{{ cat.slug }}"
+                   {{ 'checked' if selected_cat and selected_cat.slug == cat.slug }}
+                   onchange="document.getElementById('filterForm').submit()">
+            <label>{{ cat.icon }} {{ cat.name }}</label>
+          </label>
+          {% endfor %}
+          {% if selected_cat %}
+          <a href="{{ url_for('shop.products', q=search, sort=sort) }}" style="font-size:13px;color:var(--primary);display:block;margin-top:8px">
+            <i class="fas fa-times"></i> Clear category
+          </a>
+          {% endif %}
+        </div>
+
+        <!-- Brands -->
+        <div class="filter-section">
+          <h4>Brand</h4>
+          {% for brand in brands %}
+          <label class="filter-item">
+            <input type="radio" name="brand" value="{{ brand.slug }}"
+                   {{ 'checked' if selected_brand and selected_brand.slug == brand.slug }}
+                   onchange="document.getElementById('filterForm').submit()">
+            <label>{{ brand.name }}</label>
+          </label>
+          {% endfor %}
+          {% if selected_brand %}
+          <a href="{{ url_for('shop.products', q=search, sort=sort, category=selected_cat.slug if selected_cat else '') }}"
+             style="font-size:13px;color:var(--primary);display:block;margin-top:8px">
+            <i class="fas fa-times"></i> Clear brand
+          </a>
+          {% endif %}
+        </div>
+
+        <!-- Price Range -->
+        <div class="filter-section">
+          <h4>Price Range (₹)</h4>
+          <div class="price-range" style="margin-bottom:10px">
+            <input type="number" name="min_price" placeholder="Min" value="{{ request.args.get('min_price','') }}"
+                   min="0" style="padding:8px;border:2px solid var(--border);border-radius:6px;font-size:13px;width:100%">
+            <input type="number" name="max_price" placeholder="Max" value="{{ request.args.get('max_price','') }}"
+                   min="0" style="padding:8px;border:2px solid var(--border);border-radius:6px;font-size:13px;width:100%">
+          </div>
+          <button type="submit" class="btn btn-primary btn-sm btn-block">Apply</button>
+        </div>
+      </form>
+    </aside>
+
+    <!-- PRODUCTS MAIN -->
+    <div>
+      <!-- Sort Bar -->
+      <div class="sort-bar">
+        <span class="results-count">
+          <strong>{{ pagination.total }}</strong> products found
+          {% if search %}for "<em>{{ search }}</em>"{% endif %}
+          {% if selected_cat %}in <strong>{{ selected_cat.name }}</strong>{% endif %}
+        </span>
+        <form method="get" style="display:flex;align-items:center;gap:8px">
+          {% if search %}<input type="hidden" name="q" value="{{ search }}">{% endif %}
+          {% if selected_cat %}<input type="hidden" name="category" value="{{ selected_cat.slug }}">{% endif %}
+          {% if selected_brand %}<input type="hidden" name="brand" value="{{ selected_brand.slug }}">{% endif %}
+          <label style="font-size:14px;color:var(--text-3)">Sort by:</label>
+          <select name="sort" class="sort-select" onchange="this.form.submit()">
+            <option value="popular" {{ 'selected' if sort=='popular' }}>Most Popular</option>
+            <option value="newest" {{ 'selected' if sort=='newest' }}>Newest First</option>
+            <option value="price_asc" {{ 'selected' if sort=='price_asc' }}>Price: Low to High</option>
+            <option value="price_desc" {{ 'selected' if sort=='price_desc' }}>Price: High to Low</option>
+            <option value="rating" {{ 'selected' if sort=='rating' }}>Best Rated</option>
+          </select>
+        </form>
+      </div>
+
+      <!-- Product Grid -->
+      {% if products %}
+      <div class="products-grid">
+        {% for p in products %}
+        {% include 'shop/_product_card.html' %}
+        {% endfor %}
+      </div>
+
+      <!-- Pagination -->
+      {% if pagination.pages > 1 %}
+      <div class="pagination">
+        {% if pagination.has_prev %}
+        <a href="{{ url_for('shop.products', page=pagination.prev_num, q=search, category=selected_cat.slug if selected_cat else '', brand=selected_brand.slug if selected_brand else '', sort=sort) }}">&laquo;</a>
+        {% endif %}
+        {% for pg in pagination.iter_pages(left_edge=2, right_edge=2, left_current=2, right_current=2) %}
+          {% if pg %}
+          <a href="{{ url_for('shop.products', page=pg, q=search, category=selected_cat.slug if selected_cat else '', sort=sort) }}"
+             class="{{ 'active' if pg == pagination.page }}">{{ pg }}</a>
+          {% else %}<span>…</span>{% endif %}
+        {% endfor %}
+        {% if pagination.has_next %}
+        <a href="{{ url_for('shop.products', page=pagination.next_num, q=search, category=selected_cat.slug if selected_cat else '', sort=sort) }}">&raquo;</a>
+        {% endif %}
+      </div>
+      {% endif %}
+
+      {% else %}
+      <div class="empty-state">
+        <i class="fas fa-search"></i>
+        <h3>No products found</h3>
+        <p>Try adjusting your filters or search term.</p>
+        <a href="{{ url_for('shop.products') }}" class="btn btn-primary">Browse All Products</a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{% block extra_js %}
+<script>
+async function toggleWishlist(productId, btn) {
+  const resp = await fetch(`/wishlist/toggle/${productId}`, { method: 'POST' });
+  const data = await resp.json();
+  const icon = btn.querySelector('i');
+  icon.style.color = data.status === 'added' ? 'var(--primary)' : 'var(--text-3)';
+}
+</script>
+{% endblock %}
+{% endblock %}

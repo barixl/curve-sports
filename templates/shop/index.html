@@ -1,0 +1,160 @@
+{% extends 'base.html' %}
+{% block title %}Nutrabay™ — India's Authentic Supplement Store{% endblock %}
+
+{% block content %}
+<!-- HERO BANNER -->
+<section class="hero-banner">
+  <div class="hero-deco"></div>
+  <div class="container">
+    <div class="hero-content">
+      <div class="hero-badge">🔥 Flash Sale Active</div>
+      <h1 class="hero-title">
+        Fuel Your<br><span>Performance</span><br>Authentically
+      </h1>
+      <p class="hero-sub">100% Genuine Supplements · Direct from Manufacturers</p>
+      <div class="hero-btns">
+        <a href="{{ url_for('shop.products') }}" class="btn btn-primary btn-lg">
+          <i class="fas fa-shopping-bag"></i> Shop Now
+        </a>
+        <a href="{{ url_for('shop.products', sort='newest') }}" class="btn btn-outline">
+          New Arrivals
+        </a>
+      </div>
+      <div style="display:flex;gap:32px;margin-top:40px">
+        <div style="text-align:center">
+          <div style="font-family:var(--font-head);font-size:28px;font-weight:700;color:white">2M+</div>
+          <div style="font-size:12px;color:#888">Happy Customers</div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-family:var(--font-head);font-size:28px;font-weight:700;color:white">500+</div>
+          <div style="font-size:12px;color:#888">Products</div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-family:var(--font-head);font-size:28px;font-weight:700;color:white">100%</div>
+          <div style="font-size:12px;color:#888">Authentic</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TRUST BAR -->
+<div style="background:white;border-bottom:1px solid var(--border);padding:16px 0">
+  <div class="container">
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;text-align:center">
+      <div style="display:flex;align-items:center;justify-content:center;gap:10px">
+        <i class="fas fa-shield-alt" style="font-size:22px;color:var(--primary)"></i>
+        <div style="text-align:left">
+          <div style="font-weight:700;font-size:14px">100% Authentic</div>
+          <div style="font-size:12px;color:var(--text-3)">Verified products</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:center;gap:10px">
+        <i class="fas fa-truck" style="font-size:22px;color:var(--primary)"></i>
+        <div style="text-align:left">
+          <div style="font-weight:700;font-size:14px">Free Delivery</div>
+          <div style="font-size:12px;color:var(--text-3)">Orders above ₹499</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:center;gap:10px">
+        <i class="fas fa-undo" style="font-size:22px;color:var(--primary)"></i>
+        <div style="text-align:left">
+          <div style="font-weight:700;font-size:14px">Easy Returns</div>
+          <div style="font-size:12px;color:var(--text-3)">7-day return policy</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:center;gap:10px">
+        <i class="fas fa-headset" style="font-size:22px;color:var(--primary)"></i>
+        <div style="text-align:left">
+          <div style="font-weight:700;font-size:14px">24/7 Support</div>
+          <div style="font-size:12px;color:var(--text-3)">Always here to help</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CATEGORIES -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">Shop by Category</h2>
+      <a href="{{ url_for('shop.products') }}" class="view-all">View All <i class="fas fa-arrow-right"></i></a>
+    </div>
+    <div class="cat-grid">
+      {% for cat in categories %}
+      <a href="{{ url_for('shop.products', category=cat.slug) }}" class="cat-card">
+        <div class="cat-icon">{{ cat.icon }}</div>
+        <div class="cat-name">{{ cat.name }}</div>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- FEATURED PRODUCTS -->
+{% if featured %}
+<section class="section" style="background:white;padding:60px 0">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">Featured Products</h2>
+      <a href="{{ url_for('shop.products') }}" class="view-all">View All <i class="fas fa-arrow-right"></i></a>
+    </div>
+    <div class="products-grid">
+      {% for p in featured %}
+      {% include 'shop/_product_card.html' %}
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- PROMO BANNER -->
+<div style="background:linear-gradient(135deg,var(--primary),#ff6b35);padding:50px 0;margin:0">
+  <div class="container" style="text-align:center">
+    <h2 style="font-family:var(--font-head);font-size:38px;font-weight:700;color:white;margin-bottom:8px">New User Offer</h2>
+    <p style="color:rgba(255,255,255,0.9);font-size:18px;margin-bottom:24px">Get 5% off your first order. Use code at checkout.</p>
+    <div style="display:inline-flex;align-items:center;gap:12px;background:rgba(255,255,255,0.15);border:2px dashed rgba(255,255,255,0.6);border-radius:12px;padding:12px 28px">
+      <span style="font-family:var(--font-head);font-size:26px;font-weight:700;color:white;letter-spacing:4px">NUTRABAY5</span>
+      <button onclick="navigator.clipboard.writeText('NUTRABAY5').then(()=>alert('Copied!'))"
+              style="background:white;color:var(--primary);border:none;padding:6px 14px;border-radius:6px;font-weight:700;cursor:pointer;font-size:13px">
+        COPY
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- BESTSELLERS -->
+{% if bestsellers %}
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">Bestsellers 🔥</h2>
+      <a href="{{ url_for('shop.products') }}" class="view-all">View All <i class="fas fa-arrow-right"></i></a>
+    </div>
+    <div class="products-grid">
+      {% for p in bestsellers %}
+      {% include 'shop/_product_card.html' %}
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- NEW ARRIVALS -->
+{% if new_arrivals %}
+<section class="section" style="background:white;padding:60px 0">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">New Arrivals ✨</h2>
+      <a href="{{ url_for('shop.products', sort='newest') }}" class="view-all">View All <i class="fas fa-arrow-right"></i></a>
+    </div>
+    <div class="products-grid">
+      {% for p in new_arrivals %}
+      {% include 'shop/_product_card.html' %}
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+{% endblock %}

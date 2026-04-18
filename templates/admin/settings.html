@@ -1,0 +1,92 @@
+{% extends 'admin/base.html' %}
+{% block title %}Settings{% endblock %}
+{% block page_icon %}fas fa-cog{% endblock %}
+{% block page_title %}Store Settings{% endblock %}
+
+{% block content %}
+<div style="max-width:760px">
+  <form method="post">
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-header"><h3><i class="fas fa-store"></i> General Settings</h3></div>
+      <div class="card-body">
+        <div class="form-grid">
+          <div class="form-group full">
+            <label>Store Name</label>
+            <input type="text" name="store_name" class="form-control" value="Nutrabay" placeholder="Store Name">
+          </div>
+          <div class="form-group full">
+            <label>Store Tagline</label>
+            <input type="text" name="tagline" class="form-control" value="India's Authentic Supplement Store" placeholder="Tagline">
+          </div>
+          <div class="form-group">
+            <label>Support Email</label>
+            <input type="email" name="support_email" class="form-control" value="support@nutrabay.com">
+          </div>
+          <div class="form-group">
+            <label>Support Phone</label>
+            <input type="text" name="support_phone" class="form-control" value="+91-999-999-9999">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-header"><h3><i class="fas fa-truck"></i> Shipping Settings</h3></div>
+      <div class="card-body">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Free Shipping Threshold (₹)</label>
+            <input type="number" name="free_shipping" class="form-control" value="499" min="0">
+          </div>
+          <div class="form-group">
+            <label>Standard Delivery Charge (₹)</label>
+            <input type="number" name="delivery_charge" class="form-control" value="49" min="0">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-header"><h3><i class="fas fa-credit-card"></i> Payment Settings</h3></div>
+      <div class="card-body">
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div class="form-check">
+            <input type="checkbox" id="cod" name="cod" checked>
+            <label for="cod">Cash on Delivery (COD)</label>
+          </div>
+          <div class="form-check">
+            <input type="checkbox" id="upi" name="upi" checked>
+            <label for="upi">UPI Payments</label>
+          </div>
+          <div class="form-check">
+            <input type="checkbox" id="card" name="card" checked>
+            <label for="card">Credit / Debit Card</label>
+          </div>
+          <div class="form-check">
+            <input type="checkbox" id="netbanking" name="netbanking" checked>
+            <label for="netbanking">Net Banking</label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-header"><h3><i class="fas fa-shield-alt"></i> Security</h3></div>
+      <div class="card-body">
+        <div class="form-grid">
+          <div class="form-group full">
+            <label>New Admin Password</label>
+            <input type="password" name="new_password" class="form-control" placeholder="Leave blank to keep current">
+          </div>
+          <div class="form-group full">
+            <label>Confirm Password</label>
+            <input type="password" name="confirm_password" class="form-control" placeholder="Confirm new password">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Settings</button>
+  </form>
+</div>
+{% endblock %}

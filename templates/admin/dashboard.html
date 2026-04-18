@@ -1,0 +1,198 @@
+{% extends 'admin/base.html' %}
+{% block title %}Dashboard{% endblock %}
+{% block page_icon %}fas fa-tachometer-alt{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<!-- Stats -->
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-icon red"><i class="fas fa-shopping-cart"></i></div>
+    <div>
+      <div class="stat-value">{{ total_orders }}</div>
+      <div class="stat-label">Total Orders</div>
+      <div class="stat-change up"><i class="fas fa-arrow-up"></i> {{ today_orders }} today</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon green"><i class="fas fa-rupee-sign"></i></div>
+    <div>
+      <div class="stat-value">₹{{ "{:,.0f}".format(total_revenue) }}</div>
+      <div class="stat-label">Total Revenue</div>
+      <div class="stat-change up"><i class="fas fa-arrow-up"></i> ₹{{ "{:,.0f}".format(today_revenue) }} today</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon blue"><i class="fas fa-users"></i></div>
+    <div>
+      <div class="stat-value">{{ total_users }}</div>
+      <div class="stat-label">Registered Users</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon orange"><i class="fas fa-box"></i></div>
+    <div>
+      <div class="stat-value">{{ total_products }}</div>
+      <div class="stat-label">Active Products</div>
+    </div>
+  </div>
+</div>
+
+<!-- Charts Row -->
+<div class="grid-2">
+  <div class="card">
+    <div class="card-header">
+      <h3><i class="fas fa-chart-line"></i> Revenue (Last 6 Months)</h3>
+    </div>
+    <div class="card-body">
+      <div class="chart-container">
+        <canvas id="revenueChart"></canvas>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header">
+      <h3><i class="fas fa-chart-pie"></i> Orders by Status</h3>
+    </div>
+    <div class="card-body">
+      <div class="chart-container">
+        <canvas id="statusChart"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Top Products + Low Stock -->
+<div class="grid-2">
+  <div class="card">
+    <div class="card-header">
+      <h3><i class="fas fa-fire"></i> Top Selling Products</h3>
+      <a href="{{ url_for('admin.products') }}" class="btn btn-secondary btn-sm">View All</a>
+    </div>
+    <div class="card-body" style="padding:0">
+      <div class="table-container">
+        <table>
+          <thead><tr><th>#</th><th>Product</th><th>Units Sold</th></tr></thead>
+          <tbody>
+            {% for name, sold in top_products %}
+            <tr>
+              <td style="color:var(--text-3);font-weight:700">{{ loop.index }}</td>
+              <td>{{ name }}</td>
+              <td><strong>{{ sold }}</strong></td>
+            </tr>
+            {% else %}
+            <tr><td colspan="3" style="text-align:center;color:var(--text-3);padding:24px">No data yet</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h3><i class="fas fa-exclamation-triangle" style="color:var(--warning)"></i> Low Stock Alert</h3>
+      <a href="{{ url_for('admin.products') }}" class="btn btn-secondary btn-sm">Manage</a>
+    </div>
+    <div class="card-body" style="padding:0">
+      <div class="table-container">
+        <table>
+          <thead><tr><th>Product</th><th>Stock</th><th>Action</th></tr></thead>
+          <tbody>
+            {% for p in low_stock %}
+            <tr>
+              <td>{{ p.name[:40] }}{% if p.name|length > 40 %}...{% endif %}</td>
+              <td><span class="badge" style="background:{% if p.stock < 10 %}#fee2e2;color:#991b1b{% else %}#fef3c7;color:#92400e{% endif %}">{{ p.stock }}</span></td>
+              <td><a href="{{ url_for('admin.edit_product', id=p.id) }}" class="btn-icon"><i class="fas fa-edit"></i></a></td>
+            </tr>
+            {% else %}
+            <tr><td colspan="3" style="text-align:center;color:var(--text-3);padding:24px"><i class="fas fa-check-circle" style="color:var(--success)"></i> All products well stocked</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Recent Orders -->
+<div class="card">
+  <div class="card-header">
+    <h3><i class="fas fa-clock"></i> Recent Orders</h3>
+    <a href="{{ url_for('admin.orders') }}" class="btn btn-primary btn-sm">View All</a>
+  </div>
+  <div class="card-body" style="padding:0">
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Order #</th><th>Customer</th><th>Amount</th>
+            <th>Payment</th><th>Status</th><th>Date</th><th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for order in recent_orders %}
+          <tr>
+            <td><strong>{{ order.order_number }}</strong></td>
+            <td>{{ order.user.name }}</td>
+            <td><strong>₹{{ "{:,.0f}".format(order.final_amount) }}</strong></td>
+            <td>{{ order.payment_method }}</td>
+            <td><span class="status status-{{ order.status }}">{{ order.status }}</span></td>
+            <td style="color:var(--text-3)">{{ order.created_at.strftime('%d %b, %H:%M') }}</td>
+            <td>
+              <a href="{{ url_for('admin.order_detail', id=order.id) }}" class="btn-icon" title="View">
+                <i class="fas fa-eye"></i>
+              </a>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="7" style="text-align:center;color:var(--text-3);padding:32px">No orders yet</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Revenue Chart
+const revCtx = document.getElementById('revenueChart').getContext('2d');
+new Chart(revCtx, {
+  type: 'line',
+  data: {
+    labels: {{ monthly_revenue | map(attribute='month') | list | tojson }},
+    datasets: [{
+      label: 'Revenue (₹)',
+      data: {{ monthly_revenue | map(attribute='revenue') | list | tojson }},
+      borderColor: '#e31e2d',
+      backgroundColor: 'rgba(227,30,45,0.08)',
+      borderWidth: 2,
+      fill: true,
+      tension: 0.4,
+      pointBackgroundColor: '#e31e2d',
+      pointRadius: 4,
+    }]
+  },
+  options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: '#f0f0f0' } }, x: { grid: { display: false } } } }
+});
+
+// Status Pie Chart
+const statusCtx = document.getElementById('statusChart').getContext('2d');
+const statusData = {{ order_status_counts | tojson }};
+new Chart(statusCtx, {
+  type: 'doughnut',
+  data: {
+    labels: statusData.map(s => s[0]),
+    datasets: [{
+      data: statusData.map(s => s[1]),
+      backgroundColor: ['#fef3c7','#dbeafe','#ede9fe','#e0f2fe','#dcfce7','#fee2e2','#f3f4f6'],
+      borderWidth: 2,
+      borderColor: '#fff',
+    }]
+  },
+  options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+});
+</script>
+{% endblock %}

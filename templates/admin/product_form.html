@@ -1,0 +1,159 @@
+{% extends 'admin/base.html' %}
+{% block title %}{{ 'Edit' if product else 'Add' }} Product{% endblock %}
+{% block page_icon %}fas fa-box{% endblock %}
+{% block page_title %}{{ 'Edit' if product else 'Add New' }} Product{% endblock %}
+
+{% block content %}
+<div class="breadcrumb">
+  <a href="{{ url_for('admin.products') }}">Products</a>
+  <span class="sep">/</span>
+  <span class="current">{{ 'Edit: ' + product.name[:30] if product else 'Add New Product' }}</span>
+</div>
+
+<form method="post" enctype="multipart/form-data">
+  <div style="display:grid;grid-template-columns:1fr 340px;gap:20px;align-items:start">
+
+    <!-- LEFT -->
+    <div>
+      <div class="card" style="margin-bottom:20px">
+        <div class="card-header"><h3>Basic Information</h3></div>
+        <div class="card-body">
+          <div class="form-group full" style="margin-bottom:16px">
+            <label>Product Name *</label>
+            <input type="text" name="name" class="form-control" required value="{{ product.name if product else '' }}" placeholder="e.g. Nutrabay Gold 100% Whey Protein">
+          </div>
+          <div class="form-group full">
+            <label>Description</label>
+            <textarea name="description" class="form-control" rows="5" placeholder="Product description...">{{ product.description if product else '' }}</textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:20px">
+        <div class="card-header"><h3>Pricing & Inventory</h3></div>
+        <div class="card-body">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Selling Price (₹) *</label>
+              <input type="number" name="price" class="form-control" required min="0" step="0.01"
+                     value="{{ product.price if product else '' }}" placeholder="0.00">
+            </div>
+            <div class="form-group">
+              <label>Original / MRP (₹)</label>
+              <input type="number" name="original_price" class="form-control" min="0" step="0.01"
+                     value="{{ product.original_price if product else '' }}" placeholder="0.00">
+            </div>
+            <div class="form-group">
+              <label>Stock Quantity *</label>
+              <input type="number" name="stock" class="form-control" required min="0"
+                     value="{{ product.stock if product else 0 }}">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h3>Product Details</h3></div>
+        <div class="card-body">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Category</label>
+              <select name="category_id" class="form-control">
+                <option value="">— Select Category —</option>
+                {% for c in categories %}
+                <option value="{{ c.id }}" {{ 'selected' if product and product.category_id == c.id }}>{{ c.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Brand</label>
+              <select name="brand_id" class="form-control">
+                <option value="">— Select Brand —</option>
+                {% for b in brands %}
+                <option value="{{ b.id }}" {{ 'selected' if product and product.brand_id == b.id }}>{{ b.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Flavor / Variant</label>
+              <input type="text" name="flavor" class="form-control"
+                     value="{{ product.flavor if product else '' }}" placeholder="e.g. Chocolate, Vanilla">
+            </div>
+            <div class="form-group">
+              <label>Weight / Size</label>
+              <input type="text" name="weight" class="form-control"
+                     value="{{ product.weight if product else '' }}" placeholder="e.g. 1kg, 250g">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT -->
+    <div>
+      <div class="card" style="margin-bottom:20px">
+        <div class="card-header"><h3>Product Image</h3></div>
+        <div class="card-body">
+          {% if product and product.image %}
+          <div style="text-align:center;margin-bottom:12px">
+            <img src="{{ url_for('static', filename='images/products/' + product.image) }}"
+                 class="img-preview" onerror="this.src=''">
+          </div>
+          {% endif %}
+          <div class="img-upload" onclick="document.getElementById('imgInput').click()">
+            <i class="fas fa-cloud-upload-alt"></i>
+            <p>Click to upload image<br><small>PNG, JPG, WebP up to 16MB</small></p>
+          </div>
+          <input type="file" id="imgInput" name="image" accept="image/*" style="display:none"
+                 onchange="previewImg(this)">
+          <img id="imgPreview" class="img-preview" style="display:none;margin-top:10px">
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:20px">
+        <div class="card-header"><h3>Visibility & Flags</h3></div>
+        <div class="card-body" style="display:flex;flex-direction:column;gap:14px">
+          <div class="form-check">
+            <input type="checkbox" id="is_active" name="is_active" value="on"
+                   {{ 'checked' if not product or product.is_active }}>
+            <label for="is_active">Active (visible in store)</label>
+          </div>
+          <div class="form-check">
+            <input type="checkbox" id="featured" name="featured" value="on"
+                   {{ 'checked' if product and product.featured }}>
+            <label for="featured">Featured on homepage</label>
+          </div>
+          <div class="form-check">
+            <input type="checkbox" id="bestseller" name="bestseller" value="on"
+                   {{ 'checked' if product and product.bestseller }}>
+            <label for="bestseller">Mark as Bestseller</label>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px">
+        <button type="submit" class="btn btn-primary" style="flex:1">
+          <i class="fas fa-save"></i> {{ 'Update' if product else 'Add' }} Product
+        </button>
+        <a href="{{ url_for('admin.products') }}" class="btn btn-secondary">Cancel</a>
+      </div>
+    </div>
+  </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function previewImg(input) {
+  if (input.files && input.files[0]) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const preview = document.getElementById('imgPreview');
+      preview.src = e.target.result;
+      preview.style.display = 'block';
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+</script>
+{% endblock %}

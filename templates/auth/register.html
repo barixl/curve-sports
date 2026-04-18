@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+{% block title %}Create Account — Nutrabay{% endblock %}
+
+{% block content %}
+<div style="min-height:70vh;display:flex;align-items:center;justify-content:center;padding:40px 20px">
+  <div style="width:100%;max-width:480px">
+    <div style="text-align:center;margin-bottom:32px">
+      <div style="font-family:var(--font-head);font-size:32px;font-weight:700;color:var(--dark);letter-spacing:2px;margin-bottom:6px">NUTRABAY™</div>
+      <h2 style="font-size:22px;font-weight:600">Create Your Account</h2>
+      <p style="color:var(--text-3);font-size:14px">Join millions of fitness enthusiasts</p>
+    </div>
+
+    <div style="background:white;border-radius:16px;padding:36px;box-shadow:var(--shadow-lg)">
+      <form method="post">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+          <div>
+            <label style="font-size:13px;font-weight:700;color:var(--text-2);display:block;margin-bottom:7px">Full Name *</label>
+            <div style="position:relative">
+              <i class="fas fa-user" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text-3);font-size:13px"></i>
+              <input type="text" name="name" required
+                     style="width:100%;padding:11px 12px 11px 36px;border:2px solid var(--border);border-radius:8px;font-size:14px;transition:border-color 0.2s"
+                     placeholder="John Doe"
+                     onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border)'">
+            </div>
+          </div>
+          <div>
+            <label style="font-size:13px;font-weight:700;color:var(--text-2);display:block;margin-bottom:7px">Phone Number</label>
+            <div style="position:relative">
+              <i class="fas fa-phone" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text-3);font-size:13px"></i>
+              <input type="tel" name="phone"
+                     style="width:100%;padding:11px 12px 11px 36px;border:2px solid var(--border);border-radius:8px;font-size:14px;transition:border-color 0.2s"
+                     placeholder="9999999999"
+                     onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border)'">
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-bottom:16px">
+          <label style="font-size:13px;font-weight:700;color:var(--text-2);display:block;margin-bottom:7px">Email Address *</label>
+          <div style="position:relative">
+            <i class="fas fa-envelope" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text-3);font-size:13px"></i>
+            <input type="email" name="email" required
+                   style="width:100%;padding:11px 12px 11px 36px;border:2px solid var(--border);border-radius:8px;font-size:14px;transition:border-color 0.2s"
+                   placeholder="you@example.com"
+                   onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border)'">
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+          <div>
+            <label style="font-size:13px;font-weight:700;color:var(--text-2);display:block;margin-bottom:7px">Password *</label>
+            <input type="password" name="password" required minlength="6"
+                   style="width:100%;padding:11px 12px;border:2px solid var(--border);border-radius:8px;font-size:14px;transition:border-color 0.2s"
+                   placeholder="Min 6 characters"
+                   onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border)'">
+          </div>
+          <div>
+            <label style="font-size:13px;font-weight:700;color:var(--text-2);display:block;margin-bottom:7px">Confirm Password *</label>
+            <input type="password" name="confirm_password" required
+                   style="width:100%;padding:11px 12px;border:2px solid var(--border);border-radius:8px;font-size:14px;transition:border-color 0.2s"
+                   placeholder="Re-enter password"
+                   onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border)'">
+          </div>
+        </div>
+
+        <div style="background:var(--bg);border-radius:8px;padding:12px 14px;margin-bottom:20px;font-size:13px;color:var(--text-3)">
+          <i class="fas fa-tag" style="color:var(--primary)"></i>
+          Use code <strong style="color:var(--primary)">NUTRABAY5</strong> at checkout for 5% off your first order!
+        </div>
+
+        <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;font-size:13px;color:var(--text-2);margin-bottom:20px">
+          <input type="checkbox" required style="accent-color:var(--primary);margin-top:2px">
+          I agree to the <a href="#" style="color:var(--primary)">Terms of Service</a> and <a href="#" style="color:var(--primary)">Privacy Policy</a>
+        </label>
+
+        <button type="submit" class="btn btn-primary btn-block" style="padding:14px;font-size:16px">
+          <i class="fas fa-user-plus"></i> Create Account
+        </button>
+      </form>
+
+      <div style="text-align:center;margin-top:20px;padding-top:20px;border-top:1px solid var(--border)">
+        <p style="font-size:14px;color:var(--text-3)">Already have an account?
+          <a href="{{ url_for('auth.login') }}" style="color:var(--primary);font-weight:700">Login</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

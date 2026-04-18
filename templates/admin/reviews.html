@@ -1,0 +1,65 @@
+{% extends 'admin/base.html' %}
+{% block title %}Reviews{% endblock %}
+{% block page_icon %}fas fa-star{% endblock %}
+{% block page_title %}Reviews{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <h3><i class="fas fa-star"></i> All Reviews</h3>
+    <span style="font-size:13px;color:var(--text-3)">{{ reviews.total }} reviews</span>
+  </div>
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr><th>Product</th><th>Reviewer</th><th>Rating</th><th>Review</th><th>Date</th><th>Actions</th></tr>
+      </thead>
+      <tbody>
+        {% for r in reviews.items %}
+        <tr>
+          <td>
+            <a href="{{ url_for('shop.product_detail', slug=r.product.slug) }}" target="_blank" style="font-weight:600;color:var(--primary)">
+              {{ r.product.name[:40] }}{% if r.product.name|length > 40 %}...{% endif %}
+            </a>
+          </td>
+          <td>
+            <div style="font-weight:600">{{ r.user.name }}</div>
+            <div style="font-size:12px;color:var(--text-3)">{{ r.user.email }}</div>
+          </td>
+          <td>
+            <div style="display:flex;align-items:center;gap:4px">
+              <span style="color:#f59e0b">{% for i in range(r.rating) %}★{% endfor %}{% for i in range(5-r.rating) %}☆{% endfor %}</span>
+              <span style="font-weight:700">{{ r.rating }}/5</span>
+            </div>
+          </td>
+          <td>
+            {% if r.title %}<div style="font-weight:600;font-size:13px">{{ r.title }}</div>{% endif %}
+            <div style="font-size:13px;color:var(--text-3)">{{ r.body[:80] if r.body else '—' }}{% if r.body and r.body|length > 80 %}...{% endif %}</div>
+          </td>
+          <td style="font-size:13px;color:var(--text-3)">{{ r.created_at.strftime('%d %b %Y') }}</td>
+          <td>
+            <form method="post" action="{{ url_for('admin.delete_review', id=r.id) }}" style="display:inline"
+                  onsubmit="return confirm('Delete this review?')">
+              <button type="submit" class="btn-icon danger" title="Delete"><i class="fas fa-trash"></i></button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" style="text-align:center;color:var(--text-3);padding:40px">No reviews yet</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% if reviews.pages > 1 %}
+<div class="pagination">
+  {% if reviews.has_prev %}<a href="?page={{ reviews.prev_num }}">&laquo;</a>{% endif %}
+  {% for p in reviews.iter_pages() %}
+    {% if p %}<a href="?page={{ p }}" class="{{ 'active' if p == reviews.page }}">{{ p }}</a>
+    {% else %}<span>…</span>{% endif %}
+  {% endfor %}
+  {% if reviews.has_next %}<a href="?page={{ reviews.next_num }}">&raquo;</a>{% endif %}
+</div>
+{% endif %}
+{% endblock %}

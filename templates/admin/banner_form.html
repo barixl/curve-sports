@@ -1,0 +1,79 @@
+{% extends 'admin/base.html' %}
+{% block title %}{{ 'Edit' if banner else 'Add' }} Banner{% endblock %}
+{% block page_icon %}fas fa-images{% endblock %}
+{% block page_title %}{{ 'Edit' if banner else 'Add' }} Banner{% endblock %}
+
+{% block content %}
+<div class="breadcrumb">
+  <a href="{{ url_for('admin.banners') }}">Banners</a>
+  <span class="sep">/</span>
+  <span class="current">{{ 'Edit Banner' if banner else 'Add New' }}</span>
+</div>
+<div style="max-width:640px">
+  <form method="post" enctype="multipart/form-data">
+    <div class="card">
+      <div class="card-header"><h3>Banner Details</h3></div>
+      <div class="card-body">
+        <div class="form-grid">
+          <div class="form-group full">
+            <label>Title</label>
+            <input type="text" name="title" class="form-control" value="{{ banner.title if banner else '' }}" placeholder="e.g. Mega Sale - Up to 50% Off">
+          </div>
+          <div class="form-group full">
+            <label>Subtitle</label>
+            <input type="text" name="subtitle" class="form-control" value="{{ banner.subtitle if banner else '' }}" placeholder="e.g. Use code SAVE20 at checkout">
+          </div>
+          <div class="form-group full">
+            <label>Link URL</label>
+            <input type="text" name="link" class="form-control" value="{{ banner.link if banner else '' }}" placeholder="e.g. /products?category=whey-protein">
+          </div>
+          <div class="form-group">
+            <label>Position (order)</label>
+            <input type="number" name="position" class="form-control" min="0" value="{{ banner.position if banner else 0 }}">
+          </div>
+          <div class="form-group">
+            <label>Background Color</label>
+            <input type="color" name="bg_color" class="form-control" value="{{ banner.bg_color if banner else '#0a1628' }}" style="height:42px;cursor:pointer">
+          </div>
+          <div class="form-group full">
+            <label>Banner Image</label>
+            <div class="img-upload" onclick="document.getElementById('bannerImg').click()">
+              <i class="fas fa-image"></i><p>Click to upload banner image<br><small>Recommended: 1200×400px</small></p>
+            </div>
+            <input type="file" id="bannerImg" name="image" accept="image/*" style="display:none" onchange="previewImg(this,'bannerPrev')">
+            {% if banner and banner.image %}
+            <img src="{{ url_for('static', filename='images/banners/' + banner.image) }}" id="bannerPrev" class="img-preview" style="width:100%;max-width:100%;margin-top:10px">
+            {% else %}
+            <img id="bannerPrev" class="img-preview" style="display:none;width:100%;max-width:100%;margin-top:10px">
+            {% endif %}
+          </div>
+          <div class="form-group">
+            <div class="form-check" style="margin-top:8px">
+              <input type="checkbox" id="is_active" name="is_active" value="on" {{ 'checked' if not banner or banner.is_active }}>
+              <label for="is_active">Active</label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> {{ 'Update' if banner else 'Add' }} Banner</button>
+      <a href="{{ url_for('admin.banners') }}" class="btn btn-secondary">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+function previewImg(input, previewId) {
+  if (input.files && input.files[0]) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const p = document.getElementById(previewId);
+      p.src = e.target.result; p.style.display = 'block';
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+</script>
+{% endblock %}

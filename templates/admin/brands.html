@@ -1,0 +1,56 @@
+{% extends 'admin/base.html' %}
+{% block title %}Brands{% endblock %}
+{% block page_icon %}fas fa-certificate{% endblock %}
+{% block page_title %}Brands{% endblock %}
+
+{% block content %}
+<div class="toolbar">
+  <div class="toolbar-left"></div>
+  <a href="{{ url_for('admin.add_brand') }}" class="btn btn-primary"><i class="fas fa-plus"></i> Add Brand</a>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <h3><i class="fas fa-certificate"></i> All Brands</h3>
+    <span style="font-size:13px;color:var(--text-3)">{{ brands | length }} brands</span>
+  </div>
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr><th>Brand</th><th>Slug</th><th>Products</th><th>Status</th><th>Actions</th></tr>
+      </thead>
+      <tbody>
+        {% for brand in brands %}
+        <tr>
+          <td>
+            <div style="display:flex;align-items:center;gap:12px">
+              <div style="width:44px;height:44px;background:var(--bg);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:var(--primary)">
+                {{ brand.name[0].upper() }}
+              </div>
+              <div>
+                <div style="font-weight:600">{{ brand.name }}</div>
+                <div style="font-size:12px;color:var(--text-3)">{{ brand.description[:60] if brand.description else '' }}</div>
+              </div>
+            </div>
+          </td>
+          <td><code style="background:var(--bg);padding:2px 8px;border-radius:4px;font-size:12px">{{ brand.slug }}</code></td>
+          <td>{{ brand.products | selectattr('is_active') | list | length }}</td>
+          <td><span class="badge {{ 'badge-active' if brand.is_active else 'badge-inactive' }}">{{ 'Active' if brand.is_active else 'Inactive' }}</span></td>
+          <td>
+            <div style="display:flex;gap:4px">
+              <a href="{{ url_for('admin.edit_brand', id=brand.id) }}" class="btn-icon"><i class="fas fa-edit"></i></a>
+              <form method="post" action="{{ url_for('admin.delete_brand', id=brand.id) }}" style="display:inline"
+                    onsubmit="return confirm('Delete this brand?')">
+                <button type="submit" class="btn-icon danger"><i class="fas fa-trash"></i></button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5" style="text-align:center;color:var(--text-3);padding:40px">No brands found</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

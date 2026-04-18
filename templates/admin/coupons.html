@@ -1,0 +1,49 @@
+{% extends 'admin/base.html' %}
+{% block title %}Coupons{% endblock %}
+{% block page_icon %}fas fa-ticket-alt{% endblock %}
+{% block page_title %}Coupons{% endblock %}
+
+{% block content %}
+<div class="toolbar">
+  <div class="toolbar-left"></div>
+  <a href="{{ url_for('admin.add_coupon') }}" class="btn btn-primary"><i class="fas fa-plus"></i> Create Coupon</a>
+</div>
+<div class="card">
+  <div class="card-header">
+    <h3><i class="fas fa-ticket-alt"></i> All Coupons</h3>
+  </div>
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr><th>Code</th><th>Type</th><th>Discount</th><th>Min Order</th><th>Used / Limit</th><th>Expires</th><th>Status</th><th>Actions</th></tr>
+      </thead>
+      <tbody>
+        {% for c in coupons %}
+        <tr>
+          <td><strong style="font-size:15px;letter-spacing:1px">{{ c.code }}</strong></td>
+          <td>{{ c.discount_type | capitalize }}</td>
+          <td>
+            {% if c.discount_type == 'percent' %}{{ c.discount_value | int }}%{% if c.max_discount %} (max ₹{{ c.max_discount | int }}){% endif %}
+            {% else %}₹{{ c.discount_value | int }}{% endif %}
+          </td>
+          <td>₹{{ c.min_order_amount | int }}</td>
+          <td>{{ c.used_count }} / {{ c.usage_limit or '∞' }}</td>
+          <td style="font-size:13px;color:var(--text-3)">{{ c.expires_at.strftime('%d %b %Y') if c.expires_at else 'Never' }}</td>
+          <td><span class="badge {{ 'badge-active' if c.is_active else 'badge-inactive' }}">{{ 'Active' if c.is_active else 'Inactive' }}</span></td>
+          <td>
+            <div style="display:flex;gap:4px">
+              <a href="{{ url_for('admin.edit_coupon', id=c.id) }}" class="btn-icon"><i class="fas fa-edit"></i></a>
+              <form method="post" action="{{ url_for('admin.delete_coupon', id=c.id) }}" style="display:inline" onsubmit="return confirm('Delete this coupon?')">
+                <button type="submit" class="btn-icon danger"><i class="fas fa-trash"></i></button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="8" style="text-align:center;color:var(--text-3);padding:40px">No coupons yet</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

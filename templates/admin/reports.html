@@ -1,0 +1,110 @@
+{% extends 'admin/base.html' %}
+{% block title %}Analytics & Reports{% endblock %}
+{% block page_icon %}fas fa-chart-bar{% endblock %}
+{% block page_title %}Analytics & Reports{% endblock %}
+
+{% block content %}
+<!-- Monthly Revenue Chart -->
+<div class="card" style="margin-bottom:20px">
+  <div class="card-header"><h3><i class="fas fa-chart-line"></i> Monthly Revenue & Orders</h3></div>
+  <div class="card-body">
+    <div class="chart-container" style="height:320px">
+      <canvas id="monthlyChart"></canvas>
+    </div>
+  </div>
+</div>
+
+<div class="grid-2">
+  <!-- Top Products -->
+  <div class="card">
+    <div class="card-header"><h3><i class="fas fa-trophy"></i> Top Products by Revenue</h3></div>
+    <div class="table-container">
+      <table>
+        <thead><tr><th>#</th><th>Product</th><th>Units</th><th>Revenue</th></tr></thead>
+        <tbody>
+          {% for name, units, revenue in top_products %}
+          <tr>
+            <td style="font-weight:700;color:var(--text-3)">{{ loop.index }}</td>
+            <td>{{ name[:35] }}{% if name|length > 35 %}...{% endif %}</td>
+            <td>{{ units }}</td>
+            <td><strong>₹{{ "{:,.0f}".format(revenue) }}</strong></td>
+          </tr>
+          {% else %}
+          <tr><td colspan="4" style="text-align:center;color:var(--text-3);padding:32px">No sales data yet</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Revenue by Category -->
+  <div class="card">
+    <div class="card-header"><h3><i class="fas fa-chart-pie"></i> Revenue by Category</h3></div>
+    <div class="card-body">
+      <div class="chart-container" style="height:260px">
+        <canvas id="catChart"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Monthly Revenue + Orders
+const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
+const monthlyData = {{ monthly | tojson }};
+new Chart(monthlyCtx, {
+  type: 'bar',
+  data: {
+    labels: monthlyData.map(m => m[0]),
+    datasets: [
+      {
+        label: 'Revenue (₹)',
+        data: monthlyData.map(m => m[2] || 0),
+        backgroundColor: 'rgba(227,30,45,0.8)',
+        borderRadius: 6,
+        yAxisID: 'y',
+      },
+      {
+        label: 'Orders',
+        data: monthlyData.map(m => m[1] || 0),
+        type: 'line',
+        borderColor: '#3b82f6',
+        backgroundColor: 'rgba(59,130,246,0.1)',
+        borderWidth: 2,
+        fill: true,
+        tension: 0.4,
+        yAxisID: 'y1',
+        pointBackgroundColor: '#3b82f6',
+      }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { position: 'top' } },
+    scales: {
+      y: { beginAtZero: true, position: 'left', grid: { color: '#f0f0f0' }, title: { display: true, text: 'Revenue (₹)' } },
+      y1: { beginAtZero: true, position: 'right', grid: { display: false }, title: { display: true, text: 'Orders' } },
+      x: { grid: { display: false } }
+    }
+  }
+});
+
+// Category Pie
+const catCtx = document.getElementById('catChart').getContext('2d');
+const catData = {{ revenue_by_cat | tojson }};
+new Chart(catCtx, {
+  type: 'doughnut',
+  data: {
+    labels: catData.map(c => c[0]),
+    datasets: [{
+      data: catData.map(c => c[1] || 0),
+      backgroundColor: ['#e31e2d','#3b82f6','#f59e0b','#1dba6b','#8b5cf6','#ec4899','#14b8a6','#f97316'],
+      borderWidth: 2, borderColor: '#fff'
+    }]
+  },
+  options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+});
+</script>
+{% endblock %}

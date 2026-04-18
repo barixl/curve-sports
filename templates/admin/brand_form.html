@@ -1,0 +1,67 @@
+{% extends 'admin/base.html' %}
+{% block title %}{{ 'Edit' if brand else 'Add' }} Brand{% endblock %}
+{% block page_icon %}fas fa-certificate{% endblock %}
+{% block page_title %}{{ 'Edit' if brand else 'Add New' }} Brand{% endblock %}
+
+{% block content %}
+<div class="breadcrumb">
+  <a href="{{ url_for('admin.brands') }}">Brands</a>
+  <span class="sep">/</span>
+  <span class="current">{{ 'Edit: ' + brand.name if brand else 'Add New' }}</span>
+</div>
+<div style="max-width:640px">
+  <form method="post" enctype="multipart/form-data">
+    <div class="card">
+      <div class="card-header"><h3>Brand Details</h3></div>
+      <div class="card-body">
+        <div class="form-grid">
+          <div class="form-group full">
+            <label>Brand Name *</label>
+            <input type="text" name="name" class="form-control" required value="{{ brand.name if brand else '' }}" placeholder="e.g. Optimum Nutrition">
+          </div>
+          <div class="form-group full">
+            <label>Description</label>
+            <textarea name="description" class="form-control" rows="3">{{ brand.description if brand else '' }}</textarea>
+          </div>
+          <div class="form-group full">
+            <label>Logo (optional)</label>
+            <div class="img-upload" onclick="document.getElementById('brandLogo').click()">
+              <i class="fas fa-image"></i><p>Click to upload brand logo</p>
+            </div>
+            <input type="file" id="brandLogo" name="logo" accept="image/*" style="display:none" onchange="previewImg(this,'logoPrev')">
+            {% if brand and brand.logo %}
+            <img src="{{ url_for('static', filename='images/brands/' + brand.logo) }}" class="img-preview" id="logoPrev">
+            {% else %}
+            <img id="logoPrev" class="img-preview" style="display:none">
+            {% endif %}
+          </div>
+          <div class="form-group">
+            <div class="form-check">
+              <input type="checkbox" id="is_active" name="is_active" value="on" {{ 'checked' if not brand or brand.is_active }}>
+              <label for="is_active">Active</label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> {{ 'Update' if brand else 'Add' }} Brand</button>
+      <a href="{{ url_for('admin.brands') }}" class="btn btn-secondary">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+function previewImg(input, previewId) {
+  if (input.files && input.files[0]) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const p = document.getElementById(previewId);
+      p.src = e.target.result; p.style.display = 'block';
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,104 @@
+{% extends 'admin/base.html' %}
+{% block title %}Products{% endblock %}
+{% block page_icon %}fas fa-box{% endblock %}
+{% block page_title %}Products{% endblock %}
+
+{% block content %}
+<div class="toolbar">
+  <div class="toolbar-left">
+    <form method="get" style="display:flex;gap:10px;flex:1">
+      <div class="search-input">
+        <i class="fas fa-search"></i>
+        <input type="text" name="q" value="{{ search }}" placeholder="Search products...">
+      </div>
+      <select name="category" class="filter-select">
+        <option value="">All Categories</option>
+        {% for c in categories %}
+        <option value="{{ c.id }}" {{ 'selected' if cat_id == c.id }}>{{ c.name }}</option>
+        {% endfor %}
+      </select>
+      <button type="submit" class="btn btn-secondary btn-sm"><i class="fas fa-filter"></i> Filter</button>
+    </form>
+  </div>
+  <a href="{{ url_for('admin.add_product') }}" class="btn btn-primary">
+    <i class="fas fa-plus"></i> Add Product
+  </a>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <h3><i class="fas fa-box"></i> All Products</h3>
+    <span style="font-size:13px;color:var(--text-3)">{{ products.total }} products</span>
+  </div>
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th>Product</th><th>Category</th><th>Brand</th>
+          <th>Price</th><th>Stock</th><th>Status</th><th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in products.items %}
+        <tr>
+          <td>
+            <div style="display:flex;align-items:center;gap:12px">
+              <div style="width:44px;height:44px;background:var(--bg);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:22px">
+                {{ p.category.icon if p.category else '📦' }}
+              </div>
+              <div>
+                <div style="font-weight:600;font-size:14px">{{ p.name[:45] }}{% if p.name|length > 45 %}...{% endif %}</div>
+                <div style="font-size:12px;color:var(--text-3)">{{ p.flavor }} · {{ p.weight }}</div>
+              </div>
+            </div>
+          </td>
+          <td>{{ p.category.name if p.category else '—' }}</td>
+          <td>{{ p.brand.name if p.brand else '—' }}</td>
+          <td>
+            <strong>₹{{ "{:,.0f}".format(p.price) }}</strong>
+            {% if p.original_price %}<br><s style="font-size:12px;color:var(--text-3)">₹{{ "{:,.0f}".format(p.original_price) }}</s>{% endif %}
+          </td>
+          <td>
+            <span class="badge {% if p.stock < 10 %}badge-inactive{% elif p.stock < 20 %}badge-active{% else %}badge-active{% endif %}"
+                  style="{% if p.stock < 10 %}background:#fee2e2;color:#991b1b{% elif p.stock < 30 %}background:#fef3c7;color:#92400e{% endif %}">
+              {{ p.stock }}
+            </span>
+          </td>
+          <td>
+            <span class="badge {{ 'badge-active' if p.is_active else 'badge-inactive' }}">
+              {{ 'Active' if p.is_active else 'Inactive' }}
+            </span>
+            {% if p.featured %}<span class="badge" style="background:#dbeafe;color:#1e40af">Featured</span>{% endif %}
+            {% if p.bestseller %}<span class="badge" style="background:#ffedd5;color:#ea580c">Bestseller</span>{% endif %}
+          </td>
+          <td>
+            <div style="display:flex;gap:4px">
+              <a href="{{ url_for('admin.edit_product', id=p.id) }}" class="btn-icon" title="Edit"><i class="fas fa-edit"></i></a>
+              <a href="{{ url_for('shop.product_detail', slug=p.slug) }}" target="_blank" class="btn-icon" title="View"><i class="fas fa-eye"></i></a>
+              <form method="post" action="{{ url_for('admin.delete_product', id=p.id) }}" style="display:inline"
+                    onsubmit="return confirm('Deactivate this product?')">
+                <button type="submit" class="btn-icon danger" title="Deactivate"><i class="fas fa-trash"></i></button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7" style="text-align:center;color:var(--text-3);padding:40px">No products found</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Pagination -->
+{% if products.pages > 1 %}
+<div class="pagination">
+  {% if products.has_prev %}<a href="?page={{ products.prev_num }}&q={{ search }}">&laquo;</a>{% endif %}
+  {% for p in products.iter_pages(left_edge=2, right_edge=2, left_current=2, right_current=2) %}
+    {% if p %}<a href="?page={{ p }}&q={{ search }}" class="{{ 'active' if p == products.page }}">{{ p }}</a>
+    {% else %}<span>…</span>{% endif %}
+  {% endfor %}
+  {% if products.has_next %}<a href="?page={{ products.next_num }}&q={{ search }}">&raquo;</a>{% endif %}
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block title %}My Wishlist — Nutrabay{% endblock %}
+
+{% block content %}
+<div class="container" style="padding:32px 0">
+  <h1 style="font-family:var(--font-head);font-size:32px;margin-bottom:24px">
+    <i class="fas fa-heart" style="color:var(--primary)"></i> My Wishlist
+  </h1>
+
+  {% if products %}
+  <div class="products-grid">
+    {% for p in products if p %}
+    {% include 'shop/_product_card.html' %}
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <i class="fas fa-heart"></i>
+    <h3>Your wishlist is empty</h3>
+    <p>Save products you love to your wishlist and buy them later.</p>
+    <a href="{{ url_for('shop.products') }}" class="btn btn-primary">Discover Products</a>
+  </div>
+  {% endif %}
+</div>
+
+{% block extra_js %}
+<script>
+async function toggleWishlist(productId, btn) {
+  const resp = await fetch(`/wishlist/toggle/${productId}`, { method: 'POST' });
+  const data = await resp.json();
+  if (data.status === 'removed') {
+    btn.closest('.product-card').remove();
+  }
+}
+</script>
+{% endblock %}
+{% endblock %}
