@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}{{ product.name }} — Nutrabay{% endblock %}
+{% block title %}{{ product.name }} — Curve Sports{% endblock %}
 
 {% block content %}
 <div class="container">
@@ -34,9 +34,8 @@
               <rect width="300" height="300" rx="24" fill="url(#detailGrad)"/>
               <rect x="90" y="50" width="120" height="180" rx="12" fill="rgba(255,255,255,0.3)"/>
               <rect x="98" y="58" width="104" height="164" rx="8" fill="rgba(255,255,255,0.15)"/>
-              <text x="150" y="148" text-anchor="middle" fill="white" font-size="16" font-family="sans-serif" font-weight="700">{{ product.weight or '1kg' }}</text>
+              <text x="150" y="148" text-anchor="middle" fill="white" font-size="16" font-family="sans-serif" font-weight="700">{{ product.category.name if product.category else 'Product' }}</text>
               <text x="150" y="170" text-anchor="middle" fill="rgba(255,255,255,0.8)" font-size="12" font-family="sans-serif">{{ product.brand.name[:14] if product.brand else 'BRAND' }}</text>
-              <text x="150" y="190" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="10" font-family="sans-serif">{{ product.flavor[:16] if product.flavor else '' }}</text>
               <rect x="98" y="210" width="104" height="6" rx="3" fill="rgba(255,255,255,0.4)"/>
               <rect x="110" y="220" width="80" height="4" rx="2" fill="rgba(255,255,255,0.25)"/>
             </svg>
@@ -75,63 +74,81 @@
 
       <!-- Price -->
       <div class="price-box">
-        <span class="current">₹{{ "{:,.0f}".format(product.price) }}</span>
+        <span class="current" id="displayPrice">₹{{ "{:,.0f}".format(product.price) }}</span>
         {% if product.original_price and product.original_price > product.price %}
-        <span class="original">₹{{ "{:,.0f}".format(product.original_price) }}</span>
-        <span class="save">Save {{ product.discount_percent() }}%</span>
+        <span class="original" id="displayOriginalPrice">₹{{ "{:,.0f}".format(product.original_price) }}</span>
+        <span class="save" id="displaySave">Save {{ product.discount_percent() }}%</span>
         {% endif %}
         <div style="font-size:13px;color:var(--text-3);margin-top:6px">Inclusive of all taxes</div>
       </div>
 
       <!-- Stock -->
-      {% if product.in_stock() %}
-      <span class="stock-badge in-stock"><i class="fas fa-check-circle"></i> In Stock ({{ product.stock }} available)</span>
-      {% else %}
-      <span class="stock-badge out-stock"><i class="fas fa-times-circle"></i> Out of Stock</span>
-      {% endif %}
+      <div id="stockStatus">
+        {% if product.in_stock() %}
+        <span class="stock-badge in-stock"><i class="fas fa-check-circle"></i> In Stock <span id="stockCount">({{ product.stock if product.product_type == 'simple' else 'Select options' }} available)</span></span>
+        {% else %}
+        <span class="stock-badge out-stock"><i class="fas fa-times-circle"></i> Out of Stock</span>
+        {% endif %}
+      </div>
 
-      <!-- Details -->
-      {% if product.flavor or product.weight %}
-      <div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap">
-        {% if product.flavor %}
-        <div style="background:var(--bg);padding:6px 14px;border-radius:6px;font-size:13px">
-          <strong>Flavor:</strong> {{ product.flavor }}
+      <!-- Variations Selection -->
+      {% if product.product_type == 'variable' %}
+      <div class="variations-selection" style="margin: 25px 0; border-top: 1px solid var(--border); padding-top: 20px;">
+        <h4 style="margin-bottom:12px; font-size:13px; text-transform:uppercase; letter-spacing:1px; color:var(--text-3)">Available Options</h4>
+        <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap:10px">
+          {% for var in product.variations %}
+          <div class="variation-option" 
+               style="display:flex; flex-direction:column; padding:12px; border:2px solid var(--border); border-radius:10px; cursor:pointer; transition:all 0.2s" 
+               onclick="selectVariation({{ var.id }}, {{ var.price }}, {{ var.stock }}, this)">
+            <div style="font-weight:700; font-size:14px; margin-bottom:4px">
+              {% for val in var.values %}{{ val.value }}{% if not loop.last %}<br>{% endif %}{% endfor %}
+            </div>
+            <div style="font-weight:700; color:var(--primary); font-size:16px">₹{{ "{:,.0f}".format(var.price) }}</div>
+            {% if var.stock <= 0 %}
+            <div style="font-size:10px; color:var(--danger); font-weight:600; text-transform:uppercase; margin-top:4px">Out of Stock</div>
+            {% endif %}
+          </div>
+          {% endfor %}
         </div>
-        {% endif %}
-        {% if product.weight %}
-        <div style="background:var(--bg);padding:6px 14px;border-radius:6px;font-size:13px">
-          <strong>Size:</strong> {{ product.weight }}
-        </div>
-        {% endif %}
       </div>
       {% endif %}
 
       <!-- Add to Cart -->
-      {% if product.in_stock() %}
-      <form action="{{ url_for('cart.add_to_cart') }}" method="post">
+      <form action="{{ url_for('cart.add_to_cart') }}" method="post" id="addToCartForm">
         <input type="hidden" name="product_id" value="{{ product.id }}">
-        <div class="add-to-cart-form">
-          <div class="qty-selector">
-            <button type="button" onclick="changeQty(-1)">−</button>
-            <input type="number" name="qty" id="qty" value="1" min="1" max="{{ product.stock }}">
-            <button type="button" onclick="changeQty(1)">+</button>
+        <input type="hidden" name="variation_id" id="selectedVariationId" value="">
+        
+        <div id="cartControls" style="display: {{ 'none' if product.product_type == 'variable' else 'block' }}">
+          {% if product.in_stock() %}
+          <div class="add-to-cart-form">
+            <div class="qty-selector">
+              <button type="button" onclick="changeQty(-1)">−</button>
+              <input type="number" name="qty" id="qty" value="1" min="1" max="{{ product.stock }}">
+              <button type="button" onclick="changeQty(1)">+</button>
+            </div>
+            <button type="submit" class="btn btn-primary" style="flex:1">
+              <i class="fas fa-cart-plus"></i> Add to Cart
+            </button>
+            {% if current_user.is_authenticated %}
+            <button type="button" class="btn btn-dark" onclick="toggleWishlist({{ product.id }}, this)"
+                    style="padding:12px 16px" title="{{ 'Remove from Wishlist' if in_wishlist else 'Add to Wishlist' }}">
+              <i class="fas fa-heart" style="{{ 'color:var(--primary)' if in_wishlist else '' }}"></i>
+            </button>
+            {% endif %}
           </div>
-          <button type="submit" class="btn btn-primary" style="flex:1">
-            <i class="fas fa-cart-plus"></i> Add to Cart
-          </button>
-          {% if current_user.is_authenticated %}
-          <button type="button" class="btn btn-dark" onclick="toggleWishlist({{ product.id }}, this)"
-                  style="padding:12px 16px" title="{{ 'Remove from Wishlist' if in_wishlist else 'Add to Wishlist' }}">
-            <i class="fas fa-heart" style="{{ 'color:var(--primary)' if in_wishlist else '' }}"></i>
+          {% else %}
+          <button class="btn btn-block" style="background:var(--bg);color:var(--text-3);cursor:not-allowed;margin-top:20px;padding:14px">
+            Out of Stock
           </button>
           {% endif %}
         </div>
+
+        {% if product.product_type == 'variable' %}
+        <div id="variablePrompt" style="background:var(--bg); padding:12px; border-radius:8px; text-align:center; color:var(--text-3); font-size:14px;">
+          Please select a variation to add to cart
+        </div>
+        {% endif %}
       </form>
-      {% else %}
-      <button class="btn btn-block" style="background:var(--bg);color:var(--text-3);cursor:not-allowed;margin-top:20px;padding:14px">
-        Out of Stock
-      </button>
-      {% endif %}
 
       <!-- Description -->
       {% if product.description %}
@@ -256,6 +273,40 @@
 
 {% block extra_js %}
 <script>
+function selectVariation(id, price, stock, el) {
+  // Highlight selected
+  document.querySelectorAll('.variation-option').forEach(opt => opt.style.borderColor = 'var(--border)');
+  el.style.borderColor = 'var(--primary)';
+  el.style.background = 'rgba(255, 90, 0, 0.05)';
+
+  // Update Display
+  document.getElementById('displayPrice').innerText = `₹${price.toLocaleString()}`;
+  document.getElementById('selectedVariationId').value = id;
+  
+  const stockCount = document.getElementById('stockCount');
+  const cartControls = document.getElementById('cartControls');
+  const variablePrompt = document.getElementById('variablePrompt');
+  const qtyInput = document.getElementById('qty');
+
+  if (stock > 0) {
+    stockCount.innerText = `(${stock} available)`;
+    stockCount.parentElement.classList.remove('out-stock');
+    stockCount.parentElement.classList.add('in-stock');
+    cartControls.style.display = 'block';
+    if(variablePrompt) variablePrompt.style.display = 'none';
+    qtyInput.max = stock;
+  } else {
+    stockCount.innerText = `(Out of stock)`;
+    stockCount.parentElement.classList.remove('in-stock');
+    stockCount.parentElement.classList.add('out-stock');
+    cartControls.style.display = 'none';
+    if(variablePrompt) {
+      variablePrompt.style.display = 'block';
+      variablePrompt.innerText = 'This variation is currently out of stock';
+    }
+  }
+}
+
 function changeQty(delta) {
   const input = document.getElementById('qty');
   const val = parseInt(input.value) + delta;

@@ -183,15 +183,40 @@ textarea.form-control { resize: vertical; min-height: 100px; }
 .img-upload p { font-size: 13px; color: var(--text-3); }
 .img-preview { max-width: 120px; max-height: 120px; border-radius: 8px; margin-top: 10px; object-fit: contain; }
 
+/* ── MOBILE OVERLAY ────────────────────────────────── */
+.mobile-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1100; opacity: 0; visibility: hidden; transition: all 0.3s; }
+.mobile-overlay.active { opacity: 1; visibility: visible; }
+
 /* ── RESPONSIVE ────────────────────────────────────── */
 @media (max-width: 1200px) {
   .stats-grid { grid-template-columns: repeat(2, 1fr); }
   .grid-3 { grid-template-columns: 1fr 1fr; }
 }
+
 @media (max-width: 768px) {
-  .sidebar { transform: translateX(-100%); }
+  .sidebar { transform: translateX(-100%); transition: transform 0.3s ease; z-index: 1200; }
+  .sidebar.active { transform: translateX(0); }
   .main-content { margin-left: 0; }
-  .stats-grid { grid-template-columns: 1fr 1fr; }
-  .grid-2 { grid-template-columns: 1fr; }
+  
+  .admin-header { padding: 0 16px; }
+  .admin-mobile-toggle { display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; background: var(--bg); border: none; border-radius: 8px; cursor: pointer; color: var(--text); font-size: 18px; }
+  .admin-header-right { gap: 8px; }
+  .admin-header-right .btn span { display: none; }
+  .admin-header-right .btn { padding: 8px; }
+  
+  .admin-page { padding: 16px; }
+  .stats-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+  .stat-card { padding: 16px; gap: 12px; }
+  .stat-icon { width: 44px; height: 44px; font-size: 18px; }
+  .stat-value { font-size: 22px; }
+  
+  .grid-2, .grid-3 { grid-template-columns: 1fr; gap: 16px; }
   .form-grid { grid-template-columns: 1fr; }
+  .toolbar { flex-direction: column; align-items: stretch; }
+  .toolbar-left { flex-direction: column; align-items: stretch; }
+  .search-input input { min-width: 0; }
+}
+
+@media (min-width: 769px) {
+  .admin-mobile-toggle { display: none; }
 }

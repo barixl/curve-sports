@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block title %}Verify OTP — Curve Sports{% endblock %}
+
+{% block content %}
+<div style="min-height:70vh;display:flex;align-items:center;justify-content:center;padding:40px 20px">
+  <div style="width:100%;max-width:440px">
+    <div style="text-align:center;margin-bottom:32px">
+      <h2 style="font-size:22px;font-weight:600;color:var(--text)">Verify your email</h2>
+      <p style="color:var(--text-3);font-size:14px">We've sent an OTP to <strong>{{ email }}</strong></p>
+    </div>
+
+    <div style="background:white;border-radius:16px;padding:36px;box-shadow:var(--shadow-lg)">
+      <form method="post">
+        <div class="form-group" style="margin-bottom:20px">
+          <label style="font-size:13px;font-weight:700;color:var(--text-2);display:block;margin-bottom:7px">Enter 6-digit OTP</label>
+          <input type="text" name="otp" required maxlength="6" pattern="\d{6}"
+                 style="width:100%;padding:12px;border:2px solid var(--border);border-radius:10px;font-size:24px;letter-spacing:10px;text-align:center;transition:border-color 0.2s"
+                 placeholder="000000"
+                 onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border)'">
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block" style="padding:14px;font-size:16px">
+          Verify OTP
+        </button>
+      </form>
+
+      <div style="text-align:center;margin-top:24px;padding-top:24px;border-top:1px solid var(--border)">
+        <p style="font-size:14px;color:var(--text-3)">Didn't receive the code?
+          <a href="#" style="color:var(--primary);font-weight:700">Resend OTP</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

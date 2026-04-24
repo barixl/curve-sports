@@ -15,10 +15,14 @@ class User(db.Model, UserMixin):
     id         = db.Column(db.Integer, primary_key=True)
     name       = db.Column(db.String(100), nullable=False)
     email      = db.Column(db.String(120), unique=True, nullable=False)
-    password   = db.Column(db.String(256), nullable=False)
+    password   = db.Column(db.String(256), nullable=True) # Nullable for OAuth users
     phone      = db.Column(db.String(20))
     is_admin   = db.Column(db.Boolean, default=False)
     is_active  = db.Column(db.Boolean, default=True)
+    google_id  = db.Column(db.String(100), unique=True, nullable=True)
+    otp        = db.Column(db.String(6), nullable=True)
+    otp_expiry = db.Column(db.DateTime, nullable=True)
+    email_verified = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     orders     = db.relationship('Order',    backref='user', lazy=True)
     addresses  = db.relationship('Address',  backref='user', lazy=True)
@@ -36,10 +40,12 @@ class Category(db.Model):
     id          = db.Column(db.Integer, primary_key=True)
     name        = db.Column(db.String(100), nullable=False)
     slug        = db.Column(db.String(120), unique=True, nullable=False)
-    icon        = db.Column(db.String(10), default='📦')
     description = db.Column(db.Text)
     image       = db.Column(db.String(200))
     is_active   = db.Column(db.Boolean, default=True)
+    parent_id   = db.Column(db.Integer, db.ForeignKey('categories.id'), nullable=True)
+    
+    children    = db.relationship('Category', backref=db.backref('parent', remote_side=[id]), lazy=True)
     products    = db.relationship('Product', backref='category', lazy=True)
 
     def product_count(self):
@@ -67,8 +73,6 @@ class Product(db.Model):
     original_price = db.Column(db.Float)
     stock        = db.Column(db.Integer, default=0)
     image        = db.Column(db.String(200))
-    flavor       = db.Column(db.String(100))
-    weight       = db.Column(db.String(50))
     rating       = db.Column(db.Float, default=0.0)
     review_count = db.Column(db.Integer, default=0)
     featured     = db.Column(db.Boolean, default=False)
@@ -77,8 +81,13 @@ class Product(db.Model):
     created_at   = db.Column(db.DateTime, default=datetime.utcnow)
     category_id  = db.Column(db.Integer, db.ForeignKey('categories.id'))
     brand_id     = db.Column(db.Integer, db.ForeignKey('brands.id'))
+    
+    product_type = db.Column(db.String(20), default='simple') # 'simple' | 'variable'
+    
     order_items  = db.relationship('OrderItem', backref='product', lazy=True)
     reviews      = db.relationship('Review',    backref='product', lazy=True)
+    images       = db.relationship('ProductImage', backref='product', lazy=True, cascade="all, delete-orphan")
+    variations   = db.relationship('ProductVariation', backref='product', lazy=True, cascade="all, delete-orphan")
 
     def discount_percent(self):
         if self.original_price and self.original_price > self.price:
@@ -86,7 +95,41 @@ class Product(db.Model):
         return 0
 
     def in_stock(self):
+        if self.product_type == 'variable':
+            return any(v.stock > 0 for v in self.variations)
         return self.stock > 0
+
+
+class Attribute(db.Model):
+    __tablename__ = 'attributes'
+    id   = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), nullable=False, unique=True)
+    values = db.relationship('AttributeValue', backref='attribute', lazy=True, cascade="all, delete-orphan")
+
+
+class AttributeValue(db.Model):
+    __tablename__ = 'attribute_values'
+    id           = db.Column(db.Integer, primary_key=True)
+    attribute_id = db.Column(db.Integer, db.ForeignKey('attributes.id'), nullable=False)
+    value        = db.Column(db.String(100), nullable=False)
+
+
+class ProductVariation(db.Model):
+    __tablename__ = 'product_variations'
+    id         = db.Column(db.Integer, primary_key=True)
+    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
+    price      = db.Column(db.Float)
+    stock      = db.Column(db.Integer, default=0)
+    sku        = db.Column(db.String(100), unique=True)
+    image      = db.Column(db.String(200))
+    
+    values = db.relationship('AttributeValue', secondary='variation_value_link', backref='variations')
+
+
+variation_value_link = db.Table('variation_value_link',
+    db.Column('variation_id', db.Integer, db.ForeignKey('product_variations.id'), primary_key=True),
+    db.Column('value_id', db.Integer, db.ForeignKey('attribute_values.id'), primary_key=True)
+)
 
 
 class Address(db.Model):
@@ -138,6 +181,8 @@ class OrderItem(db.Model):
     quantity   = db.Column(db.Integer, nullable=False)
     price      = db.Column(db.Float,   nullable=False)
     total      = db.Column(db.Float,   nullable=False)
+    variation_id = db.Column(db.Integer, db.ForeignKey('product_variations.id'))
+    variation = db.relationship('ProductVariation')
 
 
 class Coupon(db.Model):
@@ -205,3 +250,18 @@ class Banner(db.Model):
     position  = db.Column(db.Integer, default=0)
     is_active = db.Column(db.Boolean, default=True)
     bg_color  = db.Column(db.String(20), default='#0a1628')
+
+
+class ProductImage(db.Model):
+    __tablename__ = 'product_images'
+    id         = db.Column(db.Integer, primary_key=True)
+    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
+    image      = db.Column(db.String(200), nullable=False)
+    position   = db.Column(db.Integer, default=0)
+
+
+class Setting(db.Model):
+    __tablename__ = 'settings'
+    id    = db.Column(db.Integer, primary_key=True)
+    key   = db.Column(db.String(100), unique=True, nullable=False)
+    value = db.Column(db.Text)

@@ -3,21 +3,29 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{% block title %}Admin{% endblock %} | Nutrabay Admin</title>
+<title>{% block title %}Admin{% endblock %} | Curve Sports Admin</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+<link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='images/favicons/apple-touch-icon.png') }}">
+<link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/favicons/favicon-32x32.png') }}">
+<link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='images/favicons/favicon-16x16.png') }}">
+<link rel="manifest" href="{{ url_for('static', filename='images/favicons/site.webmanifest') }}">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 {% block extra_css %}{% endblock %}
 </head>
 <body>
+<div class="mobile-overlay" id="adminOverlay"></div>
 <div class="admin-layout">
 
   <!-- SIDEBAR -->
-  <aside class="sidebar">
+  <aside class="sidebar" id="adminSidebar">
     <div class="sidebar-brand">
-      <div class="sidebar-logo">NUTRABAY<span>™</span></div>
+      <div class="sidebar-logo" style="display:flex; align-items:center; gap:10px">
+        <img src="{{ url_for('static', filename='images/curve-logo.png') }}" alt="Logo" style="height:24px; width:auto; filter:brightness(0) invert(1)">
+        CURVE SPORTS<span>™</span>
+      </div>
       <div class="sidebar-subtitle">Admin Panel</div>
     </div>
     <nav class="sidebar-nav">
@@ -37,6 +45,9 @@
       </a>
       <a href="{{ url_for('admin.banners') }}" class="{{ 'active' if 'banner' in request.endpoint }}">
         <i class="fas fa-images"></i> Banners
+      </a>
+      <a href="{{ url_for('admin.attributes') }}" class="{{ 'active' if 'attribute' in request.endpoint }}">
+        <i class="fas fa-sliders-h"></i> Attributes
       </a>
       <h6>Commerce</h6>
       <a href="{{ url_for('admin.orders') }}" class="{{ 'active' if 'order' in request.endpoint }}">
@@ -81,9 +92,14 @@
   <!-- MAIN -->
   <div class="main-content">
     <header class="admin-header">
-      <div class="page-title">
-        <i class="{% block page_icon %}fas fa-home{% endblock %}"></i>
-        {% block page_title %}Dashboard{% endblock %}
+      <div style="display:flex; align-items:center; gap:15px">
+        <button class="admin-mobile-toggle" id="adminToggle">
+          <i class="fas fa-bars"></i>
+        </button>
+        <div class="page-title">
+          <i class="{% block page_icon %}fas fa-home{% endblock %}"></i>
+          {% block page_title %}Dashboard{% endblock %}
+        </div>
       </div>
       <div class="admin-header-right">
         <a href="{{ url_for('shop.index') }}" target="_blank" class="btn btn-secondary btn-sm">
@@ -115,6 +131,27 @@
 </div>
 
 <script>
+// Admin Sidebar Toggle
+const adminToggle = document.getElementById('adminToggle');
+const adminSidebar = document.getElementById('adminSidebar');
+const adminOverlay = document.getElementById('adminOverlay');
+
+if (adminToggle) {
+  adminToggle.addEventListener('click', () => {
+    adminSidebar.classList.add('active');
+    adminOverlay.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  });
+}
+
+if (adminOverlay) {
+  adminOverlay.addEventListener('click', () => {
+    adminSidebar.classList.remove('active');
+    adminOverlay.classList.remove('active');
+    document.body.style.overflow = '';
+  });
+}
+
 setTimeout(() => {
   document.querySelectorAll('.flash').forEach(el => {
     el.style.transition = 'opacity 0.3s';

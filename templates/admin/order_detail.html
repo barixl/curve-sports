@@ -23,7 +23,13 @@
             <tr>
               <td>
                 <div style="font-weight:600">{{ item.product.name }}</div>
-                <div style="font-size:12px;color:var(--text-3)">{{ item.product.flavor }} · {{ item.product.weight }}</div>
+                <div style="font-size:12px;color:var(--text-3)">
+                  {% if item.variation %}
+                    {% for val in item.variation.values %}
+                      {{ val.attribute.name }}: {{ val.value }}{% if not loop.last %} · {% endif %}
+                    {% endfor %}
+                  {% endif %}
+                </div>
               </td>
               <td>₹{{ "{:,.0f}".format(item.price) }}</td>
               <td>{{ item.quantity }}</td>

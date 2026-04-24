@@ -45,7 +45,17 @@
           <td>
             <span class="badge" style="background:var(--bg)">{{ order.payment_method }}</span>
           </td>
-          <td><span class="status status-{{ order.status }}">{{ order.status }}</span></td>
+          <td>
+            <form action="{{ url_for('admin.update_order_status', id=order.id) }}" method="post" style="display:inline">
+              <select name="status" onchange="this.form.submit()" 
+                      style="padding:4px 8px; border-radius:6px; font-size:12px; font-weight:600; cursor:pointer; border:1px solid var(--border);
+                             background: {% if order.status == 'Pending' %}#fff7ed; color:#9a3412{% elif order.status == 'Delivered' %}#f0fdf4; color:#166534{% elif order.status == 'Cancelled' %}#fef2f2; color:#991b1b{% else %}#f8f9fa; color:var(--text-1){% endif %};">
+                {% for s in status_choices %}
+                <option value="{{ s }}" {{ 'selected' if order.status == s }}>{{ s }}</option>
+                {% endfor %}
+              </select>
+            </form>
+          </td>
           <td style="color:var(--text-3);font-size:13px">{{ order.created_at.strftime('%d %b %Y') }}</td>
           <td>
             <a href="{{ url_for('admin.order_detail', id=order.id) }}" class="btn-icon" title="View"><i class="fas fa-eye"></i></a>

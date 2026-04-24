@@ -3,11 +3,13 @@ from flask_login import login_required, current_user
 from functools import wraps
 from extensions import db
 from models import (User, Product, Category, Brand, Order, OrderItem,
-                    Coupon, Review, Banner)
+                    Coupon, Review, Banner, ProductImage, Setting,
+                    Attribute, AttributeValue, ProductVariation)
 from datetime import datetime, timedelta
 from sqlalchemy import func
 import os, uuid
 from werkzeug.utils import secure_filename
+from slugify import slugify
 
 admin_bp = Blueprint('admin', __name__)
 
@@ -73,10 +75,13 @@ def dashboard():
     order_status_counts = db.session.query(
         Order.status, func.count(Order.id)
     ).group_by(Order.status).all()
+    # Convert Row objects to lists for JSON serialization
+    order_status_counts = [list(r) for r in order_status_counts]
 
     top_products = db.session.query(
         Product.name, func.sum(OrderItem.quantity).label('sold')
     ).join(OrderItem).group_by(Product.id).order_by(func.sum(OrderItem.quantity).desc()).limit(5).all()
+    top_products = [list(r) for r in top_products]
 
     return render_template('admin/dashboard.html',
                            total_orders=total_orders, total_revenue=total_revenue,
@@ -128,18 +133,48 @@ def add_product():
             stock=int(request.form.get('stock', 0)),
             category_id=int(request.form.get('category_id')) if request.form.get('category_id') else None,
             brand_id=int(request.form.get('brand_id')) if request.form.get('brand_id') else None,
-            flavor=request.form.get('flavor', ''),
-            weight=request.form.get('weight', ''),
             featured=request.form.get('featured') == 'on',
             bestseller=request.form.get('bestseller') == 'on',
             is_active=request.form.get('is_active') == 'on',
-            image=img_name
+            image=img_name,
+            product_type=request.form.get('product_type', 'simple')
         )
         db.session.add(p)
+        db.session.flush() # To get product id
+
+        # Multiple Images
+        images_files = request.files.getlist('gallery')
+        for img_file in images_files:
+            if img_file and img_file.filename:
+                saved_name = save_image(img_file, 'products')
+                if saved_name:
+                    pi = ProductImage(product_id=p.id, image=saved_name)
+                    db.session.add(pi)
+
+        # Handle Variations if Variable
+        if p.product_type == 'variable':
+            var_prices = request.form.getlist('var_price[]')
+            var_stocks = request.form.getlist('var_stock[]')
+            var_value_ids = request.form.getlist('var_values[]') # Comma separated IDs "1,5"
+
+            for i in range(len(var_prices)):
+                pv = ProductVariation(
+                    product_id=p.id,
+                    price=float(var_prices[i]) if var_prices[i] else p.price,
+                    stock=int(var_stocks[i]) if var_stocks[i] else 0,
+                    sku=f"{p.slug}-{i}-{uuid.uuid4().hex[:4]}"
+                )
+                if var_value_ids[i]:
+                    # Use set() to ensure unique value IDs per variation
+                    ids = list(set([int(vid) for vid in var_value_ids[i].split(',') if vid]))
+                    vals = AttributeValue.query.filter(AttributeValue.id.in_(ids)).all()
+                    pv.values = vals
+                db.session.add(pv)
+
         db.session.commit()
         flash('Product added successfully!', 'success')
         return redirect(url_for('admin.products'))
-    return render_template('admin/product_form.html', product=None, categories=categories, brands=brands)
+    return render_template('admin/product_form.html', product=None, categories=categories, brands=brands, attributes=Attribute.query.all())
 
 
 @admin_bp.route('/products/edit/<int:id>', methods=['GET', 'POST'])
@@ -159,15 +194,49 @@ def edit_product(id):
         product.stock = int(request.form.get('stock', product.stock))
         product.category_id = int(request.form.get('category_id')) if request.form.get('category_id') else None
         product.brand_id = int(request.form.get('brand_id')) if request.form.get('brand_id') else None
-        product.flavor = request.form.get('flavor', '')
-        product.weight = request.form.get('weight', '')
         product.featured = request.form.get('featured') == 'on'
         product.bestseller = request.form.get('bestseller') == 'on'
         product.is_active = request.form.get('is_active') == 'on'
+        product.product_type = request.form.get('product_type', product.product_type)
+
+        # Multiple Images
+        images_files = request.files.getlist('gallery')
+        for img_file in images_files:
+            if img_file and img_file.filename:
+                saved_name = save_image(img_file, 'products')
+                if saved_name:
+                    pi = ProductImage(product_id=product.id, image=saved_name)
+                    db.session.add(pi)
+
+        # Sync Variations
+        if product.product_type == 'variable':
+            # Use session delete to trigger cascades correctly
+            for v in product.variations[:]:
+                db.session.delete(v)
+            db.session.flush() # Ensure deletions are processed before insertions
+            
+            var_prices = request.form.getlist('var_price[]')
+            var_stocks = request.form.getlist('var_stock[]')
+            var_value_ids = request.form.getlist('var_values[]')
+
+            for i in range(len(var_prices)):
+                pv = ProductVariation(
+                    product_id=product.id,
+                    price=float(var_prices[i]) if var_prices[i] else product.price,
+                    stock=int(var_stocks[i]) if var_stocks[i] else 0,
+                    sku=f"{product.slug}-{i}-{uuid.uuid4().hex[:4]}"
+                )
+                if var_value_ids[i]:
+                    # Use set() to ensure unique value IDs per variation to avoid IntegrityError
+                    ids = list(set([int(vid) for vid in var_value_ids[i].split(',') if vid]))
+                    vals = AttributeValue.query.filter(AttributeValue.id.in_(ids)).all()
+                    pv.values = vals
+                db.session.add(pv)
+
         db.session.commit()
         flash('Product updated!', 'success')
         return redirect(url_for('admin.products'))
-    return render_template('admin/product_form.html', product=product, categories=categories, brands=brands)
+    return render_template('admin/product_form.html', product=product, categories=categories, brands=brands, attributes=Attribute.query.all())
 
 
 @admin_bp.route('/products/delete/<int:id>', methods=['POST'])
@@ -207,9 +276,9 @@ def add_category():
         img_file = request.files.get('image')
         img_name = save_image(img_file, 'categories') if img_file and img_file.filename else None
         cat = Category(name=name, slug=slugify(name),
-                       icon=request.form.get('icon', '📦'),
                        description=request.form.get('description', ''),
                        image=img_name,
+                       parent_id=request.form.get('parent_id', type=int) or None,
                        is_active=request.form.get('is_active') == 'on')
         db.session.add(cat)
         db.session.commit()
@@ -229,8 +298,8 @@ def edit_category(id):
             cat.image = save_image(img_file, 'categories')
         cat.name = request.form.get('name', cat.name)
         cat.slug = slugify(cat.name)
-        cat.icon = request.form.get('icon', cat.icon)
         cat.description = request.form.get('description', cat.description)
+        cat.parent_id = request.form.get('parent_id', type=int) or None
         cat.is_active = request.form.get('is_active') == 'on'
         db.session.commit()
         flash('Category updated!', 'success')
@@ -305,6 +374,57 @@ def delete_brand(id):
     return redirect(url_for('admin.brands'))
 
 
+# ─── ATTRIBUTES ──────────────────────────────────────────────────────────────
+
+@admin_bp.route('/attributes')
+@admin_required
+def attributes():
+    attrs = Attribute.query.all()
+    return render_template('admin/attributes.html', attributes=attrs)
+
+
+@admin_bp.route('/attributes/add', methods=['POST'])
+@admin_required
+def add_attribute():
+    name = request.form.get('name')
+    if name:
+        attr = Attribute(name=name)
+        db.session.add(attr)
+        db.session.commit()
+        flash('Attribute added!', 'success')
+    return redirect(url_for('admin.attributes'))
+
+
+@admin_bp.route('/attributes/<int:id>/add-value', methods=['POST'])
+@admin_required
+def add_attribute_value(id):
+    val = request.form.get('value')
+    if val:
+        av = AttributeValue(attribute_id=id, value=val)
+        db.session.add(av)
+        db.session.commit()
+        flash('Value added!', 'success')
+    return redirect(url_for('admin.attributes'))
+
+
+@admin_bp.route('/attributes/value/delete/<int:id>', methods=['POST'])
+@admin_required
+def delete_attribute_value(id):
+    av = AttributeValue.query.get_or_404(id)
+    db.session.delete(av)
+    db.session.commit()
+    return jsonify({'success': True})
+
+
+@admin_bp.route('/attributes/delete/<int:id>', methods=['POST'])
+@admin_required
+def delete_attribute(id):
+    attr = Attribute.query.get_or_404(id)
+    db.session.delete(attr)
+    db.session.commit()
+    return jsonify({'success': True})
+
+
 # ─── ORDERS ──────────────────────────────────────────────────────────────────
 
 @admin_bp.route('/orders')
@@ -327,15 +447,7 @@ def orders():
                            status_choices=Order.STATUS_CHOICES)
 
 
-@admin_bp.route('/orders/<int:id>')
-@admin_required
-def order_detail(id):
-    order = Order.query.get_or_404(id)
-    return render_template('admin/order_detail.html', order=order,
-                           status_choices=Order.STATUS_CHOICES)
-
-
-@admin_bp.route('/orders/<int:id>/update-status', methods=['POST'])
+@admin_bp.route('/orders/update-status/<int:id>', methods=['POST'])
 @admin_required
 def update_order_status(id):
     order = Order.query.get_or_404(id)
@@ -343,8 +455,16 @@ def update_order_status(id):
     if new_status in Order.STATUS_CHOICES:
         order.status = new_status
         db.session.commit()
-        flash(f'Order status updated to {new_status}.', 'success')
-    return redirect(url_for('admin.order_detail', id=id))
+        flash(f'Order #{order.order_number} status updated to {new_status}', 'success')
+    return redirect(request.referrer or url_for('admin.orders'))
+
+
+@admin_bp.route('/orders/<int:id>')
+@admin_required
+def order_detail(id):
+    order = Order.query.get_or_404(id)
+    return render_template('admin/order_detail.html', order=order,
+                           status_choices=Order.STATUS_CHOICES)
 
 
 # ─── USERS ───────────────────────────────────────────────────────────────────
@@ -548,7 +668,32 @@ def reports():
 @admin_bp.route('/settings', methods=['GET', 'POST'])
 @admin_required
 def settings():
+    from models import Setting
     if request.method == 'POST':
+        # Save all form data to settings table
+        for key, value in request.form.items():
+            if key == 'new_password' or key == 'confirm_password': continue
+            s = Setting.query.filter_by(key=key).first()
+            if not s:
+                s = Setting(key=key)
+                db.session.add(s)
+            s.value = value
+        
+        # Handle password change separately
+        new_pass = request.form.get('new_password')
+        confirm_pass = request.form.get('confirm_password')
+        if new_pass:
+            if new_pass == confirm_pass:
+                current_user.set_password(new_pass)
+            else:
+                flash('Passwords do not match!', 'danger')
+                return redirect(url_for('admin.settings'))
+
+        db.session.commit()
         flash('Settings saved successfully!', 'success')
         return redirect(url_for('admin.settings'))
-    return render_template('admin/settings.html')
+    
+    # Get all settings
+    all_s = Setting.query.all()
+    settings_dict = {s.key: s.value for s in all_s}
+    return render_template('admin/settings.html', settings=settings_dict)

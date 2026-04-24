@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% block title %}Complete Payment - Curve Sports{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 100px 0; text-align: center;">
+    <div class="card" style="max-width: 500px; margin: 0 auto; padding: 40px;">
+        <i class="fas fa-spinner fa-spin fa-3x" style="color: var(--primary); margin-bottom: 20px;"></i>
+        <h2>Processing Your Payment</h2>
+        <p>Please do not refresh or close this page. You are being redirected to our secure payment partner.</p>
+        
+        <form action="{{ url_for('cart.verify_payment') }}" method="POST" id="rzp-form">
+            <input type="hidden" name="razorpay_payment_id" id="razorpay_payment_id">
+            <input type="hidden" name="razorpay_order_id" id="razorpay_order_id">
+            <input type="hidden" name="razorpay_signature" id="razorpay_signature">
+            <input type="hidden" name="order_id" value="{{ order.id }}">
+        </form>
+
+        <button id="rzp-button1" class="btn btn-primary" style="margin-top: 20px;">Pay Now ₹{{ "%.2f"|format(order.final_amount) }}</button>
+    </div>
+</div>
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+var options = {
+    "key": "{{ rzp_key }}",
+    "amount": "{{ rzp_order.amount }}",
+    "currency": "INR",
+    "name": "Curve Sports",
+    "description": "Payment for Order #{{ order.order_number }}",
+    "image": "{{ url_for('static', filename='images/logo.png', _external=True) }}",
+    "order_id": "{{ rzp_order.id }}",
+    "handler": function (response){
+        document.getElementById('razorpay_payment_id').value = response.razorpay_payment_id;
+        document.getElementById('razorpay_order_id').value = response.razorpay_order_id;
+        document.getElementById('razorpay_signature').value = response.razorpay_signature;
+        document.getElementById('rzp-form').submit();
+    },
+    "prefill": {
+        "name": "{{ current_user.name }}",
+        "email": "{{ current_user.email }}",
+        "contact": "{{ current_user.phone or '' }}"
+    },
+    "theme": {
+        "color": "#ff5a00"
+    },
+    "modal": {
+        "ondismiss": function(){
+            window.location.href = "{{ url_for('cart.checkout') }}";
+        }
+    }
+};
+var rzp1 = new Razorpay(options);
+document.getElementById('rzp-button1').onclick = function(e){
+    rzp1.open();
+    e.preventDefault();
+}
+
+// Auto-open on load
+window.onload = function() {
+    document.getElementById('rzp-button1').click();
+};
+</script>
+{% endblock %}

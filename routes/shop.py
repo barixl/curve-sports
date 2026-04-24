@@ -13,8 +13,9 @@ def index():
     categories = Category.query.filter_by(is_active=True).all()
     new_arrivals = Product.query.filter_by(is_active=True).order_by(Product.created_at.desc()).limit(8).all()
     banners = Banner.query.filter_by(is_active=True).order_by(Banner.position).all()
+    brands = Brand.query.filter(Brand.is_active==True, Brand.logo.isnot(None)).all()
     return render_template('shop/index.html', featured=featured, bestsellers=bestsellers,
-                           categories=categories, new_arrivals=new_arrivals, banners=banners)
+                           categories=categories, new_arrivals=new_arrivals, banners=banners, brands=brands)
 
 
 @shop_bp.route('/products')
@@ -28,7 +29,10 @@ def products():
     max_price = request.args.get('max_price', type=float)
 
     query = Product.query.filter_by(is_active=True)
+    on_sale = request.args.get('offers', type=int)
 
+    if on_sale:
+        query = query.filter(Product.original_price > Product.price)
     if search:
         query = query.filter(Product.name.ilike(f'%{search}%'))
     if category_slug:
@@ -62,7 +66,7 @@ def products():
     brands = Brand.query.filter_by(is_active=True).all()
     return render_template('shop/products.html', products=pagination.items, pagination=pagination,
                            categories=categories, brands=brands, selected_cat=cat,
-                           selected_brand=brand, sort=sort, search=search)
+                           selected_brand=brand, sort=sort, search=search, offers=on_sale)
 
 
 @shop_bp.route('/product/<slug>')

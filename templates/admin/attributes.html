@@ -1,0 +1,89 @@
+{% extends 'admin/base.html' %}
+{% block title %}Attributes{% endblock %}
+{% block page_icon %}fas fa-sliders-h{% endblock %}
+{% block page_title %}Product Attributes{% endblock %}
+
+{% block content %}
+<div class="toolbar">
+  <div class="toolbar-left">
+    <p style="color:var(--text-3);font-size:14px">Define global variations that can be applied to products.</p>
+  </div>
+  <button class="btn btn-primary" onclick="openAttrModal()"><i class="fas fa-plus"></i> Create New Attribute</button>
+</div>
+
+<div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap:20px; margin-top:20px;">
+  {% for attr in attributes %}
+  <div class="card" style="margin:0; height:100%; display:flex; flex-direction:column">
+    <div class="card-header" style="padding:15px 20px; display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.02)">
+      <h3 style="margin:0; font-size:16px; display:flex; align-items:center; gap:10px">
+        <i class="fas fa-tag" style="color:var(--primary)"></i> {{ attr.name }}
+      </h3>
+      <button class="btn-icon danger" onclick="deleteAttribute({{ attr.id }})"><i class="fas fa-trash"></i></button>
+    </div>
+    <div class="card-body" style="padding:20px; flex:1">
+      <div style="margin-bottom:15px; font-size:12px; color:var(--text-3); text-transform:uppercase; font-weight:600">Values</div>
+      <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:20px">
+        {% for val in attr.values %}
+        <span class="badge" style="background:var(--bg); border:1px solid var(--border); padding:6px 12px; border-radius:6px; display:flex; align-items:center; gap:8px; font-size:13px">
+          {{ val.value }}
+          <i class="fas fa-times" style="cursor:pointer; font-size:10px; color:var(--danger); opacity:0.6" onclick="deleteValue({{ val.id }}, this)"></i>
+        </span>
+        {% endfor %}
+        {% if not attr.values %}
+        <span style="color:var(--text-3); font-size:13px; font-style:italic">No values added yet</span>
+        {% endif %}
+      </div>
+    </div>
+    <div style="padding:15px 20px; border-top:1px solid var(--border)">
+      <form action="{{ url_for('admin.add_attribute_value', id=attr.id) }}" method="POST" style="display:flex; gap:10px">
+        <input type="text" name="value" class="form-control" placeholder="Add value (e.g. 1kg)" required style="flex:1">
+        <button type="submit" class="btn btn-secondary" style="padding:0 15px"><i class="fas fa-plus"></i></button>
+      </form>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- Attribute Modal -->
+<div id="attrModal" class="modal" style="display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.5); backdrop-filter:blur(4px)">
+  <div class="modal-content" style="background:white; margin:10% auto; padding:30px; border-radius:16px; width:450px; box-shadow:0 20px 25px -5px rgba(0,0,0,0.1)">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:25px">
+      <h3 style="margin:0">Create New Attribute</h3>
+      <i class="fas fa-times" style="cursor:pointer; font-size:20px; color:var(--text-3)" onclick="closeAttrModal()"></i>
+    </div>
+    <form action="{{ url_for('admin.add_attribute') }}" method="POST">
+      <div class="form-group">
+        <label style="margin-bottom:8px; display:block; font-weight:600">Attribute Name</label>
+        <input type="text" name="name" class="form-control" placeholder="e.g. Flavor, Size, Weight" required style="height:45px">
+        <small style="color:var(--text-3); display:block; margin-top:5px">This name will be used to group values in the product section.</small>
+      </div>
+      <button type="submit" class="btn btn-primary" style="width:100%; height:45px; margin-top:20px; font-weight:700">Create Attribute</button>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function openAttrModal() { document.getElementById('attrModal').style.display = 'block'; }
+function closeAttrModal() { document.getElementById('attrModal').style.display = 'none'; }
+
+function deleteValue(id, el) {
+  if(!confirm('Remove this value?')) return;
+  fetch(`/admin/attributes/value/delete/${id}`, {method:'POST'})
+    .then(r => r.json())
+    .then(data => {
+      if(data.success) el.parentElement.remove();
+    });
+}
+
+function deleteAttribute(id) {
+  if(!confirm('Delete this attribute? All related variation values in products will be affected.')) return;
+  fetch(`/admin/attributes/delete/${id}`, {method:'POST'})
+    .then(r => r.json())
+    .then(data => {
+      if(data.success) location.reload();
+    });
+}
+</script>
+{% endblock %}

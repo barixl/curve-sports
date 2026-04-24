@@ -1,8 +1,8 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify
 from flask_login import current_user, login_required
 from extensions import db
-from models import Product, Order, OrderItem, Address, Coupon
-import json
+from models import Product, Order, OrderItem, Address, Coupon, Setting
+import json, razorpay
 
 cart_bp = Blueprint('cart', __name__)
 
@@ -144,11 +144,16 @@ def checkout():
     grand_total = subtotal + delivery - coupon_discount
     addresses = Address.query.filter_by(user_id=current_user.id).all()
 
+    # Get Razorpay Keys
+    razorpay_key = Setting.query.filter_by(key='razorpay_key_id').first()
+    razorpay_enabled = Setting.query.filter_by(key='enable_online').first()
+
     if request.method == 'POST':
         address_id = request.form.get('address_id', type=int)
         payment_method = request.form.get('payment_method', 'COD')
+        
+        # ... (rest of the address logic remains same)
         new_addr = request.form.get('new_address') == 'on'
-
         if new_addr or not address_id:
             addr = Address(
                 user_id=current_user.id,
@@ -181,7 +186,7 @@ def checkout():
             coupon_code=session.get('coupon_code', ''),
             address_id=address_id,
             address_snapshot=addr_snapshot,
-            status='Confirmed' if payment_method == 'COD' else 'Pending'
+            status='Pending' # Always pending until COD confirmed or Online paid
         )
         order.generate_order_number()
         db.session.add(order)
@@ -189,31 +194,107 @@ def checkout():
 
         for item in items:
             oi = OrderItem(
-                order_id=order.id,
-                product_id=item['product'].id,
-                quantity=item['qty'],
-                price=item['product'].price,
-                total=item['total']
+                order_id=order.id, product_id=item['product'].id,
+                quantity=item['qty'], price=item['product'].price, total=item['total']
             )
             db.session.add(oi)
-            item['product'].stock -= item['qty']
 
-        if session.get('coupon_id'):
-            c = Coupon.query.get(session['coupon_id'])
-            if c:
-                c.used_count += 1
+        if payment_method == 'COD':
+            order.status = 'Confirmed'
+            # Reduce stock for COD
+            for item in items:
+                item['product'].stock -= item['qty']
+            if session.get('coupon_id'):
+                c = Coupon.query.get(session['coupon_id'])
+                if c: c.used_count += 1
+            
+            db.session.commit()
+            session['cart'] = {}
+            # ... cleanup session
+            session.pop('coupon_code', None); session.pop('coupon_discount', None); session.pop('coupon_id', None)
+            flash(f'Order #{order.order_number} placed successfully!', 'success')
+            return redirect(url_for('cart.order_success', order_id=order.id))
+        
+        else:
+            # Online Payment - Create Razorpay Order
+            rzp_key = Setting.query.filter_by(key='razorpay_key_id').first()
+            rzp_secret = Setting.query.filter_by(key='razorpay_key_secret').first()
+            
+            if not rzp_key or not rzp_secret:
+                flash('Online payment is currently unavailable.', 'danger')
+                return redirect(url_for('cart.checkout'))
 
-        db.session.commit()
-        session['cart'] = {}
-        session.pop('coupon_code', None)
-        session.pop('coupon_discount', None)
-        session.pop('coupon_id', None)
-        flash(f'Order #{order.order_number} placed successfully!', 'success')
-        return redirect(url_for('cart.order_success', order_id=order.id))
+            client = razorpay.Client(auth=(rzp_key.value, rzp_secret.value))
+            data = {
+                "amount": int(grand_total * 100), # amount in paise
+                "currency": "INR",
+                "receipt": order.order_number
+            }
+            rzp_order = client.order.create(data=data)
+            db.session.commit() # Save the order first
+            
+            return render_template('shop/razorpay_checkout.html', 
+                                   order=order, 
+                                   rzp_order=rzp_order, 
+                                   rzp_key=rzp_key.value)
 
     return render_template('shop/checkout.html', items=items, subtotal=subtotal,
                            delivery=delivery, coupon_discount=coupon_discount,
-                           grand_total=grand_total, addresses=addresses)
+                           grand_total=grand_total, addresses=addresses,
+                           razorpay_enabled=(razorpay_enabled.value == 'on' if razorpay_enabled else False))
+
+
+@cart_bp.route('/order/verify', methods=['POST'])
+@login_required
+def verify_payment():
+    razorpay_payment_id = request.form.get('razorpay_payment_id')
+    razorpay_order_id = request.form.get('razorpay_order_id')
+    razorpay_signature = request.form.get('razorpay_signature')
+    order_id = request.form.get('order_id')
+    
+    order = Order.query.get_or_404(order_id)
+    
+    rzp_key = Setting.query.filter_by(key='razorpay_key_id').first()
+    rzp_secret = Setting.query.filter_by(key='razorpay_key_secret').first()
+    
+    client = razorpay.Client(auth=(rzp_key.value, rzp_secret.value))
+    
+    params_dict = {
+        'razorpay_order_id': razorpay_order_id,
+        'razorpay_payment_id': razorpay_payment_id,
+        'razorpay_signature': razorpay_signature
+    }
+    
+    try:
+        # Verify the payment signature
+        client.utility.verify_payment_signature(params_dict)
+        
+        # Payment successful
+        order.status = 'Confirmed'
+        order.payment_status = 'Paid'
+        
+        # Reduce stock
+        for item in order.items:
+            item.product.stock -= item.quantity
+        
+        # Mark coupon as used
+        if order.coupon_code:
+            c = Coupon.query.filter_by(code=order.coupon_code).first()
+            if c: c.used_count += 1
+            
+        db.session.commit()
+        session['cart'] = {}
+        session.pop('coupon_code', None); session.pop('coupon_discount', None); session.pop('coupon_id', None)
+        
+        flash('Payment successful! Your order has been placed.', 'success')
+        return redirect(url_for('cart.order_success', order_id=order.id))
+        
+    except Exception as e:
+        # Payment failed or signature mismatch
+        order.status = 'Failed'
+        db.session.commit()
+        flash('Payment verification failed. Please try again or contact support.', 'danger')
+        return redirect(url_for('cart.checkout'))
 
 
 @cart_bp.route('/order/success/<int:order_id>')

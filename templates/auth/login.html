@@ -1,11 +1,11 @@
 {% extends 'base.html' %}
-{% block title %}Login — Nutrabay{% endblock %}
+{% block title %}Login — Curve Sports{% endblock %}
 
 {% block content %}
 <div style="min-height:70vh;display:flex;align-items:center;justify-content:center;padding:40px 20px">
   <div style="width:100%;max-width:440px">
     <div style="text-align:center;margin-bottom:32px">
-      <div style="font-family:var(--font-head);font-size:32px;font-weight:700;color:var(--dark);letter-spacing:2px;margin-bottom:6px">NUTRABAY™</div>
+      <div style="font-family:var(--font-head);font-size:32px;font-weight:700;color:var(--dark);letter-spacing:2px;margin-bottom:6px">CURVE SPORTS™</div>
       <h2 style="font-size:22px;font-weight:600;color:var(--text)">Welcome back</h2>
       <p style="color:var(--text-3);font-size:14px">Login to your account to continue</p>
     </div>
@@ -41,12 +41,22 @@
           <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px">
             <input type="checkbox" name="remember" style="accent-color:var(--primary)"> Remember me
           </label>
-          <a href="#" style="font-size:14px;color:var(--primary);font-weight:600">Forgot password?</a>
+          <a href="{{ url_for('auth.forgot_password') }}" style="font-size:14px;color:var(--primary);font-weight:600">Forgot password?</a>
         </div>
 
         <button type="submit" class="btn btn-primary btn-block" style="padding:14px;font-size:16px">
           <i class="fas fa-sign-in-alt"></i> Login
         </button>
+
+        <div style="text-align:center;margin:20px 0;position:relative">
+          <span style="background:white;padding:0 10px;position:relative;z-index:1;font-size:13px;color:var(--text-3)">OR</span>
+          <div style="position:absolute;top:50%;left:0;width:100%;height:1px;background:var(--border)"></div>
+        </div>
+
+        <a href="{{ url_for('auth.google_login') }}" class="btn btn-block" style="background:#fff;border:1px solid #dadce0;color:#3c4043;padding:12px;font-size:14px;display:flex;align-items:center;justify-content:center;gap:10px">
+          <svg width="18" height="18" viewBox="0 0 18 18"><path d="M17.64 9.2c0-.63-.06-1.25-.16-1.84H9v3.49h4.84c-.21 1.12-.84 2.07-1.79 2.71v2.25h2.91c1.71-1.58 2.68-3.91 2.68-6.61z" fill="#4285F4"/><path d="M9 18c2.43 0 4.47-.81 5.96-2.18l-2.91-2.25c-.81.54-1.85.86-3.05.86-2.34 0-4.33-1.58-5.04-3.71H.95v2.33C2.43 15.89 5.5 18 9 18z" fill="#34A853"/><path d="M3.96 10.71c-.18-.54-.28-1.12-.28-1.71s.1-1.17.28-1.71V4.96H.95C.35 6.17 0 7.55 0 9s.35 2.83.95 4.04l3.01-2.33z" fill="#FBBC05"/><path d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58C13.47.89 11.43 0 9 0 5.5 0 2.43 2.11.95 5.16L3.96 7.5c.71-2.13 2.7-3.92 5.04-3.92z" fill="#EA4335"/></svg>
+          Continue with Google
+        </a>
       </form>
 
       <div style="text-align:center;margin-top:24px;padding-top:24px;border-top:1px solid var(--border)">
@@ -58,7 +68,7 @@
       <!-- Demo credentials -->
       <div style="margin-top:16px;background:#fff5f5;border:1px dashed var(--primary);border-radius:8px;padding:12px;font-size:13px">
         <p style="font-weight:700;color:var(--primary);margin-bottom:6px"><i class="fas fa-info-circle"></i> Demo Credentials</p>
-        <p style="color:var(--text-2)">Admin: <strong>admin@nutrabay.com</strong> / <strong>admin123</strong></p>
+        <p style="color:var(--text-2)">Admin: <strong>admin@curvesports.com</strong> / <strong>admin123</strong></p>
       </div>
     </div>
   </div>

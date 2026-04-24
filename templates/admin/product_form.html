@@ -20,7 +20,7 @@
         <div class="card-body">
           <div class="form-group full" style="margin-bottom:16px">
             <label>Product Name *</label>
-            <input type="text" name="name" class="form-control" required value="{{ product.name if product else '' }}" placeholder="e.g. Nutrabay Gold 100% Whey Protein">
+            <input type="text" name="name" class="form-control" required value="{{ product.name if product else '' }}" placeholder="e.g. Curve Gold 100% Whey Protein">
           </div>
           <div class="form-group full">
             <label>Description</label>
@@ -35,25 +35,86 @@
           <div class="form-grid">
             <div class="form-group">
               <label>Selling Price (₹) *</label>
-              <input type="number" name="price" class="form-control" required min="0" step="0.01"
-                     value="{{ product.price if product else '' }}" placeholder="0.00">
+              <input type="number" name="price" class="form-control" 
+                     value="{{ product.price if product else 0 }}" step="0.01" required>
+              <small style="color:var(--text-3); display:block; margin-top:5px">For variable products, this acts as the <strong>Base Price</strong>.</small>
             </div>
             <div class="form-group">
               <label>Original / MRP (₹)</label>
               <input type="number" name="original_price" class="form-control" min="0" step="0.01"
                      value="{{ product.original_price if product else '' }}" placeholder="0.00">
             </div>
-            <div class="form-group">
-              <label>Stock Quantity *</label>
-              <input type="number" name="stock" class="form-control" required min="0"
+            <div id="mainStockGroup" class="form-group" style="display: {{ 'none' if product and product.product_type == 'variable' else 'block' }}">
+              <label>Inventory / Stock</label>
+              <input type="number" name="stock" class="form-control"
                      value="{{ product.stock if product else 0 }}">
+              <small style="color:var(--text-3); display:block; margin-top:5px">Ignored if using Variations.</small>
             </div>
           </div>
         </div>
       </div>
 
-      <div class="card">
+      <div class="card" style="margin-bottom:20px">
         <div class="card-header"><h3>Product Details</h3></div>
+        <div class="card-body">
+          <div class="form-group">
+            <label>Product Type</label>
+            <select name="product_type" id="productType" class="form-control" onchange="toggleProductType()">
+              <option value="simple" {{ 'selected' if product and product.product_type == 'simple' }}>Simple Product</option>
+              <option value="variable" {{ 'selected' if product and product.product_type == 'variable' }}>Variable Product</option>
+            </select>
+          </div>
+          
+          <!-- VARIABLE PRODUCT SECTION -->
+          <div id="variableSection" style="display: {{ 'block' if product and product.product_type == 'variable' else 'none' }}; margin-top: 20px; border-top: 1px solid var(--border); padding-top: 20px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+              <h4 style="margin:0">Product Variations</h4>
+              <button type="button" class="btn btn-sm" onclick="addVariationRow()" style="background:var(--primary); color:white"><i class="fas fa-plus"></i> Add Variation</button>
+            </div>
+            
+            <div class="table-container" style="border:1px solid var(--border); border-radius:8px; overflow-x:auto">
+              <table style="margin:0; min-width:800px">
+                <thead style="background:#f8f9fa">
+                  <tr>
+                    {% for attr in attributes %}
+                    <th style="min-width:150px">{{ attr.name }}</th>
+                    {% endfor %}
+                    <th style="width:120px">Price (₹)</th>
+                    <th style="width:100px">Stock</th>
+                    <th style="width:40px"></th>
+                  </tr>
+                </thead>
+                <tbody id="variationsContainer">
+                  {% if product and product.product_type == 'variable' %}
+                    {% for var in product.variations %}
+                    <tr class="variation-row">
+                      {% for attr in attributes %}
+                      <td>
+                        <select class="form-control attr-select" onchange="syncVarValues(this)">
+                          <option value="">— Select —</option>
+                          {% for val in attr.values %}
+                          <option value="{{ val.id }}" {% if val in var.values %}selected{% endif %}>{{ val.value }}</option>
+                          {% endfor %}
+                        </select>
+                      </td>
+                      {% endfor %}
+                      <input type="hidden" name="var_values[]" value="{{ var.values|map(attribute='id')|join(',') }}">
+                      <td><input type="number" name="var_price[]" class="form-control" value="{{ var.price }}" step="0.01"></td>
+                      <td><input type="number" name="var_stock[]" class="form-control" value="{{ var.stock }}"></td>
+                      <td><button type="button" class="btn-icon danger" onclick="this.closest('tr').remove()"><i class="fas fa-times"></i></button></td>
+                    </tr>
+                    {% endfor %}
+                  {% endif %}
+                </tbody>
+              </table>
+            </div>
+            <p style="font-size:12px; color:var(--text-3); margin-top:10px"><i class="fas fa-info-circle"></i> Each row represents a unique combination (e.g. Chocolate + 1kg).</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="card">
+        <div class="card-header"><h3>Classification</h3></div>
         <div class="card-body">
           <div class="form-grid">
             <div class="form-group">
@@ -74,16 +135,6 @@
                 {% endfor %}
               </select>
             </div>
-            <div class="form-group">
-              <label>Flavor / Variant</label>
-              <input type="text" name="flavor" class="form-control"
-                     value="{{ product.flavor if product else '' }}" placeholder="e.g. Chocolate, Vanilla">
-            </div>
-            <div class="form-group">
-              <label>Weight / Size</label>
-              <input type="text" name="weight" class="form-control"
-                     value="{{ product.weight if product else '' }}" placeholder="e.g. 1kg, 250g">
-            </div>
           </div>
         </div>
       </div>
@@ -92,7 +143,7 @@
     <!-- RIGHT -->
     <div>
       <div class="card" style="margin-bottom:20px">
-        <div class="card-header"><h3>Product Image</h3></div>
+        <div class="card-header"><h3>Main Product Image</h3></div>
         <div class="card-body">
           {% if product and product.image %}
           <div style="text-align:center;margin-bottom:12px">
@@ -102,11 +153,31 @@
           {% endif %}
           <div class="img-upload" onclick="document.getElementById('imgInput').click()">
             <i class="fas fa-cloud-upload-alt"></i>
-            <p>Click to upload image<br><small>PNG, JPG, WebP up to 16MB</small></p>
+            <p>Click to upload main image<br><small>PNG, JPG, WebP up to 16MB</small></p>
           </div>
           <input type="file" id="imgInput" name="image" accept="image/*" style="display:none"
                  onchange="previewImg(this)">
           <img id="imgPreview" class="img-preview" style="display:none;margin-top:10px">
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:20px">
+        <div class="card-header"><h3>Product Gallery (Additional Photos)</h3></div>
+        <div class="card-body">
+          <div id="galleryPreviewContainer" style="display:grid;grid-template-columns:repeat(auto-fill, minmax(80px, 1fr));gap:10px;margin-bottom:15px">
+            {% if product %}
+              {% for img in product.images %}
+              <div class="gallery-item" style="position:relative; border: 1px solid var(--border); border-radius: 4px; overflow: hidden;">
+                <img src="{{ url_for('static', filename='images/products/' + img.image) }}" style="width:100%;height:80px;object-fit:cover;">
+              </div>
+              {% endfor %}
+            {% endif %}
+          </div>
+          <div class="img-upload" onclick="document.getElementById('galleryInput').click()" style="padding: 20px; font-size: 13px;">
+            <i class="fas fa-images"></i>
+            <p>Add more photos<br><small>Multiple files allowed</small></p>
+          </div>
+          <input type="file" id="galleryInput" name="gallery" accept="image/*" multiple style="display:none" onchange="previewGallery(this)">
         </div>
       </div>
 
@@ -144,6 +215,55 @@
 
 {% block extra_js %}
 <script>
+function toggleProductType() {
+  const type = document.getElementById('productType').value;
+  const simple = document.getElementById('simplePriceStock');
+  const variable = document.getElementById('variableSection');
+  
+  if (type === 'variable') {
+    simple.style.display = 'none';
+    variable.style.display = 'block';
+  } else {
+    simple.style.display = 'contents';
+    variable.style.display = 'none';
+  }
+}
+
+function syncVarValues(el) {
+  const row = el.closest('tr');
+  const selects = row.querySelectorAll('.attr-select');
+  const values = Array.from(selects).map(s => s.value).filter(v => v !== "");
+  row.querySelector('input[name="var_values[]"]').value = values.join(',');
+}
+
+function addVariationRow() {
+  const container = document.getElementById('variationsContainer');
+  const row = document.createElement('tr');
+  row.className = 'variation-row';
+  
+  let attrColumns = '';
+  {% for attr in attributes %}
+    attrColumns += `
+      <td>
+        <select class="form-control attr-select" onchange="syncVarValues(this)">
+          <option value="">— Select —</option>
+          {% for val in attr.values %}
+          <option value="{{ val.id }}">{{ val.value }}</option>
+          {% endfor %}
+        </select>
+      </td>`;
+  {% endfor %}
+
+  row.innerHTML = `
+    ${attrColumns}
+    <input type="hidden" name="var_values[]" value="">
+    <td><input type="number" name="var_price[]" class="form-control" placeholder="Price" step="0.01"></td>
+    <td><input type="number" name="var_stock[]" class="form-control" placeholder="Stock"></td>
+    <td><button type="button" class="btn-icon danger" onclick="this.closest('tr').remove()"><i class="fas fa-times"></i></button></td>
+  `;
+  container.appendChild(row);
+}
+
 function previewImg(input) {
   if (input.files && input.files[0]) {
     const reader = new FileReader();
@@ -153,6 +273,25 @@ function previewImg(input) {
       preview.style.display = 'block';
     };
     reader.readAsDataURL(input.files[0]);
+  }
+}
+
+function previewGallery(input) {
+  const container = document.getElementById('galleryPreviewContainer');
+  // Only clear new previews, keep existing ones if any logic is added later
+  // For now, let's just show what's being uploaded
+  if (input.files) {
+    Array.from(input.files).forEach(file => {
+      const reader = new FileReader();
+      reader.onload = e => {
+        const div = document.createElement('div');
+        div.className = 'gallery-item new-preview';
+        div.style.cssText = 'position:relative; border: 1px solid var(--primary); border-radius: 4px; overflow: hidden; opacity: 0.8;';
+        div.innerHTML = `<img src="${e.target.result}" style="width:100%;height:80px;object-fit:cover;">`;
+        container.appendChild(div);
+      };
+      reader.readAsDataURL(file);
+    });
   }
 }
 </script>

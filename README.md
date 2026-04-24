@@ -1,6 +1,6 @@
-# Nutrabay Clone — Flask E-Commerce Store
+# Curve Sports — Flask E-Commerce Store
 
-A full-featured e-commerce web application inspired by Nutrabay.com, built with Flask.
+A full-featured e-commerce web application inspired by curvesports.com, built with Flask.
 
 ---
 
@@ -64,7 +64,7 @@ The app will start at: **http://localhost:5000**
 
 | Role  | Email                   | Password   |
 |-------|-------------------------|------------|
-| Admin | admin@nutrabay.com      | admin123   |
+| Admin | admin@curvesports.com      | admin123   |
 
 - **Admin Panel:** http://localhost:5000/admin
 - **Register** a new customer account at: http://localhost:5000/register
@@ -74,7 +74,7 @@ The app will start at: **http://localhost:5000**
 ## 🗂️ Project Structure
 
 ```
-nutrabay_clone/
+curvesports_clone/
 ├── app.py              # App factory, DB init, seed data
 ├── run.py              # Entry point
 ├── models.py           # SQLAlchemy models
@@ -96,7 +96,7 @@ nutrabay_clone/
 │   │   └── admin.css   # Admin panel styles
 │   └── images/         # Uploaded product/category/brand images
 └── instance/
-    └── nutrabay.db     # SQLite database (auto-created)
+    └── curvesports.db     # SQLite database (auto-created)
 ```
 
 ---
@@ -115,11 +115,11 @@ nutrabay_clone/
 
 In `app.py`, change:
 ```python
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///nutrabay.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///curvesports.db'
 ```
 to:
 ```python
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://user:password@localhost/nutrabay'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://user:password@localhost/curvesports'
 ```
 Then run `pip install psycopg2-binary`.
 
