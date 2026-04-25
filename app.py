@@ -4,7 +4,7 @@ import os
 
 
 def create_app():
-    app = Flask(__name__)
+    app = Flask(__name__, static_folder='static')
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'curvesports-secret-key-change-in-prod')
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///curvesports.db'
     if os.environ.get('VERCEL'):
