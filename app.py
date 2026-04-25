@@ -19,8 +19,8 @@ def create_app():
         api_secret=app.config['CLOUDINARY_API_SECRET'],
         secure=True
     )
-    if os.environ.get('VERCEL'):
-        # Move DB to /tmp for Vercel as the rest of the FS is read-only
+    if os.environ.get('VERCEL') and not os.environ.get('DATABASE_URL'):
+        # Only move to /tmp if using the default local SQLite on Vercel
         app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/curvesports.db'
     app.config['UPLOAD_FOLDER'] = os.path.join(app.static_folder, 'images', 'products')
 
