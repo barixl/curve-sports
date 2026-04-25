@@ -140,29 +140,38 @@ startAutoSlide();
   </div>
 </section>
 
-<!-- CATEGORIES -->
-<section class="section">
+<!-- CATEGORIES HIERARCHY -->
+{% for parent in categories %}
+<section class="section category-section" style="padding: 40px 0; {% if loop.index is even %}background: #fafafa;{% endif %}">
   <div class="container">
-    <div class="section-header">
-      <h2 class="section-title">Shop by Category</h2>
-      <a href="{{ url_for('shop.products') }}" class="view-all">View All <i class="fas fa-arrow-right"></i></a>
+    <div class="section-header" style="margin-bottom: 25px;">
+      <h2 class="section-title" style="display:flex; align-items:center; gap:10px;">
+        {{ parent.name }}
+        <a href="{{ url_for('shop.products', category=parent.slug) }}" style="font-size: 14px; color: var(--primary); font-weight: 500; display: flex; align-items:center; gap:5px; margin-left: 10px;">
+          All <i class="fas fa-chevron-right" style="font-size:10px;"></i>
+        </a>
+      </h2>
     </div>
-    <div class="cat-grid">
-      {% for cat in categories %}
-      <a href="{{ url_for('shop.products', category=cat.slug) }}" class="cat-card">
-        <div class="cat-icon">
-          {% if cat.image %}
-            <img src="{{ url_for('static', filename='images/categories/' + cat.image) }}" alt="{{ cat.name }}">
+    
+    <div class="subcategory-grid">
+      {% for sub in parent.children %}
+      <a href="{{ url_for('shop.products', category=sub.slug) }}" class="subcategory-card">
+        <div class="subcategory-icon">
+          {% if sub.image %}
+            <img src="{{ url_for('static', filename='images/categories/' + sub.image) }}" alt="{{ sub.name }}">
           {% else %}
-            {{ cat.icon }}
+            <div class="subcategory-placeholder">
+               <i class="fas fa-pills"></i>
+            </div>
           {% endif %}
         </div>
-        <div class="cat-name">{{ cat.name }}</div>
+        <div class="subcategory-name">{{ sub.name }}</div>
       </a>
       {% endfor %}
     </div>
   </div>
 </section>
+{% endfor %}
 
 <!-- FEATURED PRODUCTS -->
 {% if featured %}

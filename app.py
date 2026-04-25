@@ -94,19 +94,59 @@ def _seed_data():
     )
     db.session.add(admin)
 
-    # Categories
-    cats = [
-        Category(name='Whey Protein',  slug='whey-protein',  description='High quality whey protein supplements'),
-        Category(name='Creatine',      slug='creatine',      description='Pure creatine monohydrate'),
-        Category(name='Pre Workout',   slug='pre-workout',   description='Energy & focus pre-workout'),
-        Category(name='Mass Gainer',   slug='mass-gainer',   description='Weight & mass gainer supplements'),
-        Category(name='Multivitamins', slug='multivitamins', description='Daily vitamins & minerals'),
-        Category(name='BCAA',          slug='bcaa',          description='Branched Chain Amino Acids'),
-        Category(name='Fat Burner',    slug='fat-burner',    description='Weight loss & fat burning'),
-        Category(name='Protein Bars',  slug='protein-bars',  description='On the go protein snacks'),
+    # Clear old categories to avoid mess during development update
+    # In production, we'd use a migration or careful update
+    Category.query.delete()
+    
+    # 1. Performance Nutrition
+    perf = Category(name='Performance Nutrition', slug='performance-nutrition', description='Supplements for athletic performance')
+    db.session.add(perf)
+    db.session.flush()
+    
+    perf_subs = [
+        ('Whey Protein', 'whey-protein'),
+        ('Pea & Plant Protein', 'plant-protein'),
+        ('Yeast Protein', 'yeast-protein'),
+        ('Creatine', 'creatine'),
+        ('Pre Workout', 'pre-workout'),
+        ('Mass & Weight Gainer', 'mass-gainer'),
+        ('L Carnitine', 'l-carnitine'),
+        ('BCAA', 'bcaa')
     ]
-    for c in cats:
-        db.session.add(c)
+    for name, slug in perf_subs:
+        db.session.add(Category(name=name, slug=slug, parent_id=perf.id))
+
+    # 2. Vitamins
+    vit = Category(name='Vitamins', slug='vitamins', description='Essential vitamins and minerals')
+    db.session.add(vit)
+    db.session.flush()
+    
+    vit_subs = [
+        ('Fish Oil', 'fish-oil'),
+        ('Multivitamins', 'multivitamins'),
+        ('Magnesium', 'magnesium'),
+        ('Single Vitamins', 'single-vitamins'),
+        ('Shilajit', 'shilajit'),
+        ('Collagen', 'collagen'),
+        ('Ashwagandha', 'ashwagandha'),
+        ('Pre & Probiotics', 'probiotics')
+    ]
+    for name, slug in vit_subs:
+        db.session.add(Category(name=name, slug=slug, parent_id=vit.id))
+
+    # 3. Health Food
+    health = Category(name='Health Food', slug='health-food', description='Healthy snacks and ingredients')
+    db.session.add(health)
+    db.session.flush()
+    
+    health_subs = [
+        ('Protein Oats', 'protein-oats'),
+        ('Peanut Butter', 'peanut-butter'),
+        ('Apple Cider Vinegar (ACV)', 'acv'),
+        ('Protein Bars', 'protein-bars')
+    ]
+    for name, slug in health_subs:
+        db.session.add(Category(name=name, slug=slug, parent_id=health.id))
 
     # Brands
     brands = [
