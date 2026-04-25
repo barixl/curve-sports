@@ -129,70 +129,70 @@ def _seed_data():
             name='Curve Gold 100% Whey Protein', slug='curve-gold-whey-protein',
             description='Premium whey protein concentrate with 24g protein per serving. Ideal for muscle building and recovery.',
             price=1999, original_price=2999, stock=150, category_id=1, brand_id=1,
-            flavor='Chocolate', weight='1kg', rating=4.5, review_count=2341, featured=True, bestseller=True,
+            rating=4.5, review_count=2341, featured=True, bestseller=True,
             image=product_images[0]
         ),
         Product(
             name='ON Gold Standard 100% Whey', slug='on-gold-standard-whey',
             description="World's best selling whey protein. 24g blended protein, 5.5g BCAAs per serving.",
             price=4299, original_price=5499, stock=80, category_id=1, brand_id=2,
-            flavor='Double Rich Chocolate', weight='2kg', rating=4.8, review_count=8921, featured=True, bestseller=True,
+            rating=4.8, review_count=8921, featured=True, bestseller=True,
             image=product_images[1]
         ),
         Product(
             name='MuscleBlaze Biozyme Whey', slug='muscleblaze-biozyme-whey',
             description='Enhanced absorption whey protein with protease enzyme blend.',
             price=2799, original_price=3599, stock=200, category_id=1, brand_id=3,
-            flavor='Rich Chocolate', weight='1kg', rating=4.4, review_count=5612, featured=True,
+            rating=4.4, review_count=5612, featured=True,
             image=product_images[2]
         ),
         Product(
             name='Curve Pure Creatine Monohydrate', slug='curve-creatine-mono',
             description='100% pure micronized creatine monohydrate. 3g per serving for strength and power.',
             price=499, original_price=799, stock=300, category_id=2, brand_id=1,
-            flavor='Unflavoured', weight='250g', rating=4.6, review_count=3210, bestseller=True,
+            rating=4.6, review_count=3210, bestseller=True,
             image=product_images[0]
         ),
         Product(
             name='MyProtein Impact Whey', slug='myprotein-impact-whey',
             description="Europe's best selling protein powder with 21g protein per serving.",
             price=2199, original_price=2999, stock=120, category_id=1, brand_id=4,
-            flavor='Vanilla', weight='1kg', rating=4.3, review_count=4100,
+            rating=4.3, review_count=4100,
             image=product_images[1]
         ),
         Product(
             name='Curve Pre-Workout Ignite', slug='curve-preworkout-ignite',
             description='Explosive pre-workout formula with caffeine, beta-alanine and citrulline.',
             price=999, original_price=1499, stock=90, category_id=3, brand_id=1,
-            flavor='Watermelon', weight='300g', rating=4.2, review_count=1890, featured=True,
+            rating=4.2, review_count=1890, featured=True,
             image=product_images[2]
         ),
         Product(
             name='AS-IT-IS Whey Protein Concentrate', slug='as-it-is-whey',
             description='Pure, unadulterated whey protein concentrate 80%. No additives, no fillers.',
             price=1599, original_price=2199, stock=250, category_id=1, brand_id=6,
-            flavor='Unflavoured', weight='1kg', rating=4.5, review_count=7823, bestseller=True,
+            rating=4.5, review_count=7823, bestseller=True,
             image=product_images[0]
         ),
         Product(
             name='MuscleBlaze Mass Gainer XXL', slug='muscleblaze-mass-gainer-xxl',
             description='60g protein and 1000+ calories per serving for extreme mass gain.',
             price=1799, original_price=2399, stock=60, category_id=4, brand_id=3,
-            flavor='Chocolate', weight='3kg', rating=4.1, review_count=3456,
+            rating=4.1, review_count=3456,
             image=product_images[1]
         ),
         Product(
             name='Curve Wellness BCAA 2:1:1', slug='curve-bcaa',
             description='Pure BCAA in 2:1:1 ratio for muscle recovery and endurance.',
             price=799, original_price=1199, stock=180, category_id=6, brand_id=1,
-            flavor='Mango', weight='200g', rating=4.3, review_count=1230,
+            rating=4.3, review_count=1230,
             image=product_images[2]
         ),
         Product(
             name='ON Opti-Men Multivitamin', slug='on-opti-men-multivitamin',
             description='Complete multivitamin for active men with 75+ ingredients.',
             price=1899, original_price=2499, stock=100, category_id=5, brand_id=2,
-            flavor='N/A', weight='90 tablets', rating=4.7, review_count=4532, featured=True,
+            rating=4.7, review_count=4532, featured=True,
             image=product_images[0]
         ),
     ]
