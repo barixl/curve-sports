@@ -31,7 +31,7 @@
 
       <div class="card" style="margin-bottom:20px">
         <div class="card-header"><h3>Pricing & Inventory</h3></div>
-        <div class="card-body">
+        <div class="card-body" id="simplePriceStock">
           <div class="form-grid">
             <div class="form-group">
               <label>Selling Price (₹) *</label>
@@ -76,6 +76,7 @@
               <table style="margin:0; min-width:800px">
                 <thead style="background:#f8f9fa">
                   <tr>
+                    <th style="width:80px">Primary</th>
                     {% for attr in attributes %}
                     <th style="min-width:150px">{{ attr.name }}</th>
                     {% endfor %}
@@ -88,6 +89,10 @@
                   {% if product and product.product_type == 'variable' %}
                     {% for var in product.variations %}
                     <tr class="variation-row">
+                      <td style="text-align:center; vertical-align:middle">
+                        <input type="radio" name="primary_variation" value="var-{{ loop.index0 }}" {{ 'checked' if var.is_primary or loop.first }}>
+                      </td>
+                      <input type="hidden" name="variation_uid[]" value="var-{{ loop.index0 }}">
                       {% for attr in attributes %}
                       <td>
                         <select class="form-control attr-select" onchange="syncVarValues(this)">
@@ -109,6 +114,7 @@
               </table>
             </div>
             <p style="font-size:12px; color:var(--text-3); margin-top:10px"><i class="fas fa-info-circle"></i> Each row represents a unique combination (e.g. Chocolate + 1kg).</p>
+            <p style="font-size:12px; color:var(--text-3); margin-top:6px"><i class="fas fa-star"></i> Choose one primary variation. Its price will be shown as the main product price.</p>
           </div>
         </div>
       </div>
@@ -147,7 +153,7 @@
         <div class="card-body">
           {% if product and product.image %}
           <div style="text-align:center;margin-bottom:12px">
-            <img src="{{ url_for('static', filename='images/products/' + product.image) }}"
+            <img src="{{ product.image | img_url('products') }}"
                  class="img-preview" onerror="this.src=''">
           </div>
           {% endif %}
@@ -168,7 +174,7 @@
             {% if product %}
               {% for img in product.images %}
               <div class="gallery-item" style="position:relative; border: 1px solid var(--border); border-radius: 4px; overflow: hidden;">
-                <img src="{{ url_for('static', filename='images/products/' + img.image) }}" style="width:100%;height:80px;object-fit:cover;">
+                <img src="{{ img.image | img_url('products') }}" style="width:100%;height:80px;object-fit:cover;">
               </div>
               {% endfor %}
             {% endif %}
@@ -219,13 +225,16 @@ function toggleProductType() {
   const type = document.getElementById('productType').value;
   const simple = document.getElementById('simplePriceStock');
   const variable = document.getElementById('variableSection');
+  const stockGroup = document.getElementById('mainStockGroup');
   
   if (type === 'variable') {
-    simple.style.display = 'none';
+    if (simple) simple.style.display = 'block';
     variable.style.display = 'block';
+    if (stockGroup) stockGroup.style.display = 'none';
   } else {
-    simple.style.display = 'contents';
+    if (simple) simple.style.display = 'block';
     variable.style.display = 'none';
+    if (stockGroup) stockGroup.style.display = 'block';
   }
 }
 
@@ -240,6 +249,7 @@ function addVariationRow() {
   const container = document.getElementById('variationsContainer');
   const row = document.createElement('tr');
   row.className = 'variation-row';
+  const uid = `var-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`;
   
   let attrColumns = '';
   {% for attr in attributes %}
@@ -255,6 +265,10 @@ function addVariationRow() {
   {% endfor %}
 
   row.innerHTML = `
+    <td style="text-align:center; vertical-align:middle">
+      <input type="radio" name="primary_variation" value="${uid}" ${container.children.length === 0 ? 'checked' : ''}>
+    </td>
+    <input type="hidden" name="variation_uid[]" value="${uid}">
     ${attrColumns}
     <input type="hidden" name="var_values[]" value="">
     <td><input type="number" name="var_price[]" class="form-control" placeholder="Price" step="0.01"></td>

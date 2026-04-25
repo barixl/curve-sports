@@ -4,10 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{% block title %}Curve Sports - India's Authentic Supplement Store{% endblock %}</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/gfonts.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/fontawesome.min.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='images/favicons/apple-touch-icon.png') }}">
 <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/favicons/favicon-32x32.png') }}">
@@ -35,7 +33,7 @@
       <button class="mobile-toggle" id="mobileToggle"><i class="fas fa-bars"></i></button>
       
       <a href="{{ url_for('shop.index') }}" class="logo" style="display:flex; align-items:center; gap:10px">
-        <img src="{{ url_for('static', filename='images/curve-logo.png') }}" alt="Logo" style="height:44px; width:auto">
+        <img src="https://res.cloudinary.com/dqnckehnu/image/upload/v1777143823/curve-sports/curve-logo.png" alt="Logo" style="height:44px; width:auto">
         <span class="logo-text">CURVE SPORTS</span><span class="logo-dot">™</span>
       </a>
 
@@ -77,7 +75,7 @@
   <aside class="mobile-sidebar" id="mobileSidebar">
     <div class="sidebar-header">
       <div class="logo" style="font-size:22px; display:flex; align-items:center; gap:8px">
-        <img src="{{ url_for('static', filename='images/curve-logo.png') }}" alt="Logo" style="height:28px; width:auto">
+        <img src="https://res.cloudinary.com/dqnckehnu/image/upload/v1777143823/curve-sports/curve-logo.png" alt="Logo" style="height:28px; width:auto">
         CURVE SPORTS™
       </div>
       <button class="close-btn" id="closeSidebar"><i class="fas fa-times"></i></button>
@@ -92,7 +90,7 @@
         <a href="{{ url_for('shop.products') }}"><i class="fas fa-shopping-bag"></i> Shop</a>
         <a href="{{ url_for('shop.products') }}"><i class="fas fa-th-large"></i> All Categories</a>
         {% for cat in categories_nav %}
-        <a href="{{ url_for('shop.products', category=cat.slug) }}">{{ cat.icon }} {{ cat.name }}</a>
+        <a href="{{ url_for('shop.products', category=cat.slug) }}"><i class="fas fa-tag"></i> {{ cat.name }}</a>
         {% endfor %}
         <hr>
         <a href="{{ url_for('shop.products', sort='newest') }}"><i class="fas fa-star"></i> New Arrivals</a>
@@ -115,55 +113,46 @@
         <li><a href="{{ url_for('shop.products') }}">Shop</a></li>
         <li class="nav-item has-mega">
           <a href="{{ url_for('shop.products') }}">Categories <i class="fas fa-chevron-down fa-xs"></i></a>
-          <div class="mega-menu" style="width: 100%; left: 0; border-radius: 0 0 12px 12px; padding: 25px;">
-            <div class="mega-inner" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 30px;">
-              {% for parent in parent_categories %}
-              <div class="mega-column">
-                <div style="font-weight: 800; color: var(--primary); font-size: 15px; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 0.5px;">
-                  {{ parent.name }}
+          <div class="mega-menu categories-mega">
+            <div class="mega-inner categories-mega-inner">
+              {% for cat in categories_nav %}
+              <a href="{{ url_for('shop.products', category=cat.slug) }}" class="mega-item">
+                <div class="mega-icon-wrap">
+                  {% if cat.image %}
+                    <img src="{{ cat.image | img_url('categories') }}" alt="{{ cat.name }}">
+                  {% else %}
+                    <i class="fas fa-tag"></i>
+                  {% endif %}
                 </div>
-                <div style="display: flex; flex-direction: column; gap: 10px;">
-                  {% for sub in grouped_categories[parent] %}
-                  <a href="{{ url_for('shop.products', category=sub.slug) }}" style="display: flex; align-items: center; gap: 10px; color: var(--text-light); transition: 0.2s;" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--text-light)'">
-                    {% if sub.image %}
-                      <img src="{{ url_for('static', filename='images/categories/' + sub.image) }}" style="width: 24px; height: 24px; object-fit: contain; border-radius: 4px;">
-                    {% else %}
-                      <i class="fas fa-tag" style="font-size: 12px; opacity: 0.5;"></i>
-                    {% endif %}
-                    <span style="font-size: 14px; font-weight: 500;">{{ sub.name }}</span>
-                  </a>
-                  {% endfor %}
-                </div>
-              </div>
+                <span class="mega-name">{{ cat.name }}</span>
+              </a>
               {% endfor %}
             </div>
           </div>
         </li>
         <li class="nav-item has-mega">
           <a href="#">Brands <i class="fas fa-chevron-down fa-xs"></i></a>
-          <div class="mega-menu" style="width: 100%; left: 0; border-radius: 0 0 12px 12px; padding: 15px; box-shadow: 0 15px 40px rgba(0,0,0,0.15);">
-            <div class="mega-inner" style="display: block; max-height: 650px; overflow-y: auto; padding: 30px 40px;">
-              <div style="column-count: 5; column-gap: 50px; column-rule: 1px solid #f0f0f0;">
+          <div class="mega-menu brands-mega">
+            <div class="mega-inner brands-mega-inner">
                 {% for char in alphabet %}
-                <div style="break-inside: avoid; margin-bottom: 35px;">
-                  <div style="background: #f8f9fa; padding: 8px 16px; border-radius: 6px; font-weight: 800; color: var(--primary); font-size: 16px; margin-bottom: 18px; border-left: 5px solid var(--primary); letter-spacing: 1px;">
+                <div class="brand-group">
+                  <div class="brand-group-title">
                     {{ char }}
                   </div>
                   {% for brand in grouped_brands[char] %}
-                  <a href="{{ url_for('shop.products', brand=brand.slug) }}" class="mega-item" style="padding: 10px 0; margin-bottom: 4px; background: transparent; border: none; justify-content: flex-start; gap: 12px;">
-                    <div class="mega-icon-wrap" style="width: 32px; height: 32px; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                  <a href="{{ url_for('shop.products', brand=brand.slug) }}" class="mega-item brand-mega-item">
+                    <div class="mega-icon-wrap brand-icon-wrap">
                       {% if brand.logo %}
-                        <img src="{{ url_for('static', filename='images/brands/' + brand.logo) }}" alt="{{ brand.name }}">
+                        <img src="{{ brand.logo | img_url('brands') }}" alt="{{ brand.name }}">
                       {% else %}
-                        <i class="fas fa-certificate" style="font-size: 14px;"></i>
+                        <i class="fas fa-certificate"></i>
                       {% endif %}
                     </div>
-                    <span class="mega-name" style="font-size: 14px; font-weight: 600; line-height: 1.2;">{{ brand.name }}</span>
+                    <span class="mega-name brand-mega-name">{{ brand.name }}</span>
                   </a>
                   {% endfor %}
                 </div>
                 {% endfor %}
-              </div>
             </div>
           </div>
         </li>
@@ -251,28 +240,30 @@
 </footer>
 
 <script>
-// Mobile Sidebar Toggle
-const mobileToggle = document.getElementById('mobileToggle');
-const closeSidebar = document.getElementById('closeSidebar');
-const mobileSidebar = document.getElementById('mobileSidebar');
-const mobileOverlay = document.getElementById('mobileOverlay');
+document.addEventListener('DOMContentLoaded', () => {
+  // Mobile Sidebar Toggle
+  const mobileToggle = document.getElementById('mobileToggle');
+  const closeSidebar = document.getElementById('closeSidebar');
+  const mobileSidebar = document.getElementById('mobileSidebar');
+  const mobileOverlay = document.getElementById('mobileOverlay');
 
-if (mobileToggle) {
-  mobileToggle.addEventListener('click', () => {
-    mobileSidebar.classList.add('active');
-    mobileOverlay.classList.add('active');
-    document.body.style.overflow = 'hidden';
-  });
-}
+  if (mobileToggle) {
+    mobileToggle.addEventListener('click', () => {
+      mobileSidebar.classList.add('active');
+      mobileOverlay.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    });
+  }
 
-const hideSidebar = () => {
-  mobileSidebar.classList.remove('active');
-  mobileOverlay.classList.remove('active');
-  document.body.style.overflow = '';
-};
+  const hideSidebar = () => {
+    if (mobileSidebar) mobileSidebar.classList.remove('active');
+    if (mobileOverlay) mobileOverlay.classList.remove('active');
+    document.body.style.overflow = '';
+  };
 
-if (closeSidebar) closeSidebar.addEventListener('click', hideSidebar);
-if (mobileOverlay) mobileOverlay.addEventListener('click', hideSidebar);
+  if (closeSidebar) closeSidebar.addEventListener('click', hideSidebar);
+  if (mobileOverlay) mobileOverlay.addEventListener('click', hideSidebar);
+});
 
 // Fetch cart count
 async function updateCartCount() {

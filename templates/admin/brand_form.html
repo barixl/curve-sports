@@ -30,7 +30,7 @@
             </div>
             <input type="file" id="brandLogo" name="logo" accept="image/*" style="display:none" onchange="previewImg(this,'logoPrev')">
             {% if brand and brand.logo %}
-            <img src="{{ url_for('static', filename='images/brands/' + brand.logo) }}" class="img-preview" id="logoPrev">
+            <img src="{{ brand.logo | img_url('brands') }}" class="img-preview" id="logoPrev">
             {% else %}
             <img id="logoPrev" class="img-preview" style="display:none">
             {% endif %}

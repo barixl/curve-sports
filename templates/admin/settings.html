@@ -6,90 +6,148 @@
 {% block content %}
 <div style="max-width:760px">
   <form method="post">
+
+    <!-- General Settings -->
     <div class="card" style="margin-bottom:20px">
       <div class="card-header"><h3><i class="fas fa-store"></i> General Settings</h3></div>
       <div class="card-body">
         <div class="form-grid">
           <div class="form-group full">
             <label>Store Name</label>
-            <input type="text" name="store_name" class="form-control" value="Curve Sports" placeholder="Store Name">
+            <input type="text" name="store_name" class="form-control"
+                   value="{{ settings.get('store_name', 'Curve Sports') }}" placeholder="Store Name">
           </div>
           <div class="form-group full">
             <label>Store Tagline</label>
-            <input type="text" name="tagline" class="form-control" value="India's Authentic Supplement Store" placeholder="Tagline">
+            <input type="text" name="tagline" class="form-control"
+                   value="{{ settings.get('tagline', \"India's Authentic Supplement Store\") }}" placeholder="Tagline">
           </div>
           <div class="form-group">
             <label>Support Email</label>
-            <input type="email" name="support_email" class="form-control" value="support@curvesports.com">
+            <input type="email" name="support_email" class="form-control"
+                   value="{{ settings.get('support_email', 'support@curvesports.com') }}">
           </div>
           <div class="form-group">
             <label>Support Phone</label>
-            <input type="text" name="support_phone" class="form-control" value="+91-999-999-9999">
+            <input type="text" name="support_phone" class="form-control"
+                   value="{{ settings.get('support_phone', '+91-999-999-9999') }}">
           </div>
         </div>
       </div>
     </div>
 
+    <!-- Shipping Settings -->
     <div class="card" style="margin-bottom:20px">
       <div class="card-header"><h3><i class="fas fa-truck"></i> Shipping Settings</h3></div>
       <div class="card-body">
         <div class="form-grid">
           <div class="form-group">
             <label>Free Shipping Threshold (₹)</label>
-            <input type="number" name="free_shipping" class="form-control" value="499" min="0">
+            <input type="number" name="free_shipping" class="form-control"
+                   value="{{ settings.get('free_shipping', '499') }}" min="0">
           </div>
           <div class="form-group">
             <label>Standard Delivery Charge (₹)</label>
-            <input type="number" name="delivery_charge" class="form-control" value="49" min="0">
+            <input type="number" name="delivery_charge" class="form-control"
+                   value="{{ settings.get('delivery_charge', '49') }}" min="0">
           </div>
         </div>
       </div>
     </div>
 
+    <!-- Payment Configuration -->
     <div class="card" style="margin-bottom:20px">
       <div class="card-header"><h3><i class="fas fa-credit-card"></i> Payment Configuration</h3></div>
       <div class="card-body">
         <div style="display:flex;flex-direction:column;gap:20px">
-          <div style="padding:15px; background: #f8f9fa; border-radius: 8px;">
-            <div class="form-check" style="margin-bottom:10px">
-              <input type="checkbox" id="enable_cod" name="enable_cod" {{ 'checked' if settings.get('enable_cod') == 'on' or not settings.get('enable_cod') }}>
+
+          <!-- COD -->
+          <div style="padding:16px;background:#f8f9fa;border-radius:8px;border:1px solid var(--border)">
+            <div class="form-check" style="margin-bottom:6px">
+              <input type="checkbox" id="enable_cod" name="enable_cod"
+                     {{ 'checked' if settings.get('enable_cod') == 'on' or not settings.get('enable_cod') }}>
               <label for="enable_cod"><strong>Enable Cash on Delivery (COD)</strong></label>
             </div>
-            <p style="font-size:12px; color:#666; margin-left:25px">Allow customers to pay when they receive the product.</p>
+            <p style="font-size:12px;color:#666;margin:0 0 0 25px">Allow customers to pay when they receive the order.</p>
           </div>
 
-          <div style="padding:15px; background: #f8f9fa; border-radius: 8px;">
-            <div class="form-check" style="margin-bottom:15px">
-              <input type="checkbox" id="enable_online" name="enable_online" {{ 'checked' if settings.get('enable_online') == 'on' }}>
+          <!-- Razorpay -->
+          <div style="padding:16px;background:#f8f9fa;border-radius:8px;border:1px solid var(--border)">
+            <div class="form-check" style="margin-bottom:16px">
+              <input type="checkbox" id="enable_online" name="enable_online"
+                     {{ 'checked' if settings.get('enable_online') == 'on' }}>
               <label for="enable_online"><strong>Enable Online Payment (Razorpay)</strong></label>
             </div>
+
             <div class="form-grid">
               <div class="form-group full">
-                <label>Razorpay Key ID</label>
-                <input type="text" name="razorpay_key_id" class="form-control" value="{{ settings.get('razorpay_key_id', '') }}" placeholder="rzp_test_...">
+                <label>Razorpay Key ID <span style="font-size:11px;color:#888">(public — safe to display)</span></label>
+                <input type="text" name="razorpay_key_id" class="form-control"
+                       value="{{ settings.get('razorpay_key_id', '') }}"
+                       placeholder="rzp_live_... or rzp_test_...">
               </div>
+
               <div class="form-group full">
-                <label>Razorpay Key Secret</label>
-                <input type="password" name="razorpay_key_secret" class="form-control" value="{{ settings.get('razorpay_key_secret', '') }}" placeholder="Key Secret">
+                <label>
+                  Razorpay Key Secret
+                  {% if settings.get('razorpay_key_secret') %}
+                    <span style="color:var(--success);font-size:12px;font-weight:600">
+                      <i class="fas fa-check-circle"></i> Saved — leave blank to keep unchanged
+                    </span>
+                  {% endif %}
+                </label>
+                {# Never pre-fill the secret — admin must retype to change it #}
+                <input type="password" name="razorpay_key_secret" class="form-control"
+                       placeholder="{{ '••••••••••••••••' if settings.get('razorpay_key_secret') else 'Enter Key Secret' }}"
+                       autocomplete="new-password">
+              </div>
+
+              <div class="form-group full">
+                <label>
+                  Razorpay Webhook Secret
+                  <span style="font-size:11px;color:#888">
+                    (set in Razorpay Dashboard → Webhooks, Endpoint: <code>/payment/webhook</code>)
+                  </span>
+                  {% if settings.get('razorpay_webhook_secret') %}
+                    <span style="color:var(--success);font-size:12px;font-weight:600">
+                      <i class="fas fa-check-circle"></i> Saved — leave blank to keep unchanged
+                    </span>
+                  {% endif %}
+                </label>
+                <input type="password" name="razorpay_webhook_secret" class="form-control"
+                       placeholder="{{ '••••••••••••••••' if settings.get('razorpay_webhook_secret') else 'Enter Webhook Secret' }}"
+                       autocomplete="new-password">
               </div>
             </div>
-            <p style="font-size:12px; color:#666; margin-top:10px">Supports UPI, Credit/Debit Cards, NetBanking, and Wallets.</p>
+
+            <p style="font-size:12px;color:#666;margin-top:8px">
+              <i class="fas fa-info-circle"></i>
+              Supports UPI, Cards (Visa/Mastercard/Rupay), NetBanking, and Wallets.
+              Get your keys from
+              <a href="https://dashboard.razorpay.com/app/keys" target="_blank" rel="noopener">
+                Razorpay Dashboard → Settings → API Keys
+              </a>.
+            </p>
           </div>
+
         </div>
       </div>
     </div>
 
+    <!-- Security -->
     <div class="card" style="margin-bottom:20px">
       <div class="card-header"><h3><i class="fas fa-shield-alt"></i> Security</h3></div>
       <div class="card-body">
         <div class="form-grid">
           <div class="form-group full">
             <label>New Admin Password</label>
-            <input type="password" name="new_password" class="form-control" placeholder="Leave blank to keep current">
+            <input type="password" name="new_password" class="form-control"
+                   placeholder="Leave blank to keep current" autocomplete="new-password">
           </div>
           <div class="form-group full">
             <label>Confirm Password</label>
-            <input type="password" name="confirm_password" class="form-control" placeholder="Confirm new password">
+            <input type="password" name="confirm_password" class="form-control"
+                   placeholder="Confirm new password" autocomplete="new-password">
           </div>
         </div>
       </div>

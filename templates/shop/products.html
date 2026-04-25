@@ -69,13 +69,43 @@
         <!-- Categories -->
         <div class="filter-section">
           <h4>Category</h4>
-          {% for cat in categories %}
+          {% set parent_categories = categories | selectattr('parent_id', 'equalto', None) | list %}
+          {% for parent in parent_categories %}
+          {% set subcategories = categories | selectattr('parent_id', 'equalto', parent.id) | list %}
+          {% set parent_selected = selected_cat and selected_cat.slug == parent.slug %}
+          {% set child_selected = selected_cat and selected_cat.parent_id == parent.id %}
+
+          {% if subcategories %}
+          <details class="category-accordion" {{ 'open' if parent_selected or child_selected }}>
+            <summary class="category-accordion-summary">
+              <span>{{ parent.name }}</span>
+              <i class="fas fa-chevron-down"></i>
+            </summary>
+            <div class="category-accordion-body">
+              <label class="filter-item category-sub-item">
+                <input type="radio" name="category" value="{{ parent.slug }}"
+                       {{ 'checked' if parent_selected }}
+                       onchange="document.getElementById('filterForm').submit()">
+                <span>All {{ parent.name }}</span>
+              </label>
+              {% for sub in subcategories %}
+              <label class="filter-item category-sub-item">
+                <input type="radio" name="category" value="{{ sub.slug }}"
+                       {{ 'checked' if selected_cat and selected_cat.slug == sub.slug }}
+                       onchange="document.getElementById('filterForm').submit()">
+                <span>{{ sub.name }}</span>
+              </label>
+              {% endfor %}
+            </div>
+          </details>
+          {% else %}
           <label class="filter-item">
-            <input type="radio" name="category" value="{{ cat.slug }}"
-                   {{ 'checked' if selected_cat and selected_cat.slug == cat.slug }}
+            <input type="radio" name="category" value="{{ parent.slug }}"
+                   {{ 'checked' if parent_selected }}
                    onchange="document.getElementById('filterForm').submit()">
-            <label>{{ cat.icon }} {{ cat.name }}</label>
+            <span>{{ parent.name }}</span>
           </label>
+          {% endif %}
           {% endfor %}
           {% if selected_cat %}
           <a href="{{ url_for('shop.products', q=search, sort=sort) }}" style="font-size:13px;color:var(--primary);display:block;margin-top:8px">
@@ -205,28 +235,30 @@ async function toggleWishlist(productId, btn) {
   icon.style.color = data.status === 'added' ? 'var(--primary)' : 'var(--text-3)';
 }
 
-// Mobile Filter Toggle
-const openFilter = document.getElementById('openFilter');
-const closeFilter = document.getElementById('closeFilter');
-const filterSidebar = document.getElementById('filterSidebar');
-const mobileOverlay = document.getElementById('mobileOverlay');
+document.addEventListener('DOMContentLoaded', () => {
+  // Mobile Filter Toggle
+  const openFilter = document.getElementById('openFilter');
+  const closeFilter = document.getElementById('closeFilter');
+  const filterSidebar = document.getElementById('filterSidebar');
+  const mobileOverlay = document.getElementById('mobileOverlay');
 
-if (openFilter) {
-  openFilter.addEventListener('click', () => {
-    filterSidebar.classList.add('active');
-    if(mobileOverlay) mobileOverlay.classList.add('active');
-    document.body.style.overflow = 'hidden';
-  });
-}
+  if (openFilter) {
+    openFilter.addEventListener('click', () => {
+      if(filterSidebar) filterSidebar.classList.add('active');
+      if(mobileOverlay) mobileOverlay.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    });
+  }
 
-const hideFilter = () => {
-  if(filterSidebar) filterSidebar.classList.remove('active');
-  if(mobileOverlay) mobileOverlay.classList.remove('active');
-  document.body.style.overflow = '';
-};
+  const hideFilter = () => {
+    if(filterSidebar) filterSidebar.classList.remove('active');
+    if(mobileOverlay) mobileOverlay.classList.remove('active');
+    document.body.style.overflow = '';
+  };
 
-if (closeFilter) closeFilter.addEventListener('click', hideFilter);
-if (mobileOverlay) mobileOverlay.addEventListener('click', hideFilter);
+  if (closeFilter) closeFilter.addEventListener('click', hideFilter);
+  if (mobileOverlay) mobileOverlay.addEventListener('click', hideFilter);
+});
 </script>
 {% endblock %}
 {% endblock %}

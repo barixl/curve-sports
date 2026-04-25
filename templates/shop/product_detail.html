@@ -20,9 +20,9 @@
     <div>
       <div class="product-gallery">
         <div class="product-gallery-main">
-          {% if product.image and not product.image.endswith('.svg') %}
-            <img src="{{ url_for('static', filename='images/products/' + product.image) }}"
-                 alt="{{ product.name }}" style="max-width:340px;max-height:340px;object-fit:contain">
+          {% if product.image %}
+            <img src="{{ product.image | img_url('products') }}"
+                 alt="{{ product.name }}" class="product-main-image">
           {% else %}
             <svg viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg" style="width:300px;height:300px">
               <defs>
@@ -44,8 +44,8 @@
       </div>
 
       <!-- Authenticity Badge -->
-      <div style="background:linear-gradient(135deg,#0a1628,#1a2640);border-radius:12px;padding:16px 20px;margin-top:16px;display:flex;align-items:center;gap:12px">
-        <i class="fas fa-shield-alt" style="font-size:24px;color:#22c55e"></i>
+      <div class="product-auth-badge" style="background:linear-gradient(135deg,#0a1628,#1a2640);border-radius:12px;padding:16px 20px;margin-top:16px;display:flex;align-items:center;gap:12px">
+        <i class="fas fa-shield-alt product-auth-icon" style="font-size:24px;color:#22c55e"></i>
         <div>
           <div style="color:white;font-weight:700">100% Authentic Guarantee</div>
           <div style="color:#aaa;font-size:12px">Sourced directly from manufacturers. Scan QR to verify.</div>
@@ -95,7 +95,7 @@
       {% if product.product_type == 'variable' %}
       <div class="variations-selection" style="margin: 25px 0; border-top: 1px solid var(--border); padding-top: 20px;">
         <h4 style="margin-bottom:12px; font-size:13px; text-transform:uppercase; letter-spacing:1px; color:var(--text-3)">Available Options</h4>
-        <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap:10px">
+        <div class="variation-grid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap:10px">
           {% for var in product.variations %}
           <div class="variation-option" 
                style="display:flex; flex-direction:column; padding:12px; border:2px solid var(--border); border-radius:10px; cursor:pointer; transition:all 0.2s" 
@@ -152,14 +152,14 @@
 
       <!-- Description -->
       {% if product.description %}
-      <div style="margin-top:28px;padding-top:24px;border-top:1px solid var(--border)">
+      <div class="product-description-block" style="margin-top:28px;padding-top:24px;border-top:1px solid var(--border)">
         <h3 style="font-family:var(--font-head);font-size:18px;margin-bottom:12px">Product Description</h3>
         <p style="font-size:15px;line-height:1.8;color:var(--text-2)">{{ product.description }}</p>
       </div>
       {% endif %}
 
       <!-- Delivery Info -->
-      <div style="background:var(--bg);border-radius:10px;padding:16px;margin-top:20px">
+      <div class="product-delivery-box" style="background:var(--bg);border-radius:10px;padding:16px;margin-top:20px">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
           <i class="fas fa-truck" style="color:var(--primary)"></i>
           <span style="font-size:14px"><strong>Free delivery</strong> on orders above ₹499</span>
@@ -172,11 +172,25 @@
     </div>
   </div>
 
-  <!-- REVIEWS SECTION -->
+  <!-- RELATED PRODUCTS -->
+  {% if related %}
   <div style="margin-top:48px">
-    <h2 style="font-family:var(--font-head);font-size:28px;margin-bottom:24px">Customer Reviews</h2>
+    <div class="section-header">
+      <h2 class="section-title">You May Also Like</h2>
+    </div>
+    <div class="products-grid">
+      {% for p in related %}
+      {% include 'shop/_product_card.html' %}
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
 
-    <div style="display:grid;grid-template-columns:280px 1fr;gap:32px;margin-bottom:32px">
+  <!-- REVIEWS SECTION -->
+  <div class="reviews-section" style="margin-top:48px; margin-bottom: 40px;">
+    <h2 class="reviews-title" style="font-family:var(--font-head);font-size:28px;margin-bottom:24px">Customer Reviews</h2>
+
+    <div class="reviews-layout" style="margin-bottom:32px">
       <!-- Rating Summary -->
       <div style="background:white;border-radius:var(--radius);padding:24px;box-shadow:var(--shadow);text-align:center;height:fit-content">
         <div style="font-family:var(--font-head);font-size:64px;font-weight:700;color:var(--dark);line-height:1">{{ product.rating }}</div>
@@ -211,7 +225,7 @@
                       style="width:100%;padding:10px 14px;border:2px solid var(--border);border-radius:8px;font-size:14px;resize:vertical"
                       placeholder="Share your experience with this product..."></textarea>
           </div>
-          <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i> Submit Review</button>
+          <button type="submit" class="btn btn-primary review-submit-btn"><i class="fas fa-paper-plane"></i> Submit Review</button>
         </form>
       </div>
       {% else %}
@@ -254,20 +268,6 @@
     </div>
     {% endif %}
   </div>
-
-  <!-- RELATED PRODUCTS -->
-  {% if related %}
-  <div style="margin-top:48px">
-    <div class="section-header">
-      <h2 class="section-title">You May Also Like</h2>
-    </div>
-    <div class="products-grid">
-      {% for p in related %}
-      {% include 'shop/_product_card.html' %}
-      {% endfor %}
-    </div>
-  </div>
-  {% endif %}
 </div>
 {% endblock %}
 

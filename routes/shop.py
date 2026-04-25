@@ -10,12 +10,88 @@ shop_bp = Blueprint('shop', __name__)
 def index():
     featured = Product.query.filter_by(featured=True, is_active=True).limit(8).all()
     bestsellers = Product.query.filter_by(bestseller=True, is_active=True).limit(8).all()
-    categories = Category.query.filter_by(is_active=True).all()
+    categories = Category.query.filter_by(is_active=True, parent_id=None).order_by(Category.id.asc()).limit(8).all()
     new_arrivals = Product.query.filter_by(is_active=True).order_by(Product.created_at.desc()).limit(8).all()
     banners = Banner.query.filter_by(is_active=True).order_by(Banner.position).all()
     brands = Brand.query.filter(Brand.is_active==True, Brand.logo.isnot(None)).all()
+    performance_nutrition = Category.query.filter_by(slug='performance-nutrition').first()
+    perf_subcats = []
+    if performance_nutrition:
+        preferred_order = [
+            'perf-whey-protein',
+            'pea-plant-protein',
+            'yeast-protein',
+            'perf-creatine',
+            'perf-pre-workout',
+            'mass-weight-gainer',
+            'l-carnitine',
+            'perf-bcaa',
+        ]
+        by_slug = {subcat.slug: subcat for subcat in performance_nutrition.children if subcat.is_active}
+        perf_subcats = [by_slug[slug] for slug in preferred_order if slug in by_slug]
+    vitamins = Category.query.filter_by(slug='vitamins', is_active=True).first()
+    vitamin_subcats = []
+    if vitamins:
+        preferred_order = [
+            'fish-oil',
+            'vitamins-multivitamins',
+            'vitamins-magnesium',
+            'single-vitamins',
+            'vitamins-collagen',
+            'pre-probiotics',
+        ]
+        by_slug = {subcat.slug: subcat for subcat in vitamins.children if subcat.is_active}
+        vitamin_subcats = [by_slug[slug] for slug in preferred_order if slug in by_slug]
+
+    health_food = Category.query.filter_by(slug='health-food', is_active=True).first()
+    health_food_subcats = []
+    if health_food:
+        preferred_order = [
+            'protein-oats',
+            'health-food-peanut-butter',
+            'apple-cider-vinegar-acv',
+            'health-food-protein-bars',
+        ]
+        by_slug = {subcat.slug: subcat for subcat in health_food.children if subcat.is_active}
+        health_food_subcats = [by_slug[slug] for slug in preferred_order if slug in by_slug]
+
+    testimonials = [
+        {
+            'name': 'Rohit S.',
+            'city': 'Bengaluru',
+            'rating': 5,
+            'quote': 'Authentic products and quick delivery. My pre-workout and whey always arrive sealed and fresh.'
+        },
+        {
+            'name': 'Ananya K.',
+            'city': 'Pune',
+            'rating': 5,
+            'quote': 'Loved the vitamins range. The site is easy to use and the support team helped me choose the right stack.'
+        },
+        {
+            'name': 'Vikram P.',
+            'city': 'Delhi',
+            'rating': 4,
+            'quote': 'Great pricing and clean checkout. I regularly order creatine and protein bars from here.'
+        },
+        {
+            'name': 'Megha R.',
+            'city': 'Hyderabad',
+            'rating': 5,
+            'quote': 'Performance Nutrition section is super useful. The category cards make browsing very fast.'
+        },
+        {
+            'name': 'Arjun M.',
+            'city': 'Chennai',
+            'rating': 5,
+            'quote': 'Good experience on mobile too. Ordering, payments, and tracking are smooth and reliable.'
+        },
+    ]
+
     return render_template('shop/index.html', featured=featured, bestsellers=bestsellers,
-                           categories=categories, new_arrivals=new_arrivals, banners=banners, brands=brands)
+                           categories=categories, new_arrivals=new_arrivals, banners=banners, brands=brands,
+                           perf_subcats=perf_subcats, vitamin_subcats=vitamin_subcats,
+                           health_food_subcats=health_food_subcats, testimonials=testimonials)
 
 
 @shop_bp.route('/products')

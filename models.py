@@ -42,7 +42,6 @@ class Category(db.Model):
     slug        = db.Column(db.String(120), unique=True, nullable=False)
     description = db.Column(db.Text)
     image       = db.Column(db.String(200))
-    icon        = db.Column(db.String(100)) # Emoji or icon class
     is_active   = db.Column(db.Boolean, default=True)
     parent_id   = db.Column(db.Integer, db.ForeignKey('categories.id'), nullable=True)
     
@@ -123,6 +122,7 @@ class ProductVariation(db.Model):
     stock      = db.Column(db.Integer, default=0)
     sku        = db.Column(db.String(100), unique=True)
     image      = db.Column(db.String(200))
+    is_primary = db.Column(db.Boolean, default=False)
     
     values = db.relationship('AttributeValue', secondary='variation_value_link', backref='variations')
 
@@ -159,6 +159,8 @@ class Order(db.Model):
     status          = db.Column(db.String(50), default='Pending')
     payment_method  = db.Column(db.String(50), default='COD')
     payment_status  = db.Column(db.String(50), default='Pending')
+    razorpay_order_id   = db.Column(db.String(100))
+    razorpay_payment_id = db.Column(db.String(100))
     coupon_code     = db.Column(db.String(50))
     address_id      = db.Column(db.Integer, db.ForeignKey('addresses.id'))
     address_snapshot = db.Column(db.Text)

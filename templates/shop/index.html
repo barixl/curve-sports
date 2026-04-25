@@ -115,64 +115,180 @@ startAutoSlide();
 </div>
 
 <!-- SHOP BY BRAND -->
-<section class="brands-section" style="background:#fafafa; padding-bottom: 20px;">
+<section class="brands-section section-compact" style="background:#fafafa;">
   <div class="container">
     <div class="section-header">
       <h2 class="section-title">Shop by Brand</h2>
-      <a href="{{ url_for('shop.products') }}" class="view-all">View All <i class="fas fa-arrow-right"></i></a>
+      <a href="{{ url_for('shop.products') }}" class="view-all">View All</a>
     </div>
-    <div class="brands-grid">
-      {% for brand in brands %}
-      <a href="{{ url_for('shop.products', brand=brand.slug) }}" class="brand-card">
-        <div class="brand-img">
-          {% if brand.logo %}
-            <img src="{{ url_for('static', filename='images/brands/' + brand.logo) }}" alt="{{ brand.name }}">
+    <div class="brands-carousel-wrapper">
+      <button class="brands-arrow brands-arrow-prev" id="brandsPrev" aria-label="Previous brands">
+        <i class="fas fa-chevron-left"></i>
+      </button>
+      <div class="brands-carousel-viewport" id="brandsViewport">
+        <div class="brands-grid" id="brandsTrack">
+          {% for brand in brands %}
+          <a href="{{ url_for('shop.products', brand=brand.slug) }}" class="brand-card">
+            <div class="brand-img">
+              {% if brand.logo %}
+                <img src="{{ brand.logo | img_url('brands') }}" alt="{{ brand.name }}">
+              {% else %}
+                <div class="brand-placeholder">{{ brand.name[0] }}</div>
+              {% endif %}
+            </div>
+            <div class="brand-info">
+              <div class="brand-name">{{ brand.name }}</div>
+            </div>
+          </a>
+          {% endfor %}
+        </div>
+      </div>
+      <button class="brands-arrow brands-arrow-next" id="brandsNext" aria-label="Next brands">
+        <i class="fas fa-chevron-right"></i>
+      </button>
+    </div>
+  </div>
+</section>
+
+<script>
+(function () {
+  const track = document.getElementById('brandsTrack');
+  const viewport = document.getElementById('brandsViewport');
+  const prevBtn = document.getElementById('brandsPrev');
+  const nextBtn = document.getElementById('brandsNext');
+  if (!track || !prevBtn || !nextBtn) return;
+
+  const cards = Array.from(track.children);
+  let page = 0;
+
+  function update() {
+    if (window.innerWidth <= 768) {
+      cards.forEach(c => { c.style.display = ''; });
+      prevBtn.style.display = 'none';
+      nextBtn.style.display = 'none';
+      return;
+    }
+    prevBtn.style.display = '';
+    nextBtn.style.display = '';
+    const perPage = 6;
+    const pages = Math.ceil(cards.length / perPage);
+    page = Math.max(0, Math.min(page, pages - 1));
+    const start = page * perPage;
+    cards.forEach((c, i) => {
+      c.style.display = (i >= start && i < start + perPage) ? '' : 'none';
+    });
+    prevBtn.disabled = page === 0;
+    nextBtn.disabled = page >= pages - 1;
+  }
+
+  prevBtn.addEventListener('click', () => { page--; update(); });
+  nextBtn.addEventListener('click', () => { page++; update(); });
+  window.addEventListener('resize', update);
+  update();
+})();
+</script>
+
+<!-- VITAMINS SECTION -->
+{% if vitamin_subcats %}
+<section class="section section-compact">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">Vitamins</h2>
+      <a href="{{ url_for('shop.products', category='vitamins') }}" class="view-all">View All</a>
+    </div>
+    <div class="home-cat-grid">
+      {% for sc in vitamin_subcats %}
+      <a href="{{ url_for('shop.products', category=sc.slug) }}" class="home-cat-card">
+        <div class="home-cat-thumb">
+          {% if sc.image %}
+          <img src="{{ sc.image | img_url('categories') }}" alt="{{ sc.name }}">
           {% else %}
-            <div class="brand-placeholder">{{ brand.name[0] }}</div>
+          <i class="fas fa-capsules"></i>
           {% endif %}
         </div>
-        <div class="brand-info">
-          <div class="brand-name">{{ brand.name }}</div>
+        <div class="home-cat-name">{{ sc.name }}</div>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- HEALTH FOOD SECTION -->
+{% if health_food_subcats %}
+<section class="section section-compact">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">Health Food</h2>
+      <a href="{{ url_for('shop.products', category='health-food') }}" class="view-all">View All</a>
+    </div>
+    <div class="home-cat-grid">
+      {% for sc in health_food_subcats %}
+      <a href="{{ url_for('shop.products', category=sc.slug) }}" class="home-cat-card">
+        <div class="home-cat-thumb">
+          {% if sc.image %}
+          <img src="{{ sc.image | img_url('categories') }}" alt="{{ sc.name }}">
+          {% else %}
+          <i class="fas fa-apple-alt"></i>
+          {% endif %}
         </div>
+        <div class="home-cat-name">{{ sc.name }}</div>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- CATEGORIES -->
+<section class="section section-compact">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">Shop by Category</h2>
+      <a href="{{ url_for('shop.products') }}" class="view-all">View All</a>
+    </div>
+    <div class="home-cat-grid">
+      {% for cat in categories %}
+      <a href="{{ url_for('shop.products', category=cat.slug) }}" class="home-cat-card">
+        <div class="home-cat-thumb">
+          {% if cat.image %}
+            <img src="{{ cat.image | img_url('categories') }}" alt="{{ cat.name }}">
+          {% else %}
+            <i class="fas fa-layer-group"></i>
+          {% endif %}
+        </div>
+        <div class="home-cat-name">{{ cat.name }}</div>
       </a>
       {% endfor %}
     </div>
   </div>
 </section>
 
-<!-- CATEGORIES -->
-<section class="section" style="padding-top: 40px;">
+<!-- PERFORMANCE NUTRITION SECTION -->
+{% if perf_subcats %}
+<section class="section section-compact">
   <div class="container">
     <div class="section-header">
-      <h2 class="section-title">Shop by Category</h2>
-      <a href="{{ url_for('shop.products') }}" class="view-all">View All <i class="fas fa-arrow-right"></i></a>
+      <h2 class="section-title">Performance Nutrition</h2>
+      <a href="{{ url_for('shop.products', category='performance-nutrition') }}" class="view-all">View All</a>
     </div>
-    <div style="display: flex; flex-direction: column; gap: 40px;">
-      {% for parent in parent_categories %}
-      <div class="category-group">
-        <h3 style="font-family: 'Rajdhani', sans-serif; font-size: 24px; font-weight: 700; color: var(--primary); margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 10px; display: flex; align-items: center; gap: 10px;">
-          <i class="fas fa-layer-group" style="font-size: 18px; opacity: 0.6;"></i>
-          {{ parent.name }}
-        </h3>
-        <div class="cat-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 20px;">
-          {% for sub in grouped_categories[parent] %}
-          <a href="{{ url_for('shop.products', category=sub.slug) }}" class="cat-card" style="background: white; padding: 20px; border-radius: 12px; text-align: center; border: 1px solid #eee; transition: 0.3s; box-shadow: 0 2px 8px rgba(0,0,0,0.02); display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 120px;">
-            <div class="cat-icon" style="font-size: 30px; margin-bottom: 12px; color: var(--primary);">
-              {% if sub.image %}
-                <img src="{{ url_for('static', filename='images/categories/' + sub.image) }}" style="width: 50px; height: 50px; object-fit: contain;">
-              {% else %}
-                <div style="font-size: 24px;">{{ sub.icon or '🏷️' }}</div>
-              {% endif %}
-            </div>
-            <div class="cat-name" style="font-weight: 600; color: var(--text-dark); font-size: 15px;">{{ sub.name }}</div>
-          </a>
-          {% endfor %}
+    <div class="home-cat-grid">
+      {% for sc in perf_subcats %}
+      <a href="{{ url_for('shop.products', category=sc.slug) }}" class="home-cat-card">
+        <div class="home-cat-thumb">
+          {% if sc.image %}
+          <img src="{{ sc.image | img_url('categories') }}" alt="{{ sc.name }}">
+          {% else %}
+          <i class="fas fa-bolt"></i>
+          {% endif %}
         </div>
-      </div>
+        <div class="home-cat-name">{{ sc.name }}</div>
+      </a>
       {% endfor %}
     </div>
   </div>
 </section>
+{% endif %}
 
 <!-- FEATURED PRODUCTS -->
 {% if featured %}
@@ -180,7 +296,7 @@ startAutoSlide();
   <div class="container">
     <div class="section-header">
       <h2 class="section-title">Featured Products</h2>
-      <a href="{{ url_for('shop.products') }}" class="view-all">View All <i class="fas fa-arrow-right"></i></a>
+      <a href="{{ url_for('shop.products') }}" class="view-all">View All</a>
     </div>
     <div class="products-grid">
       {% for p in featured %}
@@ -204,7 +320,7 @@ startAutoSlide();
   <div class="container">
     <div class="section-header">
       <h2 class="section-title">Bestsellers 🔥</h2>
-      <a href="{{ url_for('shop.products') }}" class="view-all">View All <i class="fas fa-arrow-right"></i></a>
+      <a href="{{ url_for('shop.products') }}" class="view-all">View All</a>
     </div>
     <div class="products-grid">
       {% for p in bestsellers %}
@@ -228,7 +344,7 @@ startAutoSlide();
   <div class="container">
     <div class="section-header">
       <h2 class="section-title">New Arrivals ✨</h2>
-      <a href="{{ url_for('shop.products', sort='newest') }}" class="view-all">View All <i class="fas fa-arrow-right"></i></a>
+      <a href="{{ url_for('shop.products', sort='newest') }}" class="view-all">View All</a>
     </div>
     <div class="products-grid">
       {% for p in new_arrivals %}
@@ -238,38 +354,6 @@ startAutoSlide();
   </div>
 </section>
 {% endif %}
-
-<!-- PARENT CATEGORY SECTIONS -->
-{% for parent in parent_categories %}
-<section class="section" style="background: {% if loop.index0 % 2 == 0 %}#f8f9fa{% else %}white{% endif %}; padding: 60px 0;">
-  <div class="container">
-    <div class="section-header" style="margin-bottom: 35px;">
-      <div style="display: flex; flex-direction: column; gap: 5px;">
-        <h2 class="section-title" style="margin-bottom: 0;">{{ parent.name }}</h2>
-        <p style="color: var(--text-light); font-size: 15px;">{{ parent.description }}</p>
-      </div>
-      <a href="{{ url_for('shop.products', category=parent.slug) }}" class="view-all">Shop All {{ parent.name }} <i class="fas fa-arrow-right"></i></a>
-    </div>
-    
-    <div class="cat-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 25px;">
-      {% for sub in grouped_categories[parent] %}
-      <a href="{{ url_for('shop.products', category=sub.slug) }}" class="cat-card" style="background: white; padding: 25px; border-radius: 16px; text-align: center; border: 1px solid #eee; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(0,0,0,0.03); position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 150px;">
-        <div style="position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: var(--primary); opacity: 0.8;"></div>
-        <div class="cat-icon" style="font-size: 36px; margin-bottom: 15px; color: var(--primary);">
-          {% if sub.image %}
-            <img src="{{ url_for('static', filename='images/categories/' + sub.image) }}" style="width: 60px; height: 60px; object-fit: contain;">
-          {% else %}
-            <div style="font-size: 32px;">{{ sub.icon or '🏷️' }}</div>
-          {% endif %}
-        </div>
-        <div class="cat-name" style="font-weight: 700; color: var(--text-dark); font-size: 17px; font-family: 'Rajdhani', sans-serif; text-transform: uppercase; letter-spacing: 0.5px;">{{ sub.name }}</div>
-        <div style="font-size: 12px; color: var(--text-light); margin-top: 5px;">Explore Products <i class="fas fa-chevron-right" style="font-size: 9px;"></i></div>
-      </a>
-      {% endfor %}
-    </div>
-  </div>
-</section>
-{% endfor %}
 
 <!-- PROMO BANNER (COUPON SECTION) -->
 <div style="background:linear-gradient(135deg,var(--primary),#ff6b35);padding:60px 0;margin:0">
@@ -286,6 +370,46 @@ startAutoSlide();
   </div>
 </div>
 
+<!-- TESTIMONIALS -->
+{% if testimonials %}
+<section class="section testimonials-section">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">What Customers Say</h2>
+    </div>
+
+    <div class="testimonials-carousel" id="testimonialsCarousel">
+      <button type="button" class="testimonial-nav prev" id="testimonialPrev" aria-label="Previous testimonial">
+        <i class="fas fa-chevron-left"></i>
+      </button>
+
+      <div class="testimonials-viewport" id="testimonialsViewport">
+        <div class="testimonials-track" id="testimonialsTrack">
+          {% for t in testimonials %}
+          <article class="testimonial-card">
+            <div class="testimonial-rating">
+              {% for _ in range(t.rating) %}
+              <i class="fas fa-star"></i>
+              {% endfor %}
+            </div>
+            <p class="testimonial-quote">"{{ t.quote }}"</p>
+            <div class="testimonial-meta">
+              <span class="testimonial-name">{{ t.name }}</span>
+              <span class="testimonial-city">{{ t.city }}</span>
+            </div>
+          </article>
+          {% endfor %}
+        </div>
+      </div>
+
+      <button type="button" class="testimonial-nav next" id="testimonialNext" aria-label="Next testimonial">
+        <i class="fas fa-chevron-right"></i>
+      </button>
+    </div>
+  </div>
+</section>
+{% endif %}
+
 <!-- NEWSLETTER SECTION (B&W DARK THEME) -->
 <section class="newsletter-section">
   <div class="container">
@@ -299,4 +423,60 @@ startAutoSlide();
     </div>
   </div>
 </section>
+
+<script>
+const testimonialsTrack = document.getElementById('testimonialsTrack');
+const testimonialsViewport = document.getElementById('testimonialsViewport');
+const testimonialPrev = document.getElementById('testimonialPrev');
+const testimonialNext = document.getElementById('testimonialNext');
+
+if (testimonialsTrack && testimonialsViewport) {
+  const cards = Array.from(testimonialsTrack.children);
+  let index = 0;
+
+  function visibleCount() {
+    return window.innerWidth <= 768 ? 1 : 3;
+  }
+
+  function updateTestimonials() {
+    if (!cards.length) return;
+    const visible = visibleCount();
+    const maxIndex = Math.max(0, cards.length - visible);
+    index = Math.max(0, Math.min(index, maxIndex));
+
+    const cardWidth = cards[0].getBoundingClientRect().width;
+    const gap = parseFloat(getComputedStyle(testimonialsTrack).gap || 0);
+    testimonialsTrack.style.transform = `translateX(-${index * (cardWidth + gap)}px)`;
+
+    if (testimonialPrev) testimonialPrev.disabled = index === 0;
+    if (testimonialNext) testimonialNext.disabled = index >= maxIndex;
+  }
+
+  function moveTestimonials(step) {
+    index += step;
+    updateTestimonials();
+  }
+
+  if (testimonialPrev) testimonialPrev.addEventListener('click', () => moveTestimonials(-1));
+  if (testimonialNext) testimonialNext.addEventListener('click', () => moveTestimonials(1));
+
+  let touchStartX = 0;
+  let touchEndX = 0;
+
+  testimonialsViewport.addEventListener('touchstart', (e) => {
+    touchStartX = e.changedTouches[0].clientX;
+  }, { passive: true });
+
+  testimonialsViewport.addEventListener('touchend', (e) => {
+    touchEndX = e.changedTouches[0].clientX;
+    const delta = touchStartX - touchEndX;
+    if (Math.abs(delta) > 40) {
+      moveTestimonials(delta > 0 ? 1 : -1);
+    }
+  }, { passive: true });
+
+  window.addEventListener('resize', updateTestimonials);
+  updateTestimonials();
+}
+</script>
 {% endblock %}

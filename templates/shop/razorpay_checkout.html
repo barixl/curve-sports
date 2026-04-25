@@ -1,63 +1,159 @@
 {% extends 'base.html' %}
-{% block title %}Complete Payment - Curve Sports{% endblock %}
+{% block title %}Complete Payment — Curve Sports{% endblock %}
 
 {% block content %}
-<div class="container" style="padding: 100px 0; text-align: center;">
-    <div class="card" style="max-width: 500px; margin: 0 auto; padding: 40px;">
-        <i class="fas fa-spinner fa-spin fa-3x" style="color: var(--primary); margin-bottom: 20px;"></i>
-        <h2>Processing Your Payment</h2>
-        <p>Please do not refresh or close this page. You are being redirected to our secure payment partner.</p>
-        
-        <form action="{{ url_for('cart.verify_payment') }}" method="POST" id="rzp-form">
-            <input type="hidden" name="razorpay_payment_id" id="razorpay_payment_id">
-            <input type="hidden" name="razorpay_order_id" id="razorpay_order_id">
-            <input type="hidden" name="razorpay_signature" id="razorpay_signature">
-            <input type="hidden" name="order_id" value="{{ order.id }}">
-        </form>
+<style>
+  .pay-card {
+    max-width: 480px;
+    margin: 60px auto;
+    background: white;
+    border-radius: 16px;
+    padding: 40px 36px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.10);
+    text-align: center;
+  }
+  .pay-logo { font-size: 48px; margin-bottom: 16px; }
+  .pay-amount {
+    font-family: var(--font-head);
+    font-size: 36px;
+    font-weight: 800;
+    color: var(--dark);
+    margin: 12px 0 4px;
+  }
+  .pay-order-ref {
+    font-size: 13px;
+    color: var(--text-3);
+    margin-bottom: 28px;
+  }
+  .pay-btn {
+    width: 100%;
+    padding: 16px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: var(--radius);
+    font-family: var(--font-head);
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .pay-btn:hover { background: #d4170a; transform: translateY(-1px); }
+  .pay-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+  .pay-cancel {
+    display: block;
+    margin-top: 14px;
+    font-size: 13px;
+    color: var(--text-3);
+    text-decoration: none;
+  }
+  .pay-cancel:hover { color: var(--primary); }
+  .pay-methods {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin: 20px 0;
+    flex-wrap: wrap;
+  }
+  .pay-method-badge {
+    background: #f5f5f5;
+    border-radius: 6px;
+    padding: 5px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #555;
+  }
+  .pay-secure {
+    font-size: 11px;
+    color: var(--text-3);
+    margin-top: 18px;
+  }
+  #pay-spinner { display: none; }
+</style>
 
-        <button id="rzp-button1" class="btn btn-primary" style="margin-top: 20px;">Pay Now ₹{{ "%.2f"|format(order.final_amount) }}</button>
-    </div>
+<div class="pay-card">
+  <div class="pay-logo">🔐</div>
+  <div style="font-size:14px;color:var(--text-3);font-weight:600;text-transform:uppercase;letter-spacing:1px">
+    Secure Payment
+  </div>
+  <div class="pay-amount">₹{{ "{:,.2f}".format(order.final_amount) }}</div>
+  <div class="pay-order-ref">Order #{{ order.order_number }}</div>
+
+  <div class="pay-methods">
+    <span class="pay-method-badge"><i class="fas fa-mobile-alt"></i> UPI</span>
+    <span class="pay-method-badge"><i class="fas fa-credit-card"></i> Card</span>
+    <span class="pay-method-badge"><i class="fas fa-university"></i> Net Banking</span>
+    <span class="pay-method-badge"><i class="fas fa-wallet"></i> Wallets</span>
+  </div>
+
+  {# Hidden form — payment IDs are posted here after Razorpay confirms #}
+  <form action="{{ url_for('cart.verify_payment') }}" method="POST" id="rzp-form">
+    <input type="hidden" name="razorpay_payment_id" id="rzp_payment_id">
+    <input type="hidden" name="razorpay_order_id"   id="rzp_order_id">
+    <input type="hidden" name="razorpay_signature"  id="rzp_signature">
+    {# Note: order_id is NOT sent from the form — server reads it from the session #}
+
+    <button type="button" class="pay-btn" id="pay-btn" onclick="openRazorpay()">
+      <span id="pay-btn-text"><i class="fas fa-lock"></i> Pay Now</span>
+      <span id="pay-spinner"><i class="fas fa-spinner fa-spin"></i> Opening payment…</span>
+    </button>
+  </form>
+
+  <a href="{{ url_for('cart.checkout') }}" class="pay-cancel">
+    ← Cancel and go back to checkout
+  </a>
+
+  <div class="pay-secure">
+    <i class="fas fa-shield-alt"></i> 256-bit SSL &nbsp;·&nbsp;
+    <img src="https://cdn.razorpay.com/static/assets/logo/rzp_icon.png"
+         style="height:14px;vertical-align:middle" alt="Razorpay" loading="lazy">
+    Powered by Razorpay
+  </div>
 </div>
 
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <script>
-var options = {
-    "key": "{{ rzp_key }}",
-    "amount": "{{ rzp_order.amount }}",
-    "currency": "INR",
-    "name": "Curve Sports",
-    "description": "Payment for Order #{{ order.order_number }}",
-    "image": "{{ url_for('static', filename='images/logo.png', _external=True) }}",
-    "order_id": "{{ rzp_order.id }}",
-    "handler": function (response){
-        document.getElementById('razorpay_payment_id').value = response.razorpay_payment_id;
-        document.getElementById('razorpay_order_id').value = response.razorpay_order_id;
-        document.getElementById('razorpay_signature').value = response.razorpay_signature;
-        document.getElementById('rzp-form').submit();
-    },
-    "prefill": {
-        "name": "{{ current_user.name }}",
-        "email": "{{ current_user.email }}",
-        "contact": "{{ current_user.phone or '' }}"
-    },
-    "theme": {
-        "color": "#ff5a00"
-    },
-    "modal": {
-        "ondismiss": function(){
-            window.location.href = "{{ url_for('cart.checkout') }}";
-        }
+var rzp = new Razorpay({
+  key:         "{{ rzp_key }}",
+  amount:      "{{ rzp_order.amount }}",
+  currency:    "INR",
+  name:        "Curve Sports",
+  description: "Order #{{ order.order_number }}",
+  order_id:    "{{ rzp_order.id }}",
+  prefill: {
+    name:    "{{ current_user.name | e }}",
+    email:   "{{ current_user.email | e }}",
+    contact: "{{ current_user.phone or '' }}"
+  },
+  theme: { color: "#e31e2d" },
+  handler: function(response) {
+    document.getElementById('rzp_payment_id').value = response.razorpay_payment_id;
+    document.getElementById('rzp_order_id').value   = response.razorpay_order_id;
+    document.getElementById('rzp_signature').value  = response.razorpay_signature;
+    document.getElementById('rzp-form').submit();
+  },
+  modal: {
+    ondismiss: function() {
+      document.getElementById('pay-btn').disabled = false;
+      document.getElementById('pay-btn-text').style.display = '';
+      document.getElementById('pay-spinner').style.display  = 'none';
     }
-};
-var rzp1 = new Razorpay(options);
-document.getElementById('rzp-button1').onclick = function(e){
-    rzp1.open();
-    e.preventDefault();
+  }
+});
+
+function openRazorpay() {
+  document.getElementById('pay-btn').disabled = true;
+  document.getElementById('pay-btn-text').style.display = 'none';
+  document.getElementById('pay-spinner').style.display  = '';
+  rzp.open();
 }
 
-// Auto-open on load
-window.onload = function() {
-    document.getElementById('rzp-button1').click();
-};
+// Auto-open on page load
+window.addEventListener('load', function() { openRazorpay(); });
 </script>
 {% endblock %}

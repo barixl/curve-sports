@@ -1,31 +1,28 @@
 from flask import Flask
-from extensions import db, login_manager, mail, oauth   # ← single source of truth
+from extensions import db, login_manager, mail, oauth
+from config import Config
+from seed_data import seed_data
 import os
-
+import cloudinary
+from sqlalchemy import text
 
 def create_app():
-    app = Flask(__name__, static_folder='static')
-    app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'curvesports-secret-key-change-in-prod')
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///curvesports.db'
+    app = Flask(__name__, static_folder='static', static_url_path='/static')
+    # Tell browsers to cache static files for 1 year (fonts, CSS, JS don't change)
+    app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 31_536_000
+    app.config.from_object(Config)
+
+    # Configure Cloudinary
+    cloudinary.config(
+        cloud_name=app.config['CLOUDINARY_CLOUD_NAME'],
+        api_key=app.config['CLOUDINARY_API_KEY'],
+        api_secret=app.config['CLOUDINARY_API_SECRET'],
+        secure=True
+    )
     if os.environ.get('VERCEL'):
         # Move DB to /tmp for Vercel as the rest of the FS is read-only
         app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/curvesports.db'
-        
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['UPLOAD_FOLDER'] = os.path.join(app.static_folder, 'images', 'products')
-    app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
-
-    # Google OAuth Config
-    app.config['GOOGLE_CLIENT_ID'] = os.environ.get('GOOGLE_CLIENT_ID', 'YOUR_GOOGLE_CLIENT_ID')
-    app.config['GOOGLE_CLIENT_SECRET'] = os.environ.get('GOOGLE_CLIENT_SECRET', 'YOUR_GOOGLE_CLIENT_SECRET')
-
-    # Mail Config (using a common setup, user should update these)
-    app.config['MAIL_SERVER'] = 'smtp.gmail.com'
-    app.config['MAIL_PORT'] = 587
-    app.config['MAIL_USE_TLS'] = True
-    app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME', 'your-email@gmail.com')
-    app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD', 'your-app-password')
-    app.config['MAIL_DEFAULT_SENDER'] = app.config['MAIL_USERNAME']
 
     try:
         os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
@@ -41,12 +38,15 @@ def create_app():
     mail.init_app(app)
     oauth.init_app(app)
 
-    # Register Google OAuth
+    # Register Google OAuth — static endpoints avoid a blocking HTTP fetch on startup
     oauth.register(
         name='google',
         client_id=app.config['GOOGLE_CLIENT_ID'],
         client_secret=app.config['GOOGLE_CLIENT_SECRET'],
-        server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
+        access_token_url='https://oauth2.googleapis.com/token',
+        authorize_url='https://accounts.google.com/o/oauth2/auth',
+        api_base_url='https://www.googleapis.com/oauth2/v2/',
+        jwks_uri='https://www.googleapis.com/oauth2/v3/certs',
         client_kwargs={
             'scope': 'openid email profile'
         }
@@ -66,7 +66,19 @@ def create_app():
     # All DB work must happen inside the app context
     with app.app_context():
         db.create_all()
-        _seed_data()
+        seed_data()
+        # Add new Order columns if they don't exist yet (safe on re-run)
+        new_cols = [
+            ('razorpay_order_id',   'VARCHAR(100)'),
+            ('razorpay_payment_id', 'VARCHAR(100)'),
+        ]
+        with db.engine.connect() as conn:
+            for col, col_type in new_cols:
+                try:
+                    conn.execute(text(f'ALTER TABLE orders ADD COLUMN {col} {col_type}'))
+                    conn.commit()
+                except Exception:
+                    conn.rollback()
 
     # Jinja2 context processors & filters
     from context import register_context
@@ -75,147 +87,6 @@ def create_app():
     return app
 
 
-def _seed_data():
-    """Populate the DB with demo data on first run (idempotent)."""
-    from models import User, Category, Brand, Product
-    from werkzeug.security import generate_password_hash
-
-    if User.query.filter_by(email='admin@curvesports.com').first():
-        return  # already seeded
-
-    # Admin user
-    admin = User(
-        name='Admin User',
-        email='admin@curvesports.com',
-        password=generate_password_hash('admin123'),
-        is_admin=True,
-        email_verified=True,
-        phone='9999999999',
-    )
-    db.session.add(admin)
-
-    # Categories
-    # Categories
-    parent_sports = Category(name='Sports Nutrition', slug='sports-nutrition', icon='💪', description='Supplements for athletic performance')
-    parent_health = Category(name='Health & Wellness', slug='health-wellness', icon='🥗', description='Supplements for daily health')
-    parent_weight = Category(name='Weight Management', slug='weight-management', icon='⚖️', description='Supplements for weight goals')
-    parent_food   = Category(name='Food & Drinks', slug='food-drinks', icon='🍎', description='Healthy snacks and beverages')
-    
-    db.session.add_all([parent_sports, parent_health, parent_weight, parent_food])
-    db.session.flush()
-
-    cats = [
-        Category(name='Whey Protein',  slug='whey-protein',  icon='🥛', description='High quality whey protein supplements', parent_id=parent_sports.id),
-        Category(name='Creatine',      slug='creatine',      icon='⚡', description='Pure creatine monohydrate', parent_id=parent_sports.id),
-        Category(name='Pre Workout',   slug='pre-workout',   icon='🔥', description='Energy & focus pre-workout', parent_id=parent_sports.id),
-        Category(name='Mass Gainer',   slug='mass-gainer',   icon='🏋️', description='Weight & mass gainer supplements', parent_id=parent_sports.id),
-        Category(name='Multivitamins', slug='multivitamins', icon='💊', description='Daily vitamins & minerals', parent_id=parent_health.id),
-        Category(name='BCAA',          slug='bcaa',          icon='🧬', description='Branched Chain Amino Acids', parent_id=parent_sports.id),
-        Category(name='Fat Burner',    slug='fat-burner',    icon='🔥', description='Weight loss & fat burning', parent_id=parent_weight.id),
-        Category(name='Protein Bars',  slug='protein-bars',  icon='🍫', description='On the go protein snacks', parent_id=parent_food.id),
-    ]
-    for c in cats:
-        db.session.add(c)
-    db.session.flush()
-
-    # Mapping for product category assignment
-    cat_map = {c.slug: c.id for c in cats}
-
-    # Brands
-    brands = [
-        Brand(name='Curve Gold',      slug='curve-gold',     description='Premium in-house brand'),
-        Brand(name='Optimum Nutrition',  slug='optimum-nutrition', description='World leading supplement brand'),
-        Brand(name='MuscleBlaze',        slug='muscleblaze',       description="India's top sports nutrition brand"),
-        Brand(name='MyProtein',          slug='myprotein',         description="Europe's largest sports nutrition brand"),
-        Brand(name='HealthKart',         slug='healthkart',        description='Trusted Indian health brand'),
-        Brand(name='AS-IT-IS Nutrition', slug='as-it-is',          description='Pure & unadulterated supplements'),
-    ]
-    for b in brands:
-        db.session.add(b)
-
-    db.session.flush()  # assign IDs so foreign keys work below
-
-    # Products
-    product_images = ['Whey-Chocolate.jpg', 'muscleblaze.jpg', 'whey.webp']
-    products = [
-        Product(
-            name='Curve Gold 100% Whey Protein', slug='curve-gold-whey-protein',
-            description='Premium whey protein concentrate with 24g protein per serving. Ideal for muscle building and recovery.',
-            price=1999, original_price=2999, stock=150, category_id=cat_map['whey-protein'], brand_id=1,
-            rating=4.5, review_count=2341, featured=True, bestseller=True,
-            image=product_images[0]
-        ),
-        Product(
-            name='ON Gold Standard 100% Whey', slug='on-gold-standard-whey',
-            description="World's best selling whey protein. 24g blended protein, 5.5g BCAAs per serving.",
-            price=4299, original_price=5499, stock=80, category_id=cat_map['whey-protein'], brand_id=2,
-            rating=4.8, review_count=8921, featured=True, bestseller=True,
-            image=product_images[1]
-        ),
-        Product(
-            name='MuscleBlaze Biozyme Whey', slug='muscleblaze-biozyme-whey',
-            description='Enhanced absorption whey protein with protease enzyme blend.',
-            price=2799, original_price=3599, stock=200, category_id=cat_map['whey-protein'], brand_id=3,
-            rating=4.4, review_count=5612, featured=True,
-            image=product_images[2]
-        ),
-        Product(
-            name='Curve Pure Creatine Monohydrate', slug='curve-creatine-mono',
-            description='100% pure micronized creatine monohydrate. 3g per serving for strength and power.',
-            price=499, original_price=799, stock=300, category_id=cat_map['creatine'], brand_id=1,
-            rating=4.6, review_count=3210, bestseller=True,
-            image=product_images[0]
-        ),
-        Product(
-            name='MyProtein Impact Whey', slug='myprotein-impact-whey',
-            description="Europe's best selling protein powder with 21g protein per serving.",
-            price=2199, original_price=2999, stock=120, category_id=cat_map['whey-protein'], brand_id=4,
-            rating=4.3, review_count=4100,
-            image=product_images[1]
-        ),
-        Product(
-            name='Curve Pre-Workout Ignite', slug='curve-preworkout-ignite',
-            description='Explosive pre-workout formula with caffeine, beta-alanine and citrulline.',
-            price=999, original_price=1499, stock=90, category_id=cat_map['pre-workout'], brand_id=1,
-            rating=4.2, review_count=1890, featured=True,
-            image=product_images[2]
-        ),
-        Product(
-            name='AS-IT-IS Whey Protein Concentrate', slug='as-it-is-whey',
-            description='Pure, unadulterated whey protein concentrate 80%. No additives, no fillers.',
-            price=1599, original_price=2199, stock=250, category_id=cat_map['whey-protein'], brand_id=6,
-            rating=4.5, review_count=7823, bestseller=True,
-            image=product_images[0]
-        ),
-        Product(
-            name='MuscleBlaze Mass Gainer XXL', slug='muscleblaze-mass-gainer-xxl',
-            description='60g protein and 1000+ calories per serving for extreme mass gain.',
-            price=1799, original_price=2399, stock=60, category_id=cat_map['mass-gainer'], brand_id=3,
-            rating=4.1, review_count=3456,
-            image=product_images[1]
-        ),
-        Product(
-            name='Curve Wellness BCAA 2:1:1', slug='curve-bcaa',
-            description='Pure BCAA in 2:1:1 ratio for muscle recovery and endurance.',
-            price=799, original_price=1199, stock=180, category_id=cat_map['bcaa'], brand_id=1,
-            rating=4.3, review_count=1230,
-            image=product_images[2]
-        ),
-        Product(
-            name='ON Opti-Men Multivitamin', slug='on-opti-men-multivitamin',
-            description='Complete multivitamin for active men with 75+ ingredients.',
-            price=1899, original_price=2499, stock=100, category_id=cat_map['multivitamins'], brand_id=2,
-            rating=4.7, review_count=4532, featured=True,
-            image=product_images[0]
-        ),
-    ]
-    for p in products:
-        db.session.add(p)
-
-    db.session.commit()
-    print('✅ Demo data seeded.')
-
-
 if __name__ == '__main__':
     app = create_app()
-    app.run(debug=True)
+    app.run(debug=True, use_reloader=True, reloader_type='watchdog')

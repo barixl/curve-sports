@@ -42,7 +42,7 @@
             </div>
             <input type="file" id="bannerImg" name="image" accept="image/*" style="display:none" onchange="previewImg(this,'bannerPrev')">
             {% if banner and banner.image %}
-            <img src="{{ url_for('static', filename='images/banners/' + banner.image) }}" id="bannerPrev" class="img-preview" style="width:100%;max-width:100%;margin-top:10px">
+            <img src="{{ banner.image | img_url('banner') }}" id="bannerPrev" class="img-preview" style="width:100%;max-width:100%;margin-top:10px">
             {% else %}
             <img id="bannerPrev" class="img-preview" style="display:none;width:100%;max-width:100%;margin-top:10px">
             {% endif %}

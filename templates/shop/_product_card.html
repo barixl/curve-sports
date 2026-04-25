@@ -20,7 +20,7 @@
   <a href="{{ url_for('shop.product_detail', slug=p.slug) }}">
     <div class="product-img">
       {% if p.image and not p.image.endswith('.svg') %}
-        <img src="{{ url_for('static', filename='images/products/' + p.image) }}" alt="{{ p.name }}" loading="lazy">
+        <img src="{{ p.image | img_url('products') }}" alt="{{ p.name }}" loading="lazy">
       {% else %}
         <svg viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg">
           <defs>

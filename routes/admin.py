@@ -5,6 +5,7 @@ from extensions import db
 from models import (User, Product, Category, Brand, Order, OrderItem,
                     Coupon, Review, Banner, ProductImage, Setting,
                     Attribute, AttributeValue, ProductVariation)
+from context import invalidate_nav_cache
 from datetime import datetime, timedelta
 from sqlalchemy import func
 import os, uuid
@@ -30,15 +31,23 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
+import cloudinary
+import cloudinary.uploader
+
 def save_image(file, folder):
-    from flask import current_app
     if file and allowed_file(file.filename):
-        ext = file.filename.rsplit('.', 1)[1].lower()
-        fname = f"{uuid.uuid4().hex}.{ext}"
-        path = os.path.join(current_app.static_folder, 'images', folder, fname)
-        os.makedirs(os.path.dirname(path), exist_ok=True)
-        file.save(path)
-        return fname
+        try:
+            # Upload to Cloudinary
+            result = cloudinary.uploader.upload(
+                file, 
+                folder=folder,
+                resource_type="auto"
+            )
+            # Return the secure URL from Cloudinary
+            return result.get('secure_url')
+        except Exception as e:
+            print(f"Cloudinary upload error: {e}")
+            return None
     return None
 
 
@@ -56,9 +65,9 @@ def dashboard():
     total_users = User.query.filter_by(is_admin=False).count()
     total_products = Product.query.filter_by(is_active=True).count()
 
-    today_orders = Order.query.filter(func.date(Order.created_at) == today).count()
+    today_orders = Order.query.filter(func.cast(Order.created_at, db.Date) == today).count()
     today_revenue = db.session.query(func.sum(Order.final_amount)).filter(
-        func.date(Order.created_at) == today).scalar() or 0
+        func.cast(Order.created_at, db.Date) == today).scalar() or 0
 
     recent_orders = Order.query.order_by(Order.created_at.desc()).limit(10).all()
     low_stock = Product.query.filter(Product.stock < 20, Product.is_active == True).all()
@@ -67,7 +76,7 @@ def dashboard():
     for i in range(6):
         d = datetime.utcnow() - timedelta(days=30 * i)
         rev = db.session.query(func.sum(Order.final_amount)).filter(
-            func.strftime('%Y-%m', Order.created_at) == d.strftime('%Y-%m')
+            func.to_char(Order.created_at, 'YYYY-MM') == d.strftime('%Y-%m')
         ).scalar() or 0
         monthly_revenue.append({'month': d.strftime('%b %Y'), 'revenue': float(rev)})
     monthly_revenue.reverse()
@@ -156,6 +165,9 @@ def add_product():
             var_prices = request.form.getlist('var_price[]')
             var_stocks = request.form.getlist('var_stock[]')
             var_value_ids = request.form.getlist('var_values[]') # Comma separated IDs "1,5"
+            variation_uids = request.form.getlist('variation_uid[]')
+            primary_variation_uid = request.form.get('primary_variation')
+            created_variations = []
 
             for i in range(len(var_prices)):
                 pv = ProductVariation(
@@ -169,7 +181,17 @@ def add_product():
                     ids = list(set([int(vid) for vid in var_value_ids[i].split(',') if vid]))
                     vals = AttributeValue.query.filter(AttributeValue.id.in_(ids)).all()
                     pv.values = vals
+                pv.is_primary = (i < len(variation_uids) and variation_uids[i] == primary_variation_uid)
                 db.session.add(pv)
+                created_variations.append(pv)
+
+            if created_variations:
+                primary_variation = next((v for v in created_variations if v.is_primary), created_variations[0])
+                for v in created_variations:
+                    v.is_primary = (v == primary_variation)
+                p.price = primary_variation.price
+                if p.original_price is None:
+                    p.original_price = primary_variation.price
 
         db.session.commit()
         flash('Product added successfully!', 'success')
@@ -218,6 +240,9 @@ def edit_product(id):
             var_prices = request.form.getlist('var_price[]')
             var_stocks = request.form.getlist('var_stock[]')
             var_value_ids = request.form.getlist('var_values[]')
+            variation_uids = request.form.getlist('variation_uid[]')
+            primary_variation_uid = request.form.get('primary_variation')
+            created_variations = []
 
             for i in range(len(var_prices)):
                 pv = ProductVariation(
@@ -231,7 +256,17 @@ def edit_product(id):
                     ids = list(set([int(vid) for vid in var_value_ids[i].split(',') if vid]))
                     vals = AttributeValue.query.filter(AttributeValue.id.in_(ids)).all()
                     pv.values = vals
+                pv.is_primary = (i < len(variation_uids) and variation_uids[i] == primary_variation_uid)
                 db.session.add(pv)
+                created_variations.append(pv)
+
+            if created_variations:
+                primary_variation = next((v for v in created_variations if v.is_primary), created_variations[0])
+                for v in created_variations:
+                    v.is_primary = (v == primary_variation)
+                product.price = primary_variation.price
+                if product.original_price is None:
+                    product.original_price = primary_variation.price
 
         db.session.commit()
         flash('Product updated!', 'success')
@@ -278,15 +313,15 @@ def add_category():
         cat = Category(name=name, slug=slugify(name),
                        description=request.form.get('description', ''),
                        image=img_name,
-                       icon=request.form.get('icon'),
                        parent_id=request.form.get('parent_id', type=int) or None,
                        is_active=request.form.get('is_active') == 'on')
         db.session.add(cat)
         db.session.commit()
+        invalidate_nav_cache()
         flash('Category added!', 'success')
         return redirect(url_for('admin.categories'))
-    categories = Category.query.all()
-    return render_template('admin/category_form.html', category=None, categories=categories)
+    parent_categories = Category.query.filter_by(parent_id=None).order_by(Category.name.asc()).all()
+    return render_template('admin/category_form.html', category=None, parent_categories=parent_categories)
 
 
 @admin_bp.route('/categories/edit/<int:id>', methods=['GET', 'POST'])
@@ -301,14 +336,17 @@ def edit_category(id):
         cat.name = request.form.get('name', cat.name)
         cat.slug = slugify(cat.name)
         cat.description = request.form.get('description', cat.description)
-        cat.icon = request.form.get('icon', cat.icon)
         cat.parent_id = request.form.get('parent_id', type=int) or None
         cat.is_active = request.form.get('is_active') == 'on'
         db.session.commit()
+        invalidate_nav_cache()
         flash('Category updated!', 'success')
         return redirect(url_for('admin.categories'))
-    categories = Category.query.filter(Category.id != id).all()
-    return render_template('admin/category_form.html', category=cat, categories=categories)
+    parent_categories = Category.query.filter(
+        Category.parent_id.is_(None),
+        Category.id != cat.id
+    ).order_by(Category.name.asc()).all()
+    return render_template('admin/category_form.html', category=cat, parent_categories=parent_categories)
 
 
 @admin_bp.route('/categories/delete/<int:id>', methods=['POST'])
@@ -317,6 +355,7 @@ def delete_category(id):
     cat = Category.query.get_or_404(id)
     db.session.delete(cat)
     db.session.commit()
+    invalidate_nav_cache()
     flash('Category deleted!', 'success')
     return redirect(url_for('admin.categories'))
 
@@ -344,6 +383,7 @@ def add_brand():
                       is_active=request.form.get('is_active') == 'on')
         db.session.add(brand)
         db.session.commit()
+        invalidate_nav_cache()
         flash('Brand added!', 'success')
         return redirect(url_for('admin.brands'))
     return render_template('admin/brand_form.html', brand=None)
@@ -363,6 +403,7 @@ def edit_brand(id):
         brand.description = request.form.get('description', brand.description)
         brand.is_active = request.form.get('is_active') == 'on'
         db.session.commit()
+        invalidate_nav_cache()
         flash('Brand updated!', 'success')
         return redirect(url_for('admin.brands'))
     return render_template('admin/brand_form.html', brand=brand)
@@ -374,6 +415,7 @@ def delete_brand(id):
     brand = Brand.query.get_or_404(id)
     db.session.delete(brand)
     db.session.commit()
+    invalidate_nav_cache()
     flash('Brand deleted!', 'success')
     return redirect(url_for('admin.brands'))
 
@@ -658,7 +700,7 @@ def reports():
     ).group_by(Category.id).all()
 
     monthly = db.session.query(
-        func.strftime('%Y-%m', Order.created_at).label('month'),
+        func.to_char(Order.created_at, 'YYYY-MM').label('month'),
         func.count(Order.id).label('orders'),
         func.sum(Order.final_amount).label('revenue')
     ).group_by('month').order_by('month').limit(12).all()
@@ -673,19 +715,39 @@ def reports():
 @admin_required
 def settings():
     from models import Setting
+    # Keys that must never be overwritten with a blank submission
+    SENSITIVE_KEYS = {'razorpay_key_secret', 'razorpay_webhook_secret'}
+    # Keys that are never saved from the form at all (handled separately)
+    SKIP_KEYS = {'new_password', 'confirm_password'}
+
     if request.method == 'POST':
-        # Save all form data to settings table
+        # List of all checkboxes to ensure they are handled even if unchecked
+        CHECKBOX_KEYS = {'enable_cod', 'enable_online'}
+        
+        # 1. Handle all items in the form
         for key, value in request.form.items():
-            if key == 'new_password' or key == 'confirm_password': continue
+            if key in SKIP_KEYS:
+                continue
+            # Don't overwrite a saved secret if the admin left the field blank
+            if key in SENSITIVE_KEYS and not value.strip():
+                continue
             s = Setting.query.filter_by(key=key).first()
             if not s:
                 s = Setting(key=key)
                 db.session.add(s)
             s.value = value
-        
-        # Handle password change separately
-        new_pass = request.form.get('new_password')
-        confirm_pass = request.form.get('confirm_password')
+
+        # 2. Handle checkboxes that might be missing from the form because they are unchecked
+        for key in CHECKBOX_KEYS:
+            if key not in request.form:
+                s = Setting.query.filter_by(key=key).first()
+                if not s:
+                    s = Setting(key=key)
+                    db.session.add(s)
+                s.value = 'off'
+
+        new_pass    = request.form.get('new_password', '').strip()
+        confirm_pass = request.form.get('confirm_password', '').strip()
         if new_pass:
             if new_pass == confirm_pass:
                 current_user.set_password(new_pass)
@@ -696,8 +758,7 @@ def settings():
         db.session.commit()
         flash('Settings saved successfully!', 'success')
         return redirect(url_for('admin.settings'))
-    
-    # Get all settings
+
     all_s = Setting.query.all()
     settings_dict = {s.key: s.value for s in all_s}
     return render_template('admin/settings.html', settings=settings_dict)
