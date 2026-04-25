@@ -42,6 +42,7 @@ class Category(db.Model):
     slug        = db.Column(db.String(120), unique=True, nullable=False)
     description = db.Column(db.Text)
     image       = db.Column(db.String(200))
+    icon        = db.Column(db.String(100)) # Emoji or icon class
     is_active   = db.Column(db.Boolean, default=True)
     parent_id   = db.Column(db.Integer, db.ForeignKey('categories.id'), nullable=True)
     

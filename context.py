@@ -8,6 +8,12 @@ def register_context(app):
         cats = Category.query.filter_by(is_active=True).all()
         brands = Brand.query.filter_by(is_active=True).order_by(Brand.name.asc()).all()
         
+        # Group categories by parent
+        parent_cats = [c for c in cats if c.parent_id is None]
+        grouped_categories = {}
+        for parent in parent_cats:
+            grouped_categories[parent] = [c for c in cats if c.parent_id == parent.id]
+            
         # Group brands by alphabet
         grouped_brands = {}
         for b in brands:
@@ -19,7 +25,14 @@ def register_context(app):
         # Sort keys
         alphabet = sorted(grouped_brands.keys())
         
-        return dict(categories_nav=cats, brands_nav=brands, grouped_brands=grouped_brands, alphabet=alphabet)
+        return dict(
+            categories_nav=cats, 
+            parent_categories=parent_cats,
+            grouped_categories=grouped_categories,
+            brands_nav=brands, 
+            grouped_brands=grouped_brands, 
+            alphabet=alphabet
+        )
 
     @app.template_filter('from_json')
     def from_json_filter(value):

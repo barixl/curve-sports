@@ -115,19 +115,26 @@
         <li><a href="{{ url_for('shop.products') }}">Shop</a></li>
         <li class="nav-item has-mega">
           <a href="{{ url_for('shop.products') }}">Categories <i class="fas fa-chevron-down fa-xs"></i></a>
-          <div class="mega-menu" style="width: 100%; left: 0; border-radius: 0 0 12px 12px;">
-            <div class="mega-inner" style="grid-template-rows: repeat(2, auto); grid-auto-flow: column; grid-template-columns: none;">
-              {% for cat in categories_nav %}
-              <a href="{{ url_for('shop.products', category=cat.slug) }}" class="mega-item">
-                <div class="mega-icon-wrap">
-                  {% if cat.image %}
-                    <img src="{{ url_for('static', filename='images/categories/' + cat.image) }}" alt="{{ cat.name }}">
-                  {% else %}
-                    <i class="fas fa-tag"></i>
-                  {% endif %}
+          <div class="mega-menu" style="width: 100%; left: 0; border-radius: 0 0 12px 12px; padding: 25px;">
+            <div class="mega-inner" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 30px;">
+              {% for parent in parent_categories %}
+              <div class="mega-column">
+                <div style="font-weight: 800; color: var(--primary); font-size: 15px; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 0.5px;">
+                  {{ parent.name }}
                 </div>
-                <span class="mega-name">{{ cat.name }}</span>
-              </a>
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                  {% for sub in grouped_categories[parent] %}
+                  <a href="{{ url_for('shop.products', category=sub.slug) }}" style="display: flex; align-items: center; gap: 10px; color: var(--text-light); transition: 0.2s;" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--text-light)'">
+                    {% if sub.image %}
+                      <img src="{{ url_for('static', filename='images/categories/' + sub.image) }}" style="width: 24px; height: 24px; object-fit: contain; border-radius: 4px;">
+                    {% else %}
+                      <i class="fas fa-tag" style="font-size: 12px; opacity: 0.5;"></i>
+                    {% endif %}
+                    <span style="font-size: 14px; font-weight: 500;">{{ sub.name }}</span>
+                  </a>
+                  {% endfor %}
+                </div>
+              </div>
               {% endfor %}
             </div>
           </div>

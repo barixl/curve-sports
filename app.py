@@ -94,49 +94,32 @@ def _seed_data():
     )
     db.session.add(admin)
 
-    # Categories (Parent & Child)
-    # ── PROTEIN ──────────────────────────────────────────
-    prot = Category(name='PROTEIN', slug='protein', description='High quality protein supplements')
-    db.session.add(prot)
+    # Categories
+    # Categories
+    parent_sports = Category(name='Sports Nutrition', slug='sports-nutrition', icon='💪', description='Supplements for athletic performance')
+    parent_health = Category(name='Health & Wellness', slug='health-wellness', icon='🥗', description='Supplements for daily health')
+    parent_weight = Category(name='Weight Management', slug='weight-management', icon='⚖️', description='Supplements for weight goals')
+    parent_food   = Category(name='Food & Drinks', slug='food-drinks', icon='🍎', description='Healthy snacks and beverages')
+    
+    db.session.add_all([parent_sports, parent_health, parent_weight, parent_food])
     db.session.flush()
-    
-    cat_whey = Category(name='Whey Protein', slug='whey-protein', parent_id=prot.id)
-    cat_iso  = Category(name='Whey Protein Isolate', slug='whey-isolate', parent_id=prot.id)
-    cat_cas  = Category(name='Casein Protein', slug='casein-protein', parent_id=prot.id)
-    cat_plant = Category(name='Plant Protein', slug='plant-protein', parent_id=prot.id)
-    
-    # ── GAINERS ──────────────────────────────────────────
-    gain = Category(name='GAINERS', slug='gainers')
-    db.session.add(gain)
-    db.session.flush()
-    
-    cat_mass = Category(name='Mass Gainer', slug='mass-gainer', parent_id=gain.id)
-    cat_weight = Category(name='Weight Gainer', slug='weight-gainer', parent_id=gain.id)
-    
-    # ── PRE/POST WORKOUT ──────────────────────────────────
-    pre_post = Category(name='PRE/POST WORKOUT', slug='workout')
-    db.session.add(pre_post)
-    db.session.flush()
-    
-    cat_pre = Category(name='Pre Workout', slug='pre-workout', parent_id=pre_post.id)
-    cat_bcaa = Category(name='BCAA', slug='bcaa', parent_id=pre_post.id)
-    cat_crea = Category(name='Creatine', slug='creatine', parent_id=pre_post.id)
-    cat_glut = Category(name='Glutamine', slug='glutamine', parent_id=pre_post.id)
-    
-    # ── WELLNESS ─────────────────────────────────────────
-    well = Category(name='WELLNESS', slug='wellness')
-    db.session.add(well)
-    db.session.flush()
-    
-    cat_multi = Category(name='Multivitamins', slug='multivitamins', parent_id=well.id)
-    cat_fish = Category(name='Fish Oil', slug='fish-oil', parent_id=well.id)
-    cat_biotin = Category(name='Biotin', slug='biotin', parent_id=well.id)
-    cat_zma = Category(name='ZMA', slug='zma', parent_id=well.id)
-    
-    all_cats = [cat_whey, cat_iso, cat_cas, cat_plant, cat_mass, cat_weight, 
-                cat_pre, cat_bcaa, cat_crea, cat_glut, cat_multi, cat_fish, cat_biotin, cat_zma]
-    for c in all_cats:
+
+    cats = [
+        Category(name='Whey Protein',  slug='whey-protein',  icon='🥛', description='High quality whey protein supplements', parent_id=parent_sports.id),
+        Category(name='Creatine',      slug='creatine',      icon='⚡', description='Pure creatine monohydrate', parent_id=parent_sports.id),
+        Category(name='Pre Workout',   slug='pre-workout',   icon='🔥', description='Energy & focus pre-workout', parent_id=parent_sports.id),
+        Category(name='Mass Gainer',   slug='mass-gainer',   icon='🏋️', description='Weight & mass gainer supplements', parent_id=parent_sports.id),
+        Category(name='Multivitamins', slug='multivitamins', icon='💊', description='Daily vitamins & minerals', parent_id=parent_health.id),
+        Category(name='BCAA',          slug='bcaa',          icon='🧬', description='Branched Chain Amino Acids', parent_id=parent_sports.id),
+        Category(name='Fat Burner',    slug='fat-burner',    icon='🔥', description='Weight loss & fat burning', parent_id=parent_weight.id),
+        Category(name='Protein Bars',  slug='protein-bars',  icon='🍫', description='On the go protein snacks', parent_id=parent_food.id),
+    ]
+    for c in cats:
         db.session.add(c)
+    db.session.flush()
+
+    # Mapping for product category assignment
+    cat_map = {c.slug: c.id for c in cats}
 
     # Brands
     brands = [
@@ -154,36 +137,80 @@ def _seed_data():
 
     # Products
     product_images = ['Whey-Chocolate.jpg', 'muscleblaze.jpg', 'whey.webp']
-    
-    # Helper to add 4 products for each category
-    def add_demo_products(cat_id, base_name, base_slug, brand_id):
-        for i in range(1, 5):
-            p = Product(
-                name=f"{base_name} Pro {i}",
-                slug=f"{base_slug}-{i}",
-                description=f"Premium {base_name} formula for maximum results. Pure and authentic.",
-                price=1000 + (i*200),
-                original_price=1500 + (i*200),
-                stock=50 + (i*10),
-                category_id=cat_id,
-                brand_id=brand_id,
-                rating=4.0 + (i*0.2),
-                review_count=100 * i,
-                image=product_images[i % 3]
-            )
-            db.session.add(p)
-
-    # Adding products for some key sub-categories
-    add_demo_products(cat_whey.id, 'Curve Whey', 'curve-whey', 1)
-    add_demo_products(cat_iso.id, 'ON Isolate', 'on-isolate', 2)
-    add_demo_products(cat_mass.id, 'MB Mass', 'mb-mass', 3)
-    add_demo_products(cat_pre.id, 'Curve Ignite', 'curve-ignite', 1)
-    add_demo_products(cat_multi.id, 'Opti-Men', 'opti-men', 2)
-    add_demo_products(cat_crea.id, 'Curve Creatine', 'curve-creatine', 1)
-    add_demo_products(cat_bcaa.id, 'BCAA Recovery', 'bcaa-recovery', 1)
-    add_demo_products(cat_fish.id, 'Fish Oil Premium', 'fish-oil', 5)
-
-    db.session.commit()
+    products = [
+        Product(
+            name='Curve Gold 100% Whey Protein', slug='curve-gold-whey-protein',
+            description='Premium whey protein concentrate with 24g protein per serving. Ideal for muscle building and recovery.',
+            price=1999, original_price=2999, stock=150, category_id=cat_map['whey-protein'], brand_id=1,
+            rating=4.5, review_count=2341, featured=True, bestseller=True,
+            image=product_images[0]
+        ),
+        Product(
+            name='ON Gold Standard 100% Whey', slug='on-gold-standard-whey',
+            description="World's best selling whey protein. 24g blended protein, 5.5g BCAAs per serving.",
+            price=4299, original_price=5499, stock=80, category_id=cat_map['whey-protein'], brand_id=2,
+            rating=4.8, review_count=8921, featured=True, bestseller=True,
+            image=product_images[1]
+        ),
+        Product(
+            name='MuscleBlaze Biozyme Whey', slug='muscleblaze-biozyme-whey',
+            description='Enhanced absorption whey protein with protease enzyme blend.',
+            price=2799, original_price=3599, stock=200, category_id=cat_map['whey-protein'], brand_id=3,
+            rating=4.4, review_count=5612, featured=True,
+            image=product_images[2]
+        ),
+        Product(
+            name='Curve Pure Creatine Monohydrate', slug='curve-creatine-mono',
+            description='100% pure micronized creatine monohydrate. 3g per serving for strength and power.',
+            price=499, original_price=799, stock=300, category_id=cat_map['creatine'], brand_id=1,
+            rating=4.6, review_count=3210, bestseller=True,
+            image=product_images[0]
+        ),
+        Product(
+            name='MyProtein Impact Whey', slug='myprotein-impact-whey',
+            description="Europe's best selling protein powder with 21g protein per serving.",
+            price=2199, original_price=2999, stock=120, category_id=cat_map['whey-protein'], brand_id=4,
+            rating=4.3, review_count=4100,
+            image=product_images[1]
+        ),
+        Product(
+            name='Curve Pre-Workout Ignite', slug='curve-preworkout-ignite',
+            description='Explosive pre-workout formula with caffeine, beta-alanine and citrulline.',
+            price=999, original_price=1499, stock=90, category_id=cat_map['pre-workout'], brand_id=1,
+            rating=4.2, review_count=1890, featured=True,
+            image=product_images[2]
+        ),
+        Product(
+            name='AS-IT-IS Whey Protein Concentrate', slug='as-it-is-whey',
+            description='Pure, unadulterated whey protein concentrate 80%. No additives, no fillers.',
+            price=1599, original_price=2199, stock=250, category_id=cat_map['whey-protein'], brand_id=6,
+            rating=4.5, review_count=7823, bestseller=True,
+            image=product_images[0]
+        ),
+        Product(
+            name='MuscleBlaze Mass Gainer XXL', slug='muscleblaze-mass-gainer-xxl',
+            description='60g protein and 1000+ calories per serving for extreme mass gain.',
+            price=1799, original_price=2399, stock=60, category_id=cat_map['mass-gainer'], brand_id=3,
+            rating=4.1, review_count=3456,
+            image=product_images[1]
+        ),
+        Product(
+            name='Curve Wellness BCAA 2:1:1', slug='curve-bcaa',
+            description='Pure BCAA in 2:1:1 ratio for muscle recovery and endurance.',
+            price=799, original_price=1199, stock=180, category_id=cat_map['bcaa'], brand_id=1,
+            rating=4.3, review_count=1230,
+            image=product_images[2]
+        ),
+        Product(
+            name='ON Opti-Men Multivitamin', slug='on-opti-men-multivitamin',
+            description='Complete multivitamin for active men with 75+ ingredients.',
+            price=1899, original_price=2499, stock=100, category_id=cat_map['multivitamins'], brand_id=2,
+            rating=4.7, review_count=4532, featured=True,
+            image=product_images[0]
+        ),
+    ]
+    for p in products:
+        db.session.add(p)
 
     db.session.commit()
     print('✅ Demo data seeded.')

@@ -278,13 +278,15 @@ def add_category():
         cat = Category(name=name, slug=slugify(name),
                        description=request.form.get('description', ''),
                        image=img_name,
+                       icon=request.form.get('icon'),
                        parent_id=request.form.get('parent_id', type=int) or None,
                        is_active=request.form.get('is_active') == 'on')
         db.session.add(cat)
         db.session.commit()
         flash('Category added!', 'success')
         return redirect(url_for('admin.categories'))
-    return render_template('admin/category_form.html', category=None)
+    categories = Category.query.all()
+    return render_template('admin/category_form.html', category=None, categories=categories)
 
 
 @admin_bp.route('/categories/edit/<int:id>', methods=['GET', 'POST'])
@@ -299,12 +301,14 @@ def edit_category(id):
         cat.name = request.form.get('name', cat.name)
         cat.slug = slugify(cat.name)
         cat.description = request.form.get('description', cat.description)
+        cat.icon = request.form.get('icon', cat.icon)
         cat.parent_id = request.form.get('parent_id', type=int) or None
         cat.is_active = request.form.get('is_active') == 'on'
         db.session.commit()
         flash('Category updated!', 'success')
         return redirect(url_for('admin.categories'))
-    return render_template('admin/category_form.html', category=cat)
+    categories = Category.query.filter(Category.id != id).all()
+    return render_template('admin/category_form.html', category=cat, categories=categories)
 
 
 @admin_bp.route('/categories/delete/<int:id>', methods=['POST'])

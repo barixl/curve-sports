@@ -10,33 +10,12 @@ shop_bp = Blueprint('shop', __name__)
 def index():
     featured = Product.query.filter_by(featured=True, is_active=True).limit(8).all()
     bestsellers = Product.query.filter_by(bestseller=True, is_active=True).limit(8).all()
-    
-    # Get top level categories only
-    categories = Category.query.filter_by(is_active=True, parent_id=None).all()
-    
-    # Special lists for sections
-    def get_cat_products(slug, limit=4):
-        cat = Category.query.filter_by(slug=slug).first()
-        if not cat: return []
-        # Get products from this category and all its children
-        child_ids = [c.id for c in cat.children]
-        return Product.query.filter(
-            (Product.category_id == cat.id) | (Product.category_id.in_(child_ids))
-        ).filter_by(is_active=True).limit(limit).all()
-
-    protein_list = get_cat_products('protein')
-    gainer_list  = get_cat_products('gainers')
-    workout_list = get_cat_products('workout')
-    wellness_list = get_cat_products('wellness')
-
+    categories = Category.query.filter_by(is_active=True).all()
     new_arrivals = Product.query.filter_by(is_active=True).order_by(Product.created_at.desc()).limit(8).all()
     banners = Banner.query.filter_by(is_active=True).order_by(Banner.position).all()
     brands = Brand.query.filter(Brand.is_active==True, Brand.logo.isnot(None)).all()
-    
     return render_template('shop/index.html', featured=featured, bestsellers=bestsellers,
-                           categories=categories, new_arrivals=new_arrivals, banners=banners, brands=brands,
-                           protein_list=protein_list, gainer_list=gainer_list, 
-                           workout_list=workout_list, wellness_list=wellness_list)
+                           categories=categories, new_arrivals=new_arrivals, banners=banners, brands=brands)
 
 
 @shop_bp.route('/products')
