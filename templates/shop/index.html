@@ -140,38 +140,107 @@ startAutoSlide();
   </div>
 </section>
 
-<!-- CATEGORIES HIERARCHY -->
-{% for parent in categories %}
-<section class="section category-section" style="padding: 40px 0; {% if loop.index is even %}background: #fafafa;{% endif %}">
+<!-- CATEGORIES -->
+<section class="section">
   <div class="container">
-    <div class="section-header" style="margin-bottom: 25px;">
-      <h2 class="section-title" style="display:flex; align-items:center; gap:10px;">
-        {{ parent.name }}
-        <a href="{{ url_for('shop.products', category=parent.slug) }}" style="font-size: 14px; color: var(--primary); font-weight: 500; display: flex; align-items:center; gap:5px; margin-left: 10px;">
-          All <i class="fas fa-chevron-right" style="font-size:10px;"></i>
-        </a>
-      </h2>
+    <div class="section-header">
+      <h2 class="section-title">Shop by Category</h2>
+      <a href="{{ url_for('shop.products') }}" class="view-all">View All <i class="fas fa-arrow-right"></i></a>
     </div>
-    
-    <div class="subcategory-grid">
-      {% for sub in parent.children %}
-      <a href="{{ url_for('shop.products', category=sub.slug) }}" class="subcategory-card">
-        <div class="subcategory-icon">
-          {% if sub.image %}
-            <img src="{{ url_for('static', filename='images/categories/' + sub.image) }}" alt="{{ sub.name }}">
-          {% else %}
-            <div class="subcategory-placeholder">
-               <i class="fas fa-pills"></i>
-            </div>
-          {% endif %}
+    <div class="cat-grid">
+      {% for cat in categories %}
+      <div class="cat-item-container">
+        <a href="{{ url_for('shop.products', category=cat.slug) }}" class="cat-card">
+          <div class="cat-icon">
+            {% if cat.image %}
+              <img src="{{ url_for('static', filename='images/categories/' + cat.image) }}" alt="{{ cat.name }}">
+            {% else %}
+              <div class="cat-placeholder"><i class="fas fa-tags"></i></div>
+            {% endif %}
+          </div>
+          <div class="cat-name">{{ cat.name }}</div>
+        </a>
+        {% if cat.children %}
+        <div class="sub-cat-list">
+          {% for sub in cat.children %}
+          <a href="{{ url_for('shop.products', category=sub.slug) }}" class="sub-cat-link">{{ sub.name }}</a>
+          {% endfor %}
         </div>
-        <div class="subcategory-name">{{ sub.name }}</div>
-      </a>
+        {% endif %}
+      </div>
       {% endfor %}
     </div>
   </div>
 </section>
-{% endfor %}
+
+<!-- CATEGORY SECTIONS -->
+<!-- PROTEIN -->
+{% if protein_list %}
+<section class="section category-section" style="background: white;">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">Proteins</h2>
+      <a href="{{ url_for('shop.products', category='protein') }}" class="view-all">View All <i class="fas fa-arrow-right"></i></a>
+    </div>
+    <div class="products-grid mobile-2-col">
+      {% for p in protein_list %}
+      {% include 'shop/_product_card.html' %}
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- GAINERS -->
+{% if gainer_list %}
+<section class="section category-section">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">Gainers</h2>
+      <a href="{{ url_for('shop.products', category='gainers') }}" class="view-all">View All <i class="fas fa-arrow-right"></i></a>
+    </div>
+    <div class="products-grid mobile-2-col">
+      {% for p in gainer_list %}
+      {% include 'shop/_product_card.html' %}
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- PRE/POST WORKOUT -->
+{% if workout_list %}
+<section class="section category-section" style="background: white;">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">Pre/Post Workout</h2>
+      <a href="{{ url_for('shop.products', category='workout') }}" class="view-all">View All <i class="fas fa-arrow-right"></i></a>
+    </div>
+    <div class="products-grid mobile-2-col">
+      {% for p in workout_list %}
+      {% include 'shop/_product_card.html' %}
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- WELLNESS -->
+{% if wellness_list %}
+<section class="section category-section">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">Wellness</h2>
+      <a href="{{ url_for('shop.products', category='wellness') }}" class="view-all">View All <i class="fas fa-arrow-right"></i></a>
+    </div>
+    <div class="products-grid mobile-2-col">
+      {% for p in wellness_list %}
+      {% include 'shop/_product_card.html' %}
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
 
 <!-- FEATURED PRODUCTS -->
 {% if featured %}

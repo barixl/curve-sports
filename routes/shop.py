@@ -10,12 +10,33 @@ shop_bp = Blueprint('shop', __name__)
 def index():
     featured = Product.query.filter_by(featured=True, is_active=True).limit(8).all()
     bestsellers = Product.query.filter_by(bestseller=True, is_active=True).limit(8).all()
-    parent_categories = Category.query.filter_by(parent_id=None, is_active=True).all()
+    
+    # Get top level categories only
+    categories = Category.query.filter_by(is_active=True, parent_id=None).all()
+    
+    # Special lists for sections
+    def get_cat_products(slug, limit=4):
+        cat = Category.query.filter_by(slug=slug).first()
+        if not cat: return []
+        # Get products from this category and all its children
+        child_ids = [c.id for c in cat.children]
+        return Product.query.filter(
+            (Product.category_id == cat.id) | (Product.category_id.in_(child_ids))
+        ).filter_by(is_active=True).limit(limit).all()
+
+    protein_list = get_cat_products('protein')
+    gainer_list  = get_cat_products('gainers')
+    workout_list = get_cat_products('workout')
+    wellness_list = get_cat_products('wellness')
+
     new_arrivals = Product.query.filter_by(is_active=True).order_by(Product.created_at.desc()).limit(8).all()
     banners = Banner.query.filter_by(is_active=True).order_by(Banner.position).all()
     brands = Brand.query.filter(Brand.is_active==True, Brand.logo.isnot(None)).all()
+    
     return render_template('shop/index.html', featured=featured, bestsellers=bestsellers,
-                           categories=parent_categories, new_arrivals=new_arrivals, banners=banners, brands=brands)
+                           categories=categories, new_arrivals=new_arrivals, banners=banners, brands=brands,
+                           protein_list=protein_list, gainer_list=gainer_list, 
+                           workout_list=workout_list, wellness_list=wellness_list)
 
 
 @shop_bp.route('/products')
@@ -37,9 +58,7 @@ def products():
         query = query.filter(Product.name.ilike(f'%{search}%'))
     if category_slug:
         cat = Category.query.filter_by(slug=category_slug).first_or_404()
-        # Include children categories
-        cat_ids = [cat.id] + [child.id for child in cat.children]
-        query = query.filter(Product.category_id.in_(cat_ids))
+        query = query.filter_by(category_id=cat.id)
     else:
         cat = None
     if brand_slug:
@@ -64,10 +83,10 @@ def products():
         query = query.order_by(Product.review_count.desc())
 
     pagination = query.paginate(page=page, per_page=12, error_out=False)
-    parent_categories = Category.query.filter_by(parent_id=None, is_active=True).all()
+    categories = Category.query.filter_by(is_active=True).all()
     brands = Brand.query.filter_by(is_active=True).all()
     return render_template('shop/products.html', products=pagination.items, pagination=pagination,
-                           categories=parent_categories, brands=brands, selected_cat=cat,
+                           categories=categories, brands=brands, selected_cat=cat,
                            selected_brand=brand, sort=sort, search=search, offers=on_sale)
 
 
