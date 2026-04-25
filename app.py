@@ -7,6 +7,10 @@ def create_app():
     app = Flask(__name__)
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'curvesports-secret-key-change-in-prod')
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///curvesports.db'
+    if os.environ.get('VERCEL'):
+        # Move DB to /tmp for Vercel as the rest of the FS is read-only
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/curvesports.db'
+        
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['UPLOAD_FOLDER'] = os.path.join(app.static_folder, 'images', 'products')
     app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
@@ -23,7 +27,11 @@ def create_app():
     app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD', 'your-app-password')
     app.config['MAIL_DEFAULT_SENDER'] = app.config['MAIL_USERNAME']
 
-    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+    try:
+        os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+    except OSError:
+        # Ignore on read-only filesystems like Vercel
+        pass
 
     # Bind extensions to this app instance
     db.init_app(app)
