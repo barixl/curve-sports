@@ -278,9 +278,17 @@ def edit_product(id):
 @admin_required
 def delete_product(id):
     p = Product.query.get_or_404(id)
-    p.is_active = False
-    db.session.commit()
-    flash('Product deactivated.', 'info')
+    
+    # Check if the product is in any orders
+    if p.order_items:
+        p.is_active = False
+        db.session.commit()
+        flash(f'Product "{p.name}" has order history and cannot be fully deleted. It has been deactivated instead.', 'info')
+    else:
+        db.session.delete(p)
+        db.session.commit()
+        flash(f'Product "{p.name}" has been permanently deleted.', 'success')
+    
     return redirect(url_for('admin.products'))
 
 

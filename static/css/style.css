@@ -251,7 +251,7 @@ input, button, select, textarea { font-family: inherit; }
 /* ── SECTION ───────────────────────────────────────── */
 .section { padding: 60px 0; }
 .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px; }
-.section-title { font-family: var(--font-head); font-size: 32px; font-weight: 700; color: var(--dark); position: relative; }
+.section-title { font-family: var(--font-head); font-size: 32px; font-weight: 700; color: var(--dark); position: relative; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 70%; }
 .section-title::after { content: ''; position: absolute; bottom: -6px; left: 0; width: 48px; height: 3px; background: var(--primary); border-radius: 2px; }
 .view-all {
   display: inline-flex;
@@ -265,6 +265,7 @@ input, button, select, textarea { font-family: inherit; }
   font-size: 13px;
   font-weight: 700;
   line-height: 1;
+  white-space: nowrap;
   transition: all 0.2s ease;
 }
 
@@ -634,10 +635,18 @@ tr:hover td { background: #fafafa; }
 
   .section-compact .section-header {
     margin-bottom: 14px;
+    gap: 10px;
   }
+  .section-title {
+    font-size: 20px !important;
+    max-width: 65%;
+    white-space: normal !important; /* Allow title to wrap but keep button in line */
+  }
+  .section-title::after { width: 30px; bottom: -4px; }
+  .view-all { padding: 6px 10px; font-size: 12px; }
 
   .header-inner { justify-content: space-between; gap: 8px; padding: 10px 0; }
-  .logo { font-size: 20px; margin-right: auto; margin-left: 8px; }
+  .logo { font-size: 16px; margin-right: auto; margin-left: 6px; white-space: nowrap; letter-spacing: 0.5px; }
   .search-bar { display: none; }
   .mobile-toggle { display: block; order: -1; }
   .header-actions { gap: 4px; }
