@@ -1,6 +1,108 @@
+from sqlalchemy import text
 from extensions import db
 from models import User, Category, Brand, Product
 from werkzeug.security import generate_password_hash
+
+
+def migrate_performance_nutrition():
+    """
+    Move all subcategories of 'performance-nutrition' under a new 'Sports Nutrition'
+    parent, then delete the old parent. Uses direct SQL to avoid FK constraint issues.
+    Idempotent — no-op once performance-nutrition is gone.
+    """
+    perf = Category.query.filter_by(slug='performance-nutrition').first()
+    if not perf:
+        return
+
+    # Get or create the new parent
+    sports = Category.query.filter_by(slug='sports-nutrition').first()
+    if not sports:
+        sports = Category(
+            name='Sports Nutrition',
+            slug='sports-nutrition',
+            description='Complete range of sports and performance supplements'
+        )
+        db.session.add(sports)
+        db.session.flush()
+
+    # Re-parent all children using direct SQL (avoids FK constraint order issues)
+    db.session.execute(
+        text('UPDATE categories SET parent_id = :new_id WHERE parent_id = :old_id'),
+        {'new_id': sports.id, 'old_id': perf.id}
+    )
+    db.session.execute(
+        text("DELETE FROM categories WHERE slug = 'performance-nutrition'")
+    )
+    db.session.commit()
+    print('✅ Migrated Performance Nutrition → Sports Nutrition.')
+
+
+def _reset_pg_sequences():
+    """Sync PostgreSQL serial sequences with the current max IDs (no-op on SQLite)."""
+    if db.engine.dialect.name != 'postgresql':
+        return
+    tables = ['users', 'categories', 'brands', 'products']
+    with db.engine.connect() as conn:
+        for table in tables:
+            conn.execute(text(
+                f"SELECT setval(pg_get_serial_sequence('{table}', 'id'), "
+                f"COALESCE((SELECT MAX(id) FROM {table}), 1))"
+            ))
+        conn.commit()
+
+
+def cleanup_gym_duplicates():
+    """
+    For each name that appears more than once under gym-accessories,
+    keep the entry with a Cloudinary image and delete the rest.
+    Runs on every startup but is a no-op once duplicates are gone.
+    """
+    gym_acc = Category.query.filter_by(slug='gym-accessories').first()
+    if not gym_acc:
+        return
+
+    from collections import defaultdict
+    by_name = defaultdict(list)
+    for child in gym_acc.children:
+        by_name[child.name.strip().lower()].append(child)
+
+    deleted = 0
+    for name, entries in by_name.items():
+        if len(entries) <= 1:
+            continue
+        # Prefer entries with a Cloudinary image (starts with https://)
+        with_image = [c for c in entries if c.image and c.image.startswith('https://')]
+        without_image = [c for c in entries if not (c.image and c.image.startswith('https://'))]
+
+        if with_image:
+            # Keep the first with-image entry; delete everything else
+            to_delete = without_image + with_image[1:]
+        else:
+            # No Cloudinary images at all — keep first, delete the rest
+            to_delete = entries[1:]
+
+        for c in to_delete:
+            db.session.delete(c)
+            deleted += 1
+
+    if deleted:
+        db.session.commit()
+        print(f'🧹 Removed {deleted} duplicate gym-accessories subcategorie(s).')
+
+
+def seed_gym_accessories():
+    """Ensure the gym-accessories parent category exists. Subcategories are managed via admin."""
+    _reset_pg_sequences()
+
+    if not Category.query.filter_by(slug='gym-accessories').first():
+        gym_acc = Category(
+            name='Gym Accessories',
+            slug='gym-accessories',
+            description='Everything you need to power your gym sessions'
+        )
+        db.session.add(gym_acc)
+        db.session.commit()
+        print('✅ Gym Accessories parent category created.')
 
 
 def seed_data():

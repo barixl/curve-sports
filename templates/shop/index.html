@@ -114,6 +114,30 @@ startAutoSlide();
   </div>
 </div>
 
+<!-- SHOP BY CATEGORY -->
+<section class="section section-compact">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">Shop by Category</h2>
+      <a href="{{ url_for('shop.products') }}" class="view-all">View All</a>
+    </div>
+    <div class="home-cat-grid">
+      {% for cat in categories %}
+      <a href="{{ url_for('shop.products', category=cat.slug) }}" class="home-cat-card">
+        <div class="home-cat-thumb">
+          {% if cat.image %}
+            <img src="{{ cat.image | img_url('categories') }}" alt="{{ cat.name }}">
+          {% else %}
+            <i class="fas fa-layer-group"></i>
+          {% endif %}
+        </div>
+        <div class="home-cat-name">{{ cat.name }}</div>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
 <!-- SHOP BY BRAND -->
 <section class="brands-section section-compact" style="background:#fafafa;">
   <div class="container">
@@ -188,22 +212,22 @@ startAutoSlide();
 })();
 </script>
 
-<!-- VITAMINS SECTION -->
-{% if vitamin_subcats %}
+<!-- DYNAMIC CATEGORY SECTIONS (any parent with 2+ active subcategories) -->
+{% for section in category_sections %}
 <section class="section section-compact">
   <div class="container">
     <div class="section-header">
-      <h2 class="section-title">Vitamins</h2>
-      <a href="{{ url_for('shop.products', category='vitamins') }}" class="view-all">View All</a>
+      <h2 class="section-title">{{ section.parent.name }}</h2>
+      <a href="{{ url_for('shop.products', category=section.parent.slug) }}" class="view-all">View All</a>
     </div>
     <div class="home-cat-grid">
-      {% for sc in vitamin_subcats %}
+      {% for sc in section.children %}
       <a href="{{ url_for('shop.products', category=sc.slug) }}" class="home-cat-card">
         <div class="home-cat-thumb">
           {% if sc.image %}
           <img src="{{ sc.image | img_url('categories') }}" alt="{{ sc.name }}">
           {% else %}
-          <i class="fas fa-capsules"></i>
+          <i class="fas fa-layer-group"></i>
           {% endif %}
         </div>
         <div class="home-cat-name">{{ sc.name }}</div>
@@ -212,94 +236,59 @@ startAutoSlide();
     </div>
   </div>
 </section>
-{% endif %}
+{% endfor %}
 
-<!-- HEALTH FOOD SECTION -->
-{% if health_food_subcats %}
-<section class="section section-compact">
+<!-- WHY CHOOSE US — TRUST FEATURES -->
+<section class="trust-features-section">
   <div class="container">
-    <div class="section-header">
-      <h2 class="section-title">Health Food</h2>
-      <a href="{{ url_for('shop.products', category='health-food') }}" class="view-all">View All</a>
+    <div style="margin-bottom:40px">
+      <h2 class="section-title" style="font-size:36px">Why Choose Curve Sports and Nutrition?</h2>
     </div>
-    <div class="home-cat-grid">
-      {% for sc in health_food_subcats %}
-      <a href="{{ url_for('shop.products', category=sc.slug) }}" class="home-cat-card">
-        <div class="home-cat-thumb">
-          {% if sc.image %}
-          <img src="{{ sc.image | img_url('categories') }}" alt="{{ sc.name }}">
-          {% else %}
-          <i class="fas fa-apple-alt"></i>
-          {% endif %}
-        </div>
-        <div class="home-cat-name">{{ sc.name }}</div>
-      </a>
-      {% endfor %}
-    </div>
-  </div>
-</section>
-{% endif %}
-
-<!-- CATEGORIES -->
-<section class="section section-compact">
-  <div class="container">
-    <div class="section-header">
-      <h2 class="section-title">Shop by Category</h2>
-      <a href="{{ url_for('shop.products') }}" class="view-all">View All</a>
-    </div>
-    <div class="home-cat-grid">
-      {% for cat in categories %}
-      <a href="{{ url_for('shop.products', category=cat.slug) }}" class="home-cat-card">
-        <div class="home-cat-thumb">
-          {% if cat.image %}
-            <img src="{{ cat.image | img_url('categories') }}" alt="{{ cat.name }}">
-          {% else %}
-            <i class="fas fa-layer-group"></i>
-          {% endif %}
-        </div>
-        <div class="home-cat-name">{{ cat.name }}</div>
-      </a>
-      {% endfor %}
+    <div class="trust-features-grid">
+      <div class="trust-feature-card">
+        <div class="trust-feature-icon"><i class="fas fa-certificate"></i></div>
+        <h3>100% Authentic Products</h3>
+        <p>Every product is sourced directly from authorised distributors and manufacturers. No grey market, no fakes — ever.</p>
+      </div>
+      <div class="trust-feature-card">
+        <div class="trust-feature-icon"><i class="fas fa-flask"></i></div>
+        <h3>Lab Tested & Verified</h3>
+        <p>We work only with brands that follow GMP-certified manufacturing. What's on the label is what's in the bottle.</p>
+      </div>
+      <div class="trust-feature-card">
+        <div class="trust-feature-icon"><i class="fas fa-shipping-fast"></i></div>
+        <h3>Fast Pan-India Delivery</h3>
+        <p>Orders dispatched within 24 hours. Free delivery on orders above ₹499. Tracked shipping every step of the way.</p>
+      </div>
+      <div class="trust-feature-card">
+        <div class="trust-feature-icon"><i class="fas fa-undo-alt"></i></div>
+        <h3>Hassle-Free Returns</h3>
+        <p>Not satisfied? Our 7-day easy return policy means you shop with zero risk. Your money is always safe with us.</p>
+      </div>
+      <div class="trust-feature-card">
+        <div class="trust-feature-icon"><i class="fas fa-user-md"></i></div>
+        <h3>Expert Nutrition Advice</h3>
+        <p>Our team includes certified nutrition consultants ready to help you pick the right stack for your specific goals.</p>
+      </div>
+      <div class="trust-feature-card">
+        <div class="trust-feature-icon"><i class="fas fa-lock"></i></div>
+        <h3>Secure Payments</h3>
+        <p>Pay with confidence via Razorpay, UPI, cards, or net banking. All transactions are 100% encrypted and secure.</p>
+      </div>
     </div>
   </div>
 </section>
 
-<!-- PERFORMANCE NUTRITION SECTION -->
-{% if perf_subcats %}
-<section class="section section-compact">
-  <div class="container">
-    <div class="section-header">
-      <h2 class="section-title">Performance Nutrition</h2>
-      <a href="{{ url_for('shop.products', category='performance-nutrition') }}" class="view-all">View All</a>
-    </div>
-    <div class="home-cat-grid">
-      {% for sc in perf_subcats %}
-      <a href="{{ url_for('shop.products', category=sc.slug) }}" class="home-cat-card">
-        <div class="home-cat-thumb">
-          {% if sc.image %}
-          <img src="{{ sc.image | img_url('categories') }}" alt="{{ sc.name }}">
-          {% else %}
-          <i class="fas fa-bolt"></i>
-          {% endif %}
-        </div>
-        <div class="home-cat-name">{{ sc.name }}</div>
-      </a>
-      {% endfor %}
-    </div>
-  </div>
-</section>
-{% endif %}
-
-<!-- FEATURED PRODUCTS -->
-{% if featured %}
+<!-- BESTSELLERS -->
+{% if bestsellers %}
 <section class="section" style="background:white;padding:60px 0">
   <div class="container">
     <div class="section-header">
-      <h2 class="section-title">Featured Products</h2>
+      <h2 class="section-title">Bestsellers 🔥</h2>
       <a href="{{ url_for('shop.products') }}" class="view-all">View All</a>
     </div>
     <div class="products-grid">
-      {% for p in featured %}
+      {% for p in bestsellers %}
       {% include 'shop/_product_card.html' %}
       {% endfor %}
     </div>
@@ -314,16 +303,16 @@ startAutoSlide();
   </div>
 </div>
 
-<!-- BESTSELLERS -->
-{% if bestsellers %}
+<!-- FEATURED PRODUCTS -->
+{% if featured %}
 <section class="section">
   <div class="container">
     <div class="section-header">
-      <h2 class="section-title">Bestsellers 🔥</h2>
+      <h2 class="section-title">Featured Products</h2>
       <a href="{{ url_for('shop.products') }}" class="view-all">View All</a>
     </div>
     <div class="products-grid">
-      {% for p in bestsellers %}
+      {% for p in featured %}
       {% include 'shop/_product_card.html' %}
       {% endfor %}
     </div>
@@ -354,6 +343,44 @@ startAutoSlide();
   </div>
 </section>
 {% endif %}
+
+<!-- WHATSAPP CTA -->
+<section class="whatsapp-cta-section">
+  <div class="container">
+    <div class="whatsapp-cta-inner">
+
+      <div class="whatsapp-cta-text">
+        <div class="whatsapp-cta-badge">
+          <i class="fab fa-whatsapp"></i> WhatsApp Order
+        </div>
+        <h2>Need Help? <span>Order on WhatsApp</span></h2>
+        <p>Talk to our nutrition experts instantly — get personalised supplement recommendations, check live stock, and place your order in seconds.</p>
+        <ul class="whatsapp-perks">
+          <li><i class="fas fa-check-circle"></i> Instant order confirmation &amp; invoice</li>
+          <li><i class="fas fa-check-circle"></i> Expert supplement stack advice</li>
+          <li><i class="fas fa-check-circle"></i> Exclusive deals &amp; offers for WhatsApp customers</li>
+          <li><i class="fas fa-check-circle"></i> Real-time order tracking updates</li>
+        </ul>
+      </div>
+
+      <div class="whatsapp-cta-action">
+        <div class="whatsapp-cta-card">
+          <p>Our experts are ready to help you right now!</p>
+          <a href="https://wa.me/919999999999?text=Hi%20Curve%20Sports%20and%20Nutrition%2C%20I%20want%20to%20place%20an%20order!"
+             class="whatsapp-btn" target="_blank" rel="noopener">
+            <i class="fab fa-whatsapp"></i>
+            Order Now on WhatsApp
+          </a>
+          <div class="whatsapp-online">
+            <span class="whatsapp-online-dot"></span>
+            Usually replies within 5 minutes
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
 
 <!-- PROMO BANNER (COUPON SECTION) -->
 <div style="background:linear-gradient(135deg,var(--primary),#ff6b35);padding:60px 0;margin:0">
@@ -420,6 +447,46 @@ startAutoSlide();
         <input type="email" name="email" class="newsletter-input" placeholder="Enter your email" required>
         <button type="submit" class="newsletter-btn">Subscribe</button>
       </form>
+    </div>
+  </div>
+</section>
+
+<!-- SOCIAL MEDIA SECTION -->
+<section class="social-section">
+  <div class="container">
+    <div class="section-header" style="margin-bottom:32px">
+      <h2 class="section-title">Follow Us</h2>
+    </div>
+    <div class="social-cards-grid">
+
+      <!-- Instagram -->
+      <a href="https://www.instagram.com/curvesportsnutrition?utm_source=qr&igsh=MWxhNTJva3lpc2JzbQ=="
+         class="social-card social-card--instagram" target="_blank" rel="noopener">
+        <div class="social-card-icon">
+          <i class="fab fa-instagram"></i>
+        </div>
+        <div class="social-card-body">
+          <div class="social-card-platform">Instagram</div>
+          <div class="social-card-handle">@curvesportsnutrition</div>
+          <div class="social-card-cta">Follow for daily fitness tips, product drops &amp; offers</div>
+        </div>
+        <div class="social-card-arrow"><i class="fas fa-arrow-right"></i></div>
+      </a>
+
+      <!-- Facebook -->
+      <a href="https://www.facebook.com/share/1EEj1NCeQB/"
+         class="social-card social-card--facebook" target="_blank" rel="noopener">
+        <div class="social-card-icon">
+          <i class="fab fa-facebook-f"></i>
+        </div>
+        <div class="social-card-body">
+          <div class="social-card-platform">Facebook</div>
+          <div class="social-card-handle">Curve Sports &amp; Nutrition</div>
+          <div class="social-card-cta">Like our page for updates, reviews &amp; community</div>
+        </div>
+        <div class="social-card-arrow"><i class="fas fa-arrow-right"></i></div>
+      </a>
+
     </div>
   </div>
 </section>

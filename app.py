@@ -1,7 +1,7 @@
 from flask import Flask
 from extensions import db, login_manager, mail, oauth
 from config import Config
-from seed_data import seed_data
+from seed_data import seed_data, seed_gym_accessories, cleanup_gym_duplicates, migrate_performance_nutrition
 import os
 import cloudinary
 from sqlalchemy import text
@@ -67,6 +67,9 @@ def create_app():
     with app.app_context():
         db.create_all()
         seed_data()
+        migrate_performance_nutrition()
+        seed_gym_accessories()
+        cleanup_gym_duplicates()
         # Add new Order columns if they don't exist yet (safe on re-run)
         new_cols = [
             ('razorpay_order_id',   'VARCHAR(100)'),
