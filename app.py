@@ -5,12 +5,19 @@ from seed_data import seed_data, seed_gym_accessories, cleanup_gym_duplicates, m
 import os
 import cloudinary
 from sqlalchemy import text
+from flask_compress import Compress
+
+compress = Compress()
 
 def create_app():
     app = Flask(__name__, static_folder='static', static_url_path='/static')
     # Tell browsers to cache static files for 1 year (fonts, CSS, JS don't change)
     app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 31_536_000
+    app.config['COMPRESS_ALGORITHM'] = ['br', 'gzip', 'deflate']
     app.config.from_object(Config)
+
+    # Initialize compression
+    compress.init_app(app)
 
     # Configure Cloudinary
     cloudinary.config(
@@ -63,25 +70,31 @@ def create_app():
     app.register_blueprint(admin_bp, url_prefix='/admin')
     app.register_blueprint(cart_bp)
 
-    # All DB work must happen inside the app context
-    with app.app_context():
-        db.create_all()
-        seed_data()
-        migrate_performance_nutrition()
-        seed_gym_accessories()
-        cleanup_gym_duplicates()
-        # Add new Order columns if they don't exist yet (safe on re-run)
-        new_cols = [
-            ('razorpay_order_id',   'VARCHAR(100)'),
-            ('razorpay_payment_id', 'VARCHAR(100)'),
-        ]
-        with db.engine.connect() as conn:
-            for col, col_type in new_cols:
-                try:
-                    conn.execute(text(f'ALTER TABLE orders ADD COLUMN {col} {col_type}'))
-                    conn.commit()
-                except Exception:
-                    conn.rollback()
+    # Database initialization and migrations
+    # On Vercel, we avoid running this on every cold start if SKIP_DB_INIT is set
+    if not os.environ.get('SKIP_DB_INIT'):
+        with app.app_context():
+            try:
+                db.create_all()
+                seed_data()
+                migrate_performance_nutrition()
+                seed_gym_accessories()
+                cleanup_gym_duplicates()
+                
+                # Add new Order columns if they don't exist yet
+                new_cols = [
+                    ('razorpay_order_id',   'VARCHAR(100)'),
+                    ('razorpay_payment_id', 'VARCHAR(100)'),
+                ]
+                for col, col_type in new_cols:
+                    try:
+                        db.session.execute(text(f'ALTER TABLE orders ADD COLUMN {col} {col_type}'))
+                        db.session.commit()
+                    except Exception:
+                        db.session.rollback()
+            except Exception as e:
+                print(f"⚠️ Database initialization skipped or failed: {e}")
+                db.session.rollback()
 
     # Jinja2 context processors & filters
     from context import register_context

@@ -49,7 +49,7 @@ class Category(db.Model):
     products    = db.relationship('Product', backref='category', lazy=True)
 
     def product_count(self):
-        return len([p for p in self.products if p.is_active])
+        return Product.query.filter_by(category_id=self.id, is_active=True).count()
 
 
 class Brand(db.Model):

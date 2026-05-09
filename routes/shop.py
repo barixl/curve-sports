@@ -2,22 +2,23 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from flask_login import current_user, login_required
 from extensions import db
 from models import Product, Category, Brand, Review, Wishlist, Banner
+from sqlalchemy.orm import joinedload
 
 shop_bp = Blueprint('shop', __name__)
 
 
 @shop_bp.route('/')
 def index():
-    featured = Product.query.filter_by(featured=True, is_active=True).limit(8).all()
-    bestsellers = Product.query.filter_by(bestseller=True, is_active=True).limit(8).all()
+    featured = Product.query.options(joinedload(Product.brand), joinedload(Product.variations)).filter_by(featured=True, is_active=True).limit(8).all()
+    bestsellers = Product.query.options(joinedload(Product.brand), joinedload(Product.variations)).filter_by(bestseller=True, is_active=True).limit(8).all()
     categories = Category.query.filter_by(is_active=True, parent_id=None).order_by(Category.id.asc()).all()
-    new_arrivals = Product.query.filter_by(is_active=True).order_by(Product.created_at.desc()).limit(8).all()
+    new_arrivals = Product.query.options(joinedload(Product.brand), joinedload(Product.variations)).filter_by(is_active=True).order_by(Product.created_at.desc()).limit(8).all()
     banners = Banner.query.filter_by(is_active=True).order_by(Banner.position).all()
     brands = Brand.query.filter(Brand.is_active==True, Brand.logo.isnot(None)).all()
 
     # Build a section for every active parent that has 2+ active subcategories
     category_sections = []
-    all_parents = Category.query.filter_by(is_active=True, parent_id=None).order_by(Category.id.asc()).all()
+    all_parents = Category.query.options(joinedload(Category.children)).filter_by(is_active=True, parent_id=None).order_by(Category.id.asc()).all()
     for parent in all_parents:
         active_children = [c for c in parent.children if c.is_active]
         if len(active_children) >= 2:
@@ -71,7 +72,7 @@ def products():
     min_price = request.args.get('min_price', type=float)
     max_price = request.args.get('max_price', type=float)
 
-    query = Product.query.filter_by(is_active=True)
+    query = Product.query.options(joinedload(Product.brand), joinedload(Product.variations)).filter_by(is_active=True)
     on_sale = request.args.get('offers', type=int)
 
     if on_sale:
@@ -114,8 +115,15 @@ def products():
 
 @shop_bp.route('/product/<slug>')
 def product_detail(slug):
-    product = Product.query.filter_by(slug=slug, is_active=True).first_or_404()
-    related = Product.query.filter(
+    product = Product.query.options(
+        joinedload(Product.brand),
+        joinedload(Product.images),
+        joinedload(Product.variations)
+    ).filter_by(slug=slug, is_active=True).first_or_404()
+    related = Product.query.options(
+        joinedload(Product.brand),
+        joinedload(Product.variations)
+    ).filter(
         Product.category_id == product.category_id,
         Product.id != product.id,
         Product.is_active == True

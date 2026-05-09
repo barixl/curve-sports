@@ -42,13 +42,15 @@ def _reset_pg_sequences():
     if db.engine.dialect.name != 'postgresql':
         return
     tables = ['users', 'categories', 'brands', 'products']
-    with db.engine.connect() as conn:
-        for table in tables:
-            conn.execute(text(
+    for table in tables:
+        try:
+            db.session.execute(text(
                 f"SELECT setval(pg_get_serial_sequence('{table}', 'id'), "
                 f"COALESCE((SELECT MAX(id) FROM {table}), 1))"
             ))
-        conn.commit()
+        except Exception:
+            db.session.rollback()
+    db.session.commit()
 
 
 def cleanup_gym_duplicates():
@@ -169,7 +171,7 @@ def seed_data():
     db.session.flush()  # assign IDs so foreign keys work below
 
     # Products
-    product_images = ['Whey-Chocolate.jpg', 'muscleblaze.jpg', 'whey.webp']
+    product_images = ['Whey-Chocolate.webp', 'muscleblaze.webp', 'whey.webp']
     products = [
         Product(
             name='Curve Gold 100% Whey Protein', slug='curve-gold-whey-protein',

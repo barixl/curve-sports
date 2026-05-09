@@ -8,6 +8,18 @@ class Config:
     SECRET_KEY = os.getenv('SECRET_KEY', 'curvesports-secret-key-change-in-prod')
     SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', 'sqlite:///curvesports.db')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    
+    # Use NullPool on Vercel to avoid exhausting DB connections in serverless environment
+    if os.environ.get('VERCEL'):
+        from sqlalchemy.pool import NullPool
+        SQLALCHEMY_ENGINE_OPTIONS = {'poolclass': NullPool}
+    else:
+        SQLALCHEMY_ENGINE_OPTIONS = {
+            'pool_size': 10,
+            'max_overflow': 20,
+            'pool_recycle': 3600,
+        }
+
     UPLOAD_FOLDER = os.path.join('static', 'images', 'products')
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024
 
