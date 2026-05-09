@@ -8,13 +8,13 @@
     <div class="carousel-container" id="mainCarousel">
       <div class="carousel-wrapper" id="carouselWrapper">
         <div class="carousel-slide">
-          <img src="{{ url_for('static', filename='images/banner/banner_1.webp') }}" alt="Banner 1">
+          <img src="{{ url_for('static', filename='images/banner/banner_1.webp') }}" alt="Banner 1" fetchpriority="high">
         </div>
         <div class="carousel-slide">
-          <img src="{{ url_for('static', filename='images/banner/banner_2.webp') }}" alt="Banner 2">
+          <img src="{{ url_for('static', filename='images/banner/banner_2.webp') }}" alt="Banner 2" loading="lazy">
         </div>
         <div class="carousel-slide">
-          <img src="{{ url_for('static', filename='images/banner/banner_3.webp') }}" alt="Banner 3">
+          <img src="{{ url_for('static', filename='images/banner/banner_3.webp') }}" alt="Banner 3" loading="lazy">
         </div>
       </div>
       
@@ -126,7 +126,7 @@ startAutoSlide();
       <a href="{{ url_for('shop.products', category=cat.slug) }}" class="home-cat-card">
         <div class="home-cat-thumb">
           {% if cat.image %}
-            <img src="{{ cat.image | img_url('categories') }}" alt="{{ cat.name }}">
+            <img src="{{ cat.image | img_url('categories') }}" alt="{{ cat.name }}" loading="lazy">
           {% else %}
             <i class="fas fa-layer-group"></i>
           {% endif %}
@@ -155,7 +155,7 @@ startAutoSlide();
           <a href="{{ url_for('shop.products', brand=brand.slug) }}" class="brand-card">
             <div class="brand-img">
               {% if brand.logo %}
-                <img src="{{ brand.logo | img_url('brands') }}" alt="{{ brand.name }}">
+                <img src="{{ brand.logo | img_url('brands') }}" alt="{{ brand.name }}" loading="lazy">
               {% else %}
                 <div class="brand-placeholder">{{ brand.name[0] }}</div>
               {% endif %}
@@ -225,7 +225,7 @@ startAutoSlide();
       <a href="{{ url_for('shop.products', category=sc.slug) }}" class="home-cat-card">
         <div class="home-cat-thumb">
           {% if sc.image %}
-          <img src="{{ sc.image | img_url('categories') }}" alt="{{ sc.name }}">
+          <img src="{{ sc.image | img_url('categories') }}" alt="{{ sc.name }}" loading="lazy">
           {% else %}
           <i class="fas fa-layer-group"></i>
           {% endif %}
@@ -299,7 +299,7 @@ startAutoSlide();
 <!-- MIDDLE BANNER 1 -->
 <div class="container">
   <div class="middle-banner">
-    <img src="{{ url_for('static', filename='images/banner/banner_4.webp') }}" alt="Special Offer">
+    <img src="{{ url_for('static', filename='images/banner/banner_4.webp') }}" alt="Special Offer" loading="lazy">
   </div>
 </div>
 
@@ -323,7 +323,7 @@ startAutoSlide();
 <!-- MIDDLE BANNER 2 -->
 <div class="container">
   <div class="middle-banner">
-    <img src="{{ url_for('static', filename='images/banner/banner_5.webp') }}" alt="Promotional Banner">
+    <img src="{{ url_for('static', filename='images/banner/banner_5.webp') }}" alt="Promotional Banner" loading="lazy">
   </div>
 </div>
 

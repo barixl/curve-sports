@@ -19,7 +19,7 @@
             {% if item.product.image %}
               <img src="{{ item.product.image | img_url('products') }}"
                    style="width:80px;height:80px;object-fit:contain"
-                   alt="{{ item.product.name }}">
+                   alt="{{ item.product.name }}" loading="lazy">
             {% else %}
               <div style="font-size:32px">{{ item.product.category.icon if item.product.category else '📦' }}</div>
             {% endif %}

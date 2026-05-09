@@ -6,7 +6,7 @@
 <title>{% block title %}Curve Sports - India's Authentic Supplement Store{% endblock %}</title>
 <link rel="stylesheet" href="{{ url_for('static', filename='css/gfonts.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/fontawesome.min.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=7">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=8">
 <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='images/favicons/apple-touch-icon.png') }}">
 <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/favicons/favicon-32x32.png') }}">
 <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='images/favicons/favicon-16x16.png') }}">
@@ -119,7 +119,7 @@
               <a href="{{ url_for('shop.products', category=cat.slug) }}" class="mega-item">
                 <div class="mega-icon-wrap">
                   {% if cat.image %}
-                    <img src="{{ cat.image | img_url('categories') }}" alt="{{ cat.name }}">
+                    <img src="{{ cat.image | img_url('categories') }}" alt="{{ cat.name }}" loading="lazy">
                   {% else %}
                     <i class="fas fa-tag"></i>
                   {% endif %}
@@ -143,7 +143,7 @@
                   <a href="{{ url_for('shop.products', brand=brand.slug) }}" class="mega-item brand-mega-item">
                     <div class="mega-icon-wrap brand-icon-wrap">
                       {% if brand.logo %}
-                        <img src="{{ brand.logo | img_url('brands') }}" alt="{{ brand.name }}">
+                        <img src="{{ brand.logo | img_url('brands') }}" alt="{{ brand.name }}" loading="lazy">
                       {% else %}
                         <i class="fas fa-certificate"></i>
                       {% endif %}
@@ -187,7 +187,7 @@
     <div class="footer-grid">
       <div class="footer-col">
         <div class="footer-logo" style="display:flex; align-items:center; gap:10px; margin-bottom:15px">
-          <img src="{{ url_for('static', filename='images/curve-logo.webp') }}" alt="Logo" style="height:48px; width:auto">
+          <img src="{{ url_for('static', filename='images/curve-logo.webp') }}" alt="Logo" style="height:48px; width:auto" loading="lazy">
           <span style="font-size:20px; font-weight:700; line-height:1.2">Curve Sports<br><span style="font-size:12px; font-weight:500; letter-spacing:1.5px; text-transform:uppercase; color:var(--primary)">and Nutrition</span></span>™
         </div>
         <p>India's most trusted authentic supplement store. We guarantee 100% genuine products sourced directly from manufacturers.</p>

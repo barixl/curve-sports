@@ -1752,3 +1752,15 @@ tr:hover td { background: #fafafa; }
   .social-card-icon { width: 48px; height: 48px; border-radius: 12px; }
   .social-card-icon i { font-size: 22px; }
 }
+
+/* ── CONTENT-VISIBILITY: Skip rendering offscreen sections ──── */
+/* The browser won't layout/paint these until user scrolls near them */
+.trust-features-section,
+.whatsapp-cta-section,
+.testimonials-section,
+.newsletter-section,
+.social-section,
+.footer {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 500px;
+}
