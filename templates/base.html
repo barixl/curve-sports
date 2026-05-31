@@ -34,7 +34,7 @@
       
       <a href="{{ url_for('shop.index') }}" class="logo" style="display:flex; align-items:center; gap:12px">
         <img src="https://res.cloudinary.com/dqnckehnu/image/upload/v1777143823/curve-sports/curve-logo.png" alt="Logo" style="height:56px; width:auto">
-        <span class="logo-text" style="font-size:22px; line-height:1.15">Curve Sports<br><span style="font-size:13px; font-weight:500; letter-spacing:1.5px; text-transform:uppercase; color:var(--primary)">and Nutrition</span></span><span class="logo-dot">™</span>
+        <span class="logo-text" style="font-size:22px; line-height:1.15">Curve Sports<br><span style="color:var(--primary)">& Nutrition</span></span><span class="logo-dot">™</span>
       </a>
 
       <form class="search-bar" action="{{ url_for('shop.search') }}" method="get">
@@ -76,7 +76,7 @@
     <div class="sidebar-header">
       <div class="logo" style="display:flex; align-items:center; gap:10px">
         <img src="https://res.cloudinary.com/dqnckehnu/image/upload/v1777143823/curve-sports/curve-logo.png" alt="Logo" style="height:38px; width:auto">
-        <span style="font-size:18px; font-weight:700; line-height:1.2">Curve Sports<br><span style="font-size:11px; font-weight:500; letter-spacing:1.5px; text-transform:uppercase; color:var(--primary)">and Nutrition</span></span><span class="logo-dot">™</span>
+        <span style="font-size:18px; font-weight:700; line-height:1.2">Curve Sports<br><span style="color:var(--primary)">& Nutrition</span></span><span class="logo-dot">™</span>
       </div>
       <button class="close-btn" id="closeSidebar"><i class="fas fa-times"></i></button>
     </div>
@@ -188,7 +188,7 @@
       <div class="footer-col">
         <div class="footer-logo" style="display:flex; align-items:center; gap:10px; margin-bottom:15px">
           <img src="{{ url_for('static', filename='images/curve-logo.webp') }}" alt="Logo" style="height:48px; width:auto" loading="lazy">
-          <span style="font-size:20px; font-weight:700; line-height:1.2">Curve Sports<br><span style="font-size:12px; font-weight:500; letter-spacing:1.5px; text-transform:uppercase; color:var(--primary)">and Nutrition</span></span>™
+          <span style="font-size:20px; font-weight:700; line-height:1.2">Curve Sports<br><span style="color:var(--primary)">& Nutrition</span></span>™
         </div>
         <p>India's most trusted authentic supplement store. We guarantee 100% genuine products sourced directly from manufacturers.</p>
         <div class="social-links">
@@ -219,14 +219,15 @@
       <div class="footer-col">
         <h4>Support</h4>
         <ul>
-          <li><a href="#">Help Center</a></li>
-          <li><a href="#">Track Order</a></li>
-          <li><a href="#">Return Policy</a></li>
-          <li><a href="#">Privacy Policy</a></li>
+          <li><a href="{{ url_for('shop.contact') }}">Contact Us</a></li>
+          <li><a href="{{ url_for('shop.shipping') }}">Shipping Policy</a></li>
+          <li><a href="{{ url_for('shop.refund') }}">Refund Policy</a></li>
+          <li><a href="{{ url_for('shop.privacy') }}">Privacy Policy</a></li>
+          <li><a href="{{ url_for('shop.terms') }}">Terms & Conditions</a></li>
         </ul>
         <div class="footer-contact">
           <p><i class="fas fa-envelope"></i> support@curvesports.com</p>
-          <p><i class="fas fa-phone"></i> +91-999-999-9999</p>
+          <p><i class="fas fa-phone"></i> +91-9312110022, +91-9810227504</p>
         </div>
       </div>
     </div>
@@ -250,6 +251,27 @@
     </div>
   </div>
 </footer>
+
+<!-- MOBILE BOTTOM NAV -->
+<div class="mobile-bottom-nav">
+  <a href="{{ url_for('shop.index') }}" class="mobile-nav-item">
+    <i class="fas fa-home"></i>
+    <span>Home</span>
+  </a>
+  <a href="{{ url_for('shop.products') }}" class="mobile-nav-item">
+    <i class="fas fa-shopping-bag"></i>
+    <span>Shop</span>
+  </a>
+  <a href="{{ url_for('cart.cart') }}" class="mobile-nav-item relative-icon">
+    <i class="fas fa-shopping-cart"></i>
+    <span class="mobile-cart-badge" id="mobile-cart-count">0</span>
+    <span>Cart</span>
+  </a>
+  <a href="{{ url_for('auth.profile') }}" class="mobile-nav-item">
+    <i class="fas fa-user"></i>
+    <span>Account</span>
+  </a>
+</div>
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
@@ -282,7 +304,10 @@ async function updateCartCount() {
   try {
     const r = await fetch('/cart/count');
     const d = await r.json();
-    document.getElementById('cart-count').textContent = d.count;
+    const countEl = document.getElementById('cart-count');
+    if (countEl) countEl.textContent = d.count;
+    const mobileCountEl = document.getElementById('mobile-cart-count');
+    if (mobileCountEl) mobileCountEl.textContent = d.count;
   } catch(e) {}
 }
 updateCartCount();

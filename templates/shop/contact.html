@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block title %}Contact Us - Curve Sports{% endblock %}
+{% block content %}
+<div class="container" style="padding: 40px 15px;">
+  <div class="card" style="padding: 40px; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.05);">
+    <h1 style="margin-bottom: 20px; font-size: 32px; font-weight: 700;">Contact Us</h1>
+    <div style="line-height: 1.8; color: #555; font-size: 16px;">
+      <p>We're here to help! Whether you have a question about our products, need assistance with an order, or just want to share feedback, we'd love to hear from you.</p>
+      
+      <div style="display: flex; flex-wrap: wrap; gap: 30px; margin-top: 30px;">
+        <div style="flex: 1; min-width: 250px;">
+          <h3 style="color: #222; font-size: 20px; margin-bottom: 10px;"><i class="fas fa-building" style="color: var(--primary); margin-right: 8px;"></i> Amisha Office</h3>
+          <p style="margin-bottom: 5px;"><strong>Email:</strong> <a href="mailto:support@curvesports.com" style="color: var(--primary); text-decoration: none;">support@curvesports.com</a></p>
+          <p><strong>Phone:</strong> <a href="tel:+918840042734" style="color: var(--primary); text-decoration: none;">+91-8840042734</a></p>
+        </div>
+
+        <div style="flex: 1; min-width: 250px;">
+          <h3 style="color: #222; font-size: 20px; margin-bottom: 10px;"><i class="fas fa-truck" style="color: var(--primary); margin-right: 8px;"></i> Sujeet Logistics</h3>
+          <p style="margin-bottom: 5px;"><strong>Phone 1:</strong> <a href="tel:+918090920261" style="color: var(--primary); text-decoration: none;">+91-8090920261</a></p>
+          <p><strong>Phone 2:</strong> <a href="tel:+917275520261" style="color: var(--primary); text-decoration: none;">+91-7275520261</a></p>
+        </div>
+        
+        <div style="flex: 1; min-width: 250px;">
+          <h3 style="color: #222; font-size: 20px; margin-bottom: 10px;"><i class="fas fa-clock" style="color: var(--primary); margin-right: 8px;"></i> Business Hours</h3>
+          <p style="margin-bottom: 5px;">Monday - Saturday: 10:00 AM - 7:00 PM (IST)</p>
+          <p>Sunday: Closed</p>
+        </div>
+        
+        <div style="flex: 1; min-width: 250px;">
+          <h3 style="color: #222; font-size: 20px; margin-bottom: 10px;"><i class="fas fa-map-marker-alt" style="color: var(--primary); margin-right: 8px;"></i> Our Address & Details</h3>
+          <p style="margin-bottom: 5px;"><strong>Curve Sports & Nutrition</strong></p>
+          <p style="margin-bottom: 5px;">140 F, Kharaiya Pokhara, Basharatpur, Medical College road, Near Anand Mashroom, Gorakhpur, Uttar Pradesh 273004</p>
+          <p style="margin-bottom: 5px;"><strong>GSTIN:</strong> 09AJOPA9239L3ZK</p>
+          <p><strong>FSSAI Number:</strong> 22725625000292</p>
+        </div>
+      </div>
+
+      <div style="margin-top: 40px; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3554.264997049186!2d83.26922887454683!3d27.021791076582335!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3996b53ae285dbcd%3A0x1df4df9beadb5355!2sCurve%20Sports%20%26%20Nutrition!5e0!3m2!1sen!2sde!4v1780263975582!5m2!1sen!2sde" width="100%" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+      </div>
+
+      <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee;">
+        <h3 style="color: #222; font-size: 20px; margin-bottom: 10px;">Communication Policy</h3>
+        <p style="margin-bottom: 10px;"><strong>To Communicate with You:</strong> We may use your information to respond to your inquiries, provide customer service support, send you important information about the services, and marketing communications (with your consent) via different channels, including but not limited to SMS, Email, RCS, WhatsApp, and Voice.</p>
+        <p>For more details on how we handle your data, please read our full <a href="{{ url_for('shop.privacy') }}" style="color: var(--primary); text-decoration: underline; font-weight: 500;">Privacy Policy</a>.</p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

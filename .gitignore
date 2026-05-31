@@ -161,3 +161,4 @@ static/images/banners/*
 !static/images/banners/.gitkeep
 exports/
 *.db
+category_backup.json

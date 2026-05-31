@@ -1,3 +1,4 @@
+from collections import defaultdict
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import current_user, login_required
 from extensions import db
@@ -65,30 +66,33 @@ def index():
 @shop_bp.route('/products')
 def products():
     page = request.args.get('page', 1, type=int)
-    category_slug = request.args.get('category')
-    brand_slug = request.args.get('brand')
+    category_slugs = request.args.getlist('category')
+    brand_slugs = request.args.getlist('brand')
     sort = request.args.get('sort', 'popular')
     search = request.args.get('q', '').strip()
     min_price = request.args.get('min_price', type=float)
     max_price = request.args.get('max_price', type=float)
+    on_sale = request.args.get('offers', type=int)
 
     query = Product.query.options(joinedload(Product.brand), joinedload(Product.variations)).filter_by(is_active=True)
-    on_sale = request.args.get('offers', type=int)
 
     if on_sale:
         query = query.filter(Product.original_price > Product.price)
     if search:
         query = query.filter(Product.name.ilike(f'%{search}%'))
-    if category_slug:
-        cat = Category.query.filter_by(slug=category_slug).first_or_404()
-        query = query.filter_by(category_id=cat.id)
-    else:
-        cat = None
-    if brand_slug:
-        brand = Brand.query.filter_by(slug=brand_slug).first_or_404()
-        query = query.filter_by(brand_id=brand.id)
-    else:
-        brand = None
+
+    selected_cats = []
+    if category_slugs:
+        selected_cats = Category.query.filter(Category.slug.in_(category_slugs)).all()
+        if selected_cats:
+            query = query.filter(Product.category_id.in_([c.id for c in selected_cats]))
+
+    selected_brands = []
+    if brand_slugs:
+        selected_brands = Brand.query.filter(Brand.slug.in_(brand_slugs)).all()
+        if selected_brands:
+            query = query.filter(Product.brand_id.in_([b.id for b in selected_brands]))
+
     if min_price:
         query = query.filter(Product.price >= min_price)
     if max_price:
@@ -105,12 +109,37 @@ def products():
     else:
         query = query.order_by(Product.review_count.desc())
 
-    pagination = query.paginate(page=page, per_page=12, error_out=False)
-    categories = Category.query.filter_by(is_active=True).all()
-    brands = Brand.query.filter_by(is_active=True).all()
-    return render_template('shop/products.html', products=pagination.items, pagination=pagination,
-                           categories=categories, brands=brands, selected_cat=cat,
-                           selected_brand=brand, sort=sort, search=search, offers=on_sale)
+    pagination = query.paginate(page=page, per_page=20, error_out=False)
+
+    all_categories = Category.query.filter_by(is_active=True).all()
+    all_brands = Brand.query.filter_by(is_active=True).order_by(Brand.name).all()
+
+    grouped_brands = defaultdict(list)
+    for b in all_brands:
+        first = b.name[0].upper()
+        grouped_brands[first if first.isalpha() else '#'].append(b)
+    alphabet = sorted(grouped_brands.keys())
+
+    selected_cat_slugs = [c.slug for c in selected_cats]
+    selected_brand_slugs = [b.slug for b in selected_brands]
+
+    return render_template('shop/products.html',
+        products=pagination.items,
+        pagination=pagination,
+        categories=all_categories,
+        brands=all_brands,
+        grouped_brands=grouped_brands,
+        alphabet=alphabet,
+        selected_cats=selected_cats,
+        selected_cat=selected_cats[0] if len(selected_cats) == 1 else None,
+        selected_cat_slugs=selected_cat_slugs,
+        selected_brands=selected_brands,
+        selected_brand=selected_brands[0] if len(selected_brands) == 1 else None,
+        selected_brand_slugs=selected_brand_slugs,
+        sort=sort,
+        search=search,
+        offers=on_sale,
+    )
 
 
 @shop_bp.route('/product/<slug>')
@@ -190,3 +219,24 @@ def search():
     if not q:
         return redirect(url_for('shop.products'))
     return redirect(url_for('shop.products', q=q))
+
+
+@shop_bp.route('/terms')
+def terms():
+    return render_template('shop/terms.html')
+
+@shop_bp.route('/privacy')
+def privacy():
+    return render_template('shop/privacy.html')
+
+@shop_bp.route('/refund')
+def refund():
+    return render_template('shop/refund.html')
+
+@shop_bp.route('/shipping')
+def shipping():
+    return render_template('shop/shipping.html')
+
+@shop_bp.route('/contact')
+def contact():
+    return render_template('shop/contact.html')

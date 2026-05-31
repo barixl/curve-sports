@@ -15,7 +15,6 @@
       <div class="hide-mobile" style="position:relative; z-index:2">
         <span style="font-size:64px; opacity:0.2"><i class="fas fa-bolt"></i></span>
       </div>
-      <!-- Decorative background -->
       <div style="position:absolute; top:-20px; right:-20px; width:150px; height:150px; background:white; opacity:0.05; border-radius:50%"></div>
     </div>
   </div>
@@ -62,55 +61,74 @@
           <label class="filter-item" style="background: #fff5f5; border-color: #feb2b2; padding: 10px; border-radius: 8px;">
             <input type="checkbox" name="offers" value="1" {{ 'checked' if request.args.get('offers') == '1' }}
                    onchange="document.getElementById('filterForm').submit()">
-            <label style="color: #c53030; font-weight: 700;"><i class="fas fa-tag"></i> Special Offers</label>
+            <span style="color: #c53030; font-weight: 700;"><i class="fas fa-tag"></i> Special Offers</span>
           </label>
         </div>
 
         <!-- Categories -->
         <div class="filter-section">
-          <h4>Category</h4>
+          <h4>Category
+            {% if selected_cat_slugs %}
+            <button type="button" onclick="clearFilter('category')"
+                    style="font-size:11px;font-weight:normal;color:var(--primary);background:none;border:none;cursor:pointer;padding:0">
+              Clear
+            </button>
+            {% endif %}
+          </h4>
           {% set parent_categories = categories | selectattr('parent_id', 'equalto', None) | list %}
-          {% for parent in parent_categories %}
-          {% set subcategories = categories | selectattr('parent_id', 'equalto', parent.id) | list %}
-          {% set parent_selected = selected_cat and selected_cat.slug == parent.slug %}
-          {% set child_selected = selected_cat and selected_cat.parent_id == parent.id %}
 
-          {% if subcategories %}
-          <details class="category-accordion" {{ 'open' if parent_selected or child_selected }}>
-            <summary class="category-accordion-summary">
-              <span>{{ parent.name }}</span>
-              <i class="fas fa-chevron-down"></i>
-            </summary>
-            <div class="category-accordion-body">
-              <label class="filter-item category-sub-item">
-                <input type="radio" name="category" value="{{ parent.slug }}"
-                       {{ 'checked' if parent_selected }}
-                       onchange="document.getElementById('filterForm').submit()">
-                <span>All {{ parent.name }}</span>
-              </label>
-              {% for sub in subcategories %}
-              <label class="filter-item category-sub-item">
-                <input type="radio" name="category" value="{{ sub.slug }}"
-                       {{ 'checked' if selected_cat and selected_cat.slug == sub.slug }}
-                       onchange="document.getElementById('filterForm').submit()">
-                <span>{{ sub.name }}</span>
-              </label>
-              {% endfor %}
-            </div>
-          </details>
-          {% else %}
-          <label class="filter-item">
-            <input type="radio" name="category" value="{{ parent.slug }}"
-                   {{ 'checked' if parent_selected }}
-                   onchange="document.getElementById('filterForm').submit()">
-            <span>{{ parent.name }}</span>
-          </label>
-          {% endif %}
+          {# Pass 1: expandable parents (have subcategories) #}
+          {% for parent in parent_categories %}
+            {% set subcategories = categories | selectattr('parent_id', 'equalto', parent.id) | list %}
+            {% if subcategories %}
+              {% set parent_checked = parent.slug in selected_cat_slugs %}
+              {% set child_open = namespace(found=false) %}
+              {% for sub in subcategories %}{% if sub.slug in selected_cat_slugs %}{% set child_open.found = true %}{% endif %}{% endfor %}
+              <details class="category-accordion" {{ 'open' if parent_checked or child_open.found }}>
+                <summary class="category-accordion-summary">
+                  <span>{{ parent.name }}</span>
+                  <i class="fas fa-chevron-down"></i>
+                </summary>
+                <div class="category-accordion-body">
+                  <label class="filter-item category-sub-item">
+                    <input type="checkbox" name="category" value="{{ parent.slug }}"
+                           {{ 'checked' if parent_checked }}
+                           onchange="document.getElementById('filterForm').submit()">
+                    <span>All {{ parent.name }}</span>
+                  </label>
+                  {% for sub in subcategories %}
+                  <label class="filter-item category-sub-item">
+                    <input type="checkbox" name="category" value="{{ sub.slug }}"
+                           {{ 'checked' if sub.slug in selected_cat_slugs }}
+                           onchange="document.getElementById('filterForm').submit()">
+                    <span>{{ sub.name }}</span>
+                  </label>
+                  {% endfor %}
+                </div>
+              </details>
+            {% endif %}
           {% endfor %}
-          {% if selected_cat %}
-          <a href="{{ url_for('shop.products', q=search, sort=sort) }}" style="font-size:13px;color:var(--primary);display:block;margin-top:8px">
-            <i class="fas fa-times"></i> Clear category
-          </a>
+
+          {# Pass 2: simple parents (no subcategories) #}
+          {% set has_simple = namespace(any=false) %}
+          {% for parent in parent_categories %}
+            {% set subcategories = categories | selectattr('parent_id', 'equalto', parent.id) | list %}
+            {% if not subcategories %}{% set has_simple.any = true %}{% endif %}
+          {% endfor %}
+          {% if has_simple.any %}
+          <div class="filter-simple-group">
+            {% for parent in parent_categories %}
+              {% set subcategories = categories | selectattr('parent_id', 'equalto', parent.id) | list %}
+              {% if not subcategories %}
+              <label class="filter-item">
+                <input type="checkbox" name="category" value="{{ parent.slug }}"
+                       {{ 'checked' if parent.slug in selected_cat_slugs }}
+                       onchange="document.getElementById('filterForm').submit()">
+                <span>{{ parent.name }}</span>
+              </label>
+              {% endif %}
+            {% endfor %}
+          </div>
           {% endif %}
         </div>
 
@@ -118,13 +136,16 @@
         <div class="filter-section">
           <h4 style="display:flex; justify-content:space-between; align-items:center">
             Brand
-            {% if selected_brand %}
-            <a href="{{ url_for('shop.products', q=search, sort=sort, category=selected_cat.slug if selected_cat else '') }}"
-               style="font-size:11px; font-weight:normal; color:var(--primary)">Clear</a>
+            {% if selected_brand_slugs %}
+            <button type="button" onclick="clearFilter('brand')"
+                    style="font-size:11px;font-weight:normal;color:var(--primary);background:none;border:none;cursor:pointer;padding:0">
+              Clear
+            </button>
             {% endif %}
           </h4>
-          
+
           <!-- Alphabet Quick Select -->
+          {% if alphabet %}
           <div class="alphabet-strip" style="display:flex; flex-wrap:wrap; gap:4px; margin-bottom:12px; border-bottom:1px solid #eee; padding-bottom:8px">
             {% for char in alphabet %}
             <a href="#brand-{{ char }}" style="font-size:11px; font-weight:bold; width:18px; height:18px; display:flex; align-items:center; justify-content:center; background:#f0f0f0; border-radius:3px; color:#666">
@@ -132,6 +153,7 @@
             </a>
             {% endfor %}
           </div>
+          {% endif %}
 
           <div class="brands-filter-list" style="max-height:300px; overflow-y:auto; padding-right:5px">
             {% for char in alphabet %}
@@ -140,10 +162,10 @@
             </div>
             {% for brand in grouped_brands[char] %}
             <label class="filter-item" style="padding:4px 0; margin:0">
-              <input type="radio" name="brand" value="{{ brand.slug }}"
-                     {{ 'checked' if selected_brand and selected_brand.slug == brand.slug }}
+              <input type="checkbox" name="brand" value="{{ brand.slug }}"
+                     {{ 'checked' if brand.slug in selected_brand_slugs }}
                      onchange="document.getElementById('filterForm').submit()">
-              <label style="font-size:13px">{{ brand.name }}</label>
+              <span style="font-size:13px">{{ brand.name }}</span>
             </label>
             {% endfor %}
             {% endfor %}
@@ -175,8 +197,11 @@
         </span>
         <form method="get" style="display:flex;align-items:center;gap:8px">
           {% if search %}<input type="hidden" name="q" value="{{ search }}">{% endif %}
-          {% if selected_cat %}<input type="hidden" name="category" value="{{ selected_cat.slug }}">{% endif %}
-          {% if selected_brand %}<input type="hidden" name="brand" value="{{ selected_brand.slug }}">{% endif %}
+          {% for slug in selected_cat_slugs %}<input type="hidden" name="category" value="{{ slug }}">{% endfor %}
+          {% for slug in selected_brand_slugs %}<input type="hidden" name="brand" value="{{ slug }}">{% endfor %}
+          {% if request.args.get('offers') %}<input type="hidden" name="offers" value="{{ request.args.get('offers') }}">{% endif %}
+          {% if request.args.get('min_price') %}<input type="hidden" name="min_price" value="{{ request.args.get('min_price') }}">{% endif %}
+          {% if request.args.get('max_price') %}<input type="hidden" name="max_price" value="{{ request.args.get('max_price') }}">{% endif %}
           <label style="font-size:14px;color:var(--text-3)">Sort by:</label>
           <select name="sort" class="sort-select" onchange="this.form.submit()">
             <option value="popular" {{ 'selected' if sort=='popular' }}>Most Popular</option>
@@ -200,16 +225,16 @@
       {% if pagination.pages > 1 %}
       <div class="pagination">
         {% if pagination.has_prev %}
-        <a href="{{ url_for('shop.products', page=pagination.prev_num, q=search, category=selected_cat.slug if selected_cat else '', brand=selected_brand.slug if selected_brand else '', sort=sort) }}">&laquo;</a>
+        <a href="javascript:void(0)" onclick="goToPage({{ pagination.prev_num }})">&laquo;</a>
         {% endif %}
         {% for pg in pagination.iter_pages(left_edge=2, right_edge=2, left_current=2, right_current=2) %}
           {% if pg %}
-          <a href="{{ url_for('shop.products', page=pg, q=search, category=selected_cat.slug if selected_cat else '', sort=sort) }}"
+          <a href="javascript:void(0)" onclick="goToPage({{ pg }})"
              class="{{ 'active' if pg == pagination.page }}">{{ pg }}</a>
           {% else %}<span>…</span>{% endif %}
         {% endfor %}
         {% if pagination.has_next %}
-        <a href="{{ url_for('shop.products', page=pagination.next_num, q=search, category=selected_cat.slug if selected_cat else '', sort=sort) }}">&raquo;</a>
+        <a href="javascript:void(0)" onclick="goToPage({{ pagination.next_num }})">&raquo;</a>
         {% endif %}
       </div>
       {% endif %}
@@ -226,8 +251,24 @@
   </div>
 </div>
 
+<!-- Mobile overlay — closes filter drawer when tapped -->
+<div class="mobile-overlay" id="mobileOverlay"></div>
+
 {% block extra_js %}
 <script>
+function goToPage(page) {
+  const url = new URL(window.location.href);
+  url.searchParams.set('page', page);
+  window.location.href = url.toString();
+}
+
+function clearFilter(param) {
+  const url = new URL(window.location.href);
+  url.searchParams.delete(param);
+  url.searchParams.delete('page');
+  window.location.href = url.toString();
+}
+
 async function toggleWishlist(productId, btn) {
   const resp = await fetch(`/wishlist/toggle/${productId}`, { method: 'POST' });
   const data = await resp.json();
@@ -236,26 +277,24 @@ async function toggleWishlist(productId, btn) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  // Mobile Filter Toggle
-  const openFilter = document.getElementById('openFilter');
+  const openFilter  = document.getElementById('openFilter');
   const closeFilter = document.getElementById('closeFilter');
   const filterSidebar = document.getElementById('filterSidebar');
   const mobileOverlay = document.getElementById('mobileOverlay');
 
-  if (openFilter) {
-    openFilter.addEventListener('click', () => {
-      if(filterSidebar) filterSidebar.classList.add('active');
-      if(mobileOverlay) mobileOverlay.classList.add('active');
-      document.body.style.overflow = 'hidden';
-    });
-  }
+  const showFilter = () => {
+    if (filterSidebar) filterSidebar.classList.add('active');
+    if (mobileOverlay) mobileOverlay.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  };
 
   const hideFilter = () => {
-    if(filterSidebar) filterSidebar.classList.remove('active');
-    if(mobileOverlay) mobileOverlay.classList.remove('active');
+    if (filterSidebar) filterSidebar.classList.remove('active');
+    if (mobileOverlay) mobileOverlay.classList.remove('active');
     document.body.style.overflow = '';
   };
 
+  if (openFilter)  openFilter.addEventListener('click', showFilter);
   if (closeFilter) closeFilter.addEventListener('click', hideFilter);
   if (mobileOverlay) mobileOverlay.addEventListener('click', hideFilter);
 });
