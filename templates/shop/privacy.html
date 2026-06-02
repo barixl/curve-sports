@@ -1,23 +1,115 @@
 {% extends 'base.html' %}
-{% block title %}Privacy Policy - Curve Sports{% endblock %}
+{% block title %}Privacy Policy — Curve Sports & Nutrition{% endblock %}
+
 {% block content %}
-<div class="container" style="padding: 40px 15px;">
-  <div class="card" style="padding: 40px; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.05);">
-    <h1 style="margin-bottom: 20px; font-size: 32px; font-weight: 700;">Privacy Policy</h1>
-    <div style="line-height: 1.8; color: #555; font-size: 16px;">
-      <p>At Curve Sports, your privacy is important to us. This Privacy Policy explains how we collect, use, and protect your personal information when you use our website.</p>
-      <h3 style="margin-top: 25px; color: #222; font-size: 20px;">1. Information We Collect</h3>
-      <p>We may collect personal information such as your name, email address, phone number, and shipping address when you register an account, place an order, or subscribe to our newsletter. We also collect non-personal data like browser type and IP address to improve our website.</p>
-      <h3 style="margin-top: 25px; color: #222; font-size: 20px;">2. How We Use Your Information</h3>
-      <p style="margin-bottom: 10px;">Your information is used to process orders, deliver products, and enhance your shopping experience.</p>
-      <p><strong>To Communicate with You:</strong> We may use your information to respond to your inquiries, provide customer service support, send you important information about the services, and marketing communications (with your consent) via different channels, including but not limited to SMS, Email, RCS, WhatsApp, and Voice.</p>
-      <h3 style="margin-top: 25px; color: #222; font-size: 20px;">3. Data Security</h3>
-      <p>We implement appropriate technical and organizational security measures to protect your personal data from unauthorized access, alteration, disclosure, or destruction. However, no internet transmission is completely secure.</p>
-      <h3 style="margin-top: 25px; color: #222; font-size: 20px;">4. Sharing of Information</h3>
-      <p>We do not sell or rent your personal information to third parties. We may share your data with trusted service providers (such as payment gateways like Razorpay and shipping partners) strictly to fulfill your orders and improve our services.</p>
-      <h3 style="margin-top: 25px; color: #222; font-size: 20px;">5. Cookies</h3>
-      <p>Our website uses cookies to recognize your browser, remember your preferences, and track items in your shopping cart. You can manage or disable cookies through your browser settings, though this may affect site functionality.</p>
+<section class="policy-hero">
+  <div class="container">
+    <div class="policy-hero-inner">
+      <div class="breadcrumb" style="margin-bottom:12px">
+        <a href="{{ url_for('shop.index') }}">Home</a>
+        <i class="fas fa-chevron-right fa-xs"></i>
+        <span>Privacy Policy</span>
+      </div>
+      <h1><i class="fas fa-shield-alt" style="color:var(--primary);margin-right:12px"></i>Privacy Policy</h1>
+      <p>Last updated: June 2025 &nbsp;·&nbsp; Effective for all users of curvesports.com</p>
     </div>
+  </div>
+</section>
+
+<div class="container policy-container">
+  <div class="policy-card">
+
+    <p class="policy-intro">At Curve Sports &amp; Nutrition, your privacy is our priority. This policy explains how we collect, use, and protect your personal information when you shop with us.</p>
+
+    <div class="policy-section">
+      <div class="policy-section-icon"><i class="fas fa-database"></i></div>
+      <div>
+        <h3>1. Information We Collect</h3>
+        <p>We collect information you provide directly when you:</p>
+        <ul>
+          <li>Create an account (name, email, phone number, password)</li>
+          <li>Place an order (billing &amp; shipping address, payment details processed via Razorpay)</li>
+          <li>Contact us or subscribe to our newsletter</li>
+        </ul>
+        <p>We also automatically collect non-personal data such as browser type, IP address, pages visited, and device information to improve our website experience.</p>
+      </div>
+    </div>
+
+    <div class="policy-section">
+      <div class="policy-section-icon"><i class="fas fa-cogs"></i></div>
+      <div>
+        <h3>2. How We Use Your Information</h3>
+        <ul>
+          <li>Process and fulfil your orders, including shipping and delivery</li>
+          <li>Send order confirmations, invoices, and tracking updates</li>
+          <li>Provide customer support and respond to your enquiries</li>
+          <li>Send promotional offers and newsletters (with your consent)</li>
+          <li>Improve website performance, features, and product offerings</li>
+          <li>Comply with legal obligations</li>
+        </ul>
+        <p><strong>Communication channels:</strong> We may contact you via SMS, Email, WhatsApp, RCS, or Voice for order updates and marketing communications (with your consent).</p>
+      </div>
+    </div>
+
+    <div class="policy-section">
+      <div class="policy-section-icon"><i class="fas fa-share-alt"></i></div>
+      <div>
+        <h3>3. Sharing of Information</h3>
+        <p>We do <strong>not</strong> sell or rent your personal data to third parties. We may share your information with:</p>
+        <ul>
+          <li><strong>Razorpay</strong> — secure payment processing</li>
+          <li><strong>Shipping partners</strong> — to deliver your orders</li>
+          <li><strong>Analytics providers</strong> — to understand site usage (anonymised data only)</li>
+          <li><strong>Legal authorities</strong> — when required by law</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="policy-section">
+      <div class="policy-section-icon"><i class="fas fa-lock"></i></div>
+      <div>
+        <h3>4. Data Security</h3>
+        <p>We implement industry-standard technical and organisational security measures to protect your personal data from unauthorised access, alteration, disclosure, or destruction. All payment transactions are encrypted via SSL and processed by Razorpay — we never store your card details on our servers.</p>
+      </div>
+    </div>
+
+    <div class="policy-section">
+      <div class="policy-section-icon"><i class="fas fa-cookie-bite"></i></div>
+      <div>
+        <h3>5. Cookies</h3>
+        <p>Our website uses cookies to recognise your browser, remember your preferences (such as cart items), and track site usage. You can manage or disable cookies through your browser settings, though this may affect some site functionality.</p>
+      </div>
+    </div>
+
+    <div class="policy-section">
+      <div class="policy-section-icon"><i class="fas fa-user-check"></i></div>
+      <div>
+        <h3>6. Your Rights</h3>
+        <ul>
+          <li>Access or update your personal information via your account</li>
+          <li>Request deletion of your account and associated data</li>
+          <li>Opt out of marketing communications at any time</li>
+          <li>Request a copy of data we hold about you</li>
+        </ul>
+        <p>To exercise these rights, contact us at <a href="mailto:support@curvesports.com">support@curvesports.com</a> or call <a href="tel:+919312110022">+91 93121 10022</a>.</p>
+      </div>
+    </div>
+
+    <div class="policy-section">
+      <div class="policy-section-icon"><i class="fas fa-sync-alt"></i></div>
+      <div>
+        <h3>7. Changes to This Policy</h3>
+        <p>We may update this Privacy Policy from time to time. Any changes will be posted on this page with a revised "last updated" date. We encourage you to review this policy periodically.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="policy-crosslinks">
+    <a href="{{ url_for('shop.terms') }}"><i class="fas fa-file-alt"></i> Terms &amp; Conditions</a>
+    <a href="{{ url_for('shop.refund') }}"><i class="fas fa-undo"></i> Refund Policy</a>
+    <a href="{{ url_for('shop.shipping') }}"><i class="fas fa-shipping-fast"></i> Shipping Policy</a>
+    <a href="{{ url_for('shop.contact') }}"><i class="fas fa-headset"></i> Contact Us</a>
   </div>
 </div>
 {% endblock %}

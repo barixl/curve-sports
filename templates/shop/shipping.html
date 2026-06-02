@@ -1,20 +1,138 @@
 {% extends 'base.html' %}
-{% block title %}Shipping & Delivery Policy - Curve Sports{% endblock %}
+{% block title %}Shipping & Delivery Policy — Curve Sports & Nutrition{% endblock %}
+
 {% block content %}
-<div class="container" style="padding: 40px 15px;">
-  <div class="card" style="padding: 40px; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.05);">
-    <h1 style="margin-bottom: 20px; font-size: 32px; font-weight: 700;">Shipping & Delivery Policy</h1>
-    <div style="line-height: 1.8; color: #555; font-size: 16px;">
-      <p>We strive to deliver your products as quickly and safely as possible. Below are the details of our shipping and delivery policy.</p>
-      <h3 style="margin-top: 25px; color: #222; font-size: 20px;">1. Processing Time</h3>
-      <p>All orders are processed within 1-2 business days. Orders are not processed, shipped, or delivered on Sundays or national holidays. If we are experiencing a high volume of orders, shipments may be delayed by a few days.</p>
-      <h3 style="margin-top: 25px; color: #222; font-size: 20px;">2. Shipping Rates & Delivery Estimates</h3>
-      <p>Shipping charges for your order will be calculated and displayed at checkout. We offer free delivery on orders above ₹499. Standard delivery usually takes 3-7 business days depending on your location. Delivery delays can occasionally occur due to unforeseen circumstances or location constraints.</p>
-      <h3 style="margin-top: 25px; color: #222; font-size: 20px;">3. Shipment Confirmation & Order Tracking</h3>
-      <p>You will receive a Shipment Confirmation email containing your tracking number(s) once your order has shipped. The tracking number will be active within 24 hours.</p>
-      <h3 style="margin-top: 25px; color: #222; font-size: 20px;">4. Damages & Lost Packages</h3>
-      <p>Curve Sports is not liable for any products damaged or lost during transit. If you received your order damaged, please contact the shipment carrier to file a claim. Please save all packaging materials and damaged goods before filing a claim. If your package is lost, contact us and we will assist you in resolving the issue with the carrier.</p>
+<section class="policy-hero">
+  <div class="container">
+    <div class="policy-hero-inner">
+      <div class="breadcrumb" style="margin-bottom:12px">
+        <a href="{{ url_for('shop.index') }}">Home</a>
+        <i class="fas fa-chevron-right fa-xs"></i>
+        <span>Shipping Policy</span>
+      </div>
+      <h1><i class="fas fa-shipping-fast" style="color:var(--primary);margin-right:12px"></i>Shipping &amp; Delivery Policy</h1>
+      <p>Last updated: June 2025 &nbsp;·&nbsp; Fast, safe, and reliable delivery across India.</p>
     </div>
+  </div>
+</section>
+
+<div class="container policy-container">
+
+  <!-- QUICK SUMMARY BADGES -->
+  <div class="policy-badges">
+    <div class="policy-badge">
+      <i class="fas fa-bolt"></i>
+      <span>Dispatch in 1–2 days</span>
+    </div>
+    <div class="policy-badge">
+      <i class="fas fa-truck"></i>
+      <span>3–7 day delivery</span>
+    </div>
+    <div class="policy-badge">
+      <i class="fas fa-gift"></i>
+      <span>Free above ₹499</span>
+    </div>
+    <div class="policy-badge">
+      <i class="fas fa-map-marker-alt"></i>
+      <span>Pan-India delivery</span>
+    </div>
+  </div>
+
+  <div class="policy-card">
+
+    <p class="policy-intro">We work hard to get your supplements to you as quickly and safely as possible. Here's everything you need to know about how we ship your orders.</p>
+
+    <div class="policy-section">
+      <div class="policy-section-icon"><i class="fas fa-boxes"></i></div>
+      <div>
+        <h3>1. Order Processing</h3>
+        <p>All orders are processed within <strong>1–2 business days</strong> of payment confirmation. Orders placed on Sundays or national holidays are processed on the next business day. During high-volume sale periods, processing may take up to 3 business days — we'll notify you if this applies to your order.</p>
+      </div>
+    </div>
+
+    <div class="policy-section">
+      <div class="policy-section-icon"><i class="fas fa-rupee-sign"></i></div>
+      <div>
+        <h3>2. Shipping Charges &amp; Free Delivery</h3>
+        <ul>
+          <li><strong>Free delivery</strong> on all orders above <strong>₹499</strong></li>
+          <li>Shipping charges for orders below ₹499 are calculated at checkout based on your location and order weight</li>
+          <li>Charges are displayed before you complete payment — no hidden fees</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="policy-section">
+      <div class="policy-section-icon"><i class="fas fa-calendar-alt"></i></div>
+      <div>
+        <h3>3. Delivery Timeline</h3>
+        <ul>
+          <li><strong>Metro cities</strong> (Delhi, Mumbai, Bengaluru, etc.): 2–4 business days</li>
+          <li><strong>Tier-2 cities</strong> (Gorakhpur, Lucknow, Agra, etc.): 3–5 business days</li>
+          <li><strong>Remote / rural areas:</strong> 5–7 business days</li>
+        </ul>
+        <p>Delivery timelines are estimates and may vary due to courier partner delays, weather conditions, or local logistics constraints.</p>
+      </div>
+    </div>
+
+    <div class="policy-section">
+      <div class="policy-section-icon"><i class="fas fa-search-location"></i></div>
+      <div>
+        <h3>4. Order Tracking</h3>
+        <p>Once your order is dispatched, you will receive a <strong>shipment confirmation</strong> via SMS and/or email containing your tracking number and courier partner details. Tracking becomes active within 24 hours of dispatch. You can track your order directly on the courier partner's website using the tracking number provided.</p>
+      </div>
+    </div>
+
+    <div class="policy-section">
+      <div class="policy-section-icon"><i class="fas fa-box-open"></i></div>
+      <div>
+        <h3>5. Packaging</h3>
+        <p>All orders are carefully packed to prevent damage during transit. Supplements are packed in tamper-evident packaging. If you notice any damage to the outer packaging at the time of delivery, please take photos before opening and contact us within 24 hours.</p>
+      </div>
+    </div>
+
+    <div class="policy-section">
+      <div class="policy-section-icon"><i class="fas fa-exclamation-circle"></i></div>
+      <div>
+        <h3>6. Damaged or Lost Packages</h3>
+        <p>If your package arrives damaged:</p>
+        <ul>
+          <li>Document the damage with photos/video before opening</li>
+          <li>Contact us within <strong>24 hours</strong> of delivery at <a href="mailto:support@curvesports.com">support@curvesports.com</a></li>
+          <li>We will raise a claim with the courier partner on your behalf</li>
+        </ul>
+        <p>If your package is marked as delivered but you haven't received it, please contact us within <strong>48 hours</strong>. We will investigate and resolve it as quickly as possible.</p>
+      </div>
+    </div>
+
+    <div class="policy-section">
+      <div class="policy-section-icon"><i class="fas fa-map-marked-alt"></i></div>
+      <div>
+        <h3>7. Delivery Locations</h3>
+        <p>We deliver to all serviceable pin codes across India. Some extremely remote areas may not be serviceable by our courier partners — in such cases, we will contact you to arrange an alternative or offer a full refund.</p>
+      </div>
+    </div>
+
+    <div class="policy-section">
+      <div class="policy-section-icon"><i class="fas fa-headset"></i></div>
+      <div>
+        <h3>8. Shipping Support</h3>
+        <p>For any shipping-related queries, reach out to us:</p>
+        <ul>
+          <li><strong>Phone/WhatsApp:</strong> <a href="tel:+919312110022">+91 93121 10022</a> &nbsp;|&nbsp; <a href="tel:+919810227504">+91 98102 27504</a></li>
+          <li><strong>Email:</strong> <a href="mailto:support@curvesports.com">support@curvesports.com</a></li>
+          <li><strong>Hours:</strong> Monday – Saturday, 10:00 AM – 7:00 PM IST</li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="policy-crosslinks">
+    <a href="{{ url_for('shop.refund') }}"><i class="fas fa-undo"></i> Refund Policy</a>
+    <a href="{{ url_for('shop.privacy') }}"><i class="fas fa-shield-alt"></i> Privacy Policy</a>
+    <a href="{{ url_for('shop.terms') }}"><i class="fas fa-file-alt"></i> Terms &amp; Conditions</a>
+    <a href="{{ url_for('shop.contact') }}"><i class="fas fa-headset"></i> Contact Us</a>
   </div>
 </div>
 {% endblock %}

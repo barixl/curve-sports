@@ -1,22 +1,112 @@
 {% extends 'base.html' %}
-{% block title %}Terms and Conditions - Curve Sports{% endblock %}
+{% block title %}Terms & Conditions — Curve Sports & Nutrition{% endblock %}
+
 {% block content %}
-<div class="container" style="padding: 40px 15px;">
-  <div class="card" style="padding: 40px; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.05);">
-    <h1 style="margin-bottom: 20px; font-size: 32px; font-weight: 700;">Terms and Conditions</h1>
-    <div style="line-height: 1.8; color: #555; font-size: 16px;">
-      <p>Welcome to Curve Sports. By accessing or using our website, you agree to be bound by these Terms and Conditions.</p>
-      <h3 style="margin-top: 25px; color: #222; font-size: 20px;">1. Use of the Site</h3>
-      <p>You must be at least 18 years old to use our website. You agree to use the site for lawful purposes only and in a way that does not infringe the rights of, restrict, or inhibit anyone else's use and enjoyment of the site.</p>
-      <h3 style="margin-top: 25px; color: #222; font-size: 20px;">2. Product Information</h3>
-      <p>We strive to ensure that all information on the site is accurate. However, we do not warrant that product descriptions, images, pricing, or other content are error-free. We reserve the right to correct any errors and to change or update information at any time without prior notice.</p>
-      <h3 style="margin-top: 25px; color: #222; font-size: 20px;">3. Pricing and Payments</h3>
-      <p>All prices are subject to change without notice. We reserve the right to refuse or cancel any order placed for a product listed at an incorrect price. We use secure payment gateways (like Razorpay) for processing payments. You agree to provide current, complete, and accurate purchase and account information for all purchases made at our store.</p>
-      <h3 style="margin-top: 25px; color: #222; font-size: 20px;">4. Intellectual Property</h3>
-      <p>All content on this site, including logos, text, graphics, images, and software, is the property of Curve Sports and protected by applicable copyright and trademark laws.</p>
-      <h3 style="margin-top: 25px; color: #222; font-size: 20px;">5. Limitation of Liability</h3>
-      <p>Curve Sports shall not be liable for any direct, indirect, incidental, special, or consequential damages resulting from the use or inability to use the site or products purchased from the site.</p>
+<section class="policy-hero">
+  <div class="container">
+    <div class="policy-hero-inner">
+      <div class="breadcrumb" style="margin-bottom:12px">
+        <a href="{{ url_for('shop.index') }}">Home</a>
+        <i class="fas fa-chevron-right fa-xs"></i>
+        <span>Terms &amp; Conditions</span>
+      </div>
+      <h1><i class="fas fa-file-contract" style="color:var(--primary);margin-right:12px"></i>Terms &amp; Conditions</h1>
+      <p>Last updated: June 2025 &nbsp;·&nbsp; Please read carefully before using our website.</p>
     </div>
+  </div>
+</section>
+
+<div class="container policy-container">
+  <div class="policy-card">
+
+    <p class="policy-intro">Welcome to Curve Sports &amp; Nutrition. By accessing or using our website at curvesports.com, you agree to be bound by these Terms &amp; Conditions. If you do not agree, please do not use our site.</p>
+
+    <div class="policy-section">
+      <div class="policy-section-icon"><i class="fas fa-user-shield"></i></div>
+      <div>
+        <h3>1. Eligibility</h3>
+        <p>You must be at least 18 years old to purchase from our website. By placing an order, you confirm that you meet this requirement and that all information you provide is accurate and complete.</p>
+      </div>
+    </div>
+
+    <div class="policy-section">
+      <div class="policy-section-icon"><i class="fas fa-shopping-bag"></i></div>
+      <div>
+        <h3>2. Products &amp; Pricing</h3>
+        <p>We strive to ensure all product descriptions, images, and pricing on our site are accurate. However, we reserve the right to:</p>
+        <ul>
+          <li>Correct any errors in pricing or product information without prior notice</li>
+          <li>Refuse or cancel any order placed at an incorrectly listed price</li>
+          <li>Modify or discontinue products at any time</li>
+        </ul>
+        <p>All prices are displayed in Indian Rupees (₹) and are inclusive of applicable taxes unless stated otherwise.</p>
+      </div>
+    </div>
+
+    <div class="policy-section">
+      <div class="policy-section-icon"><i class="fas fa-credit-card"></i></div>
+      <div>
+        <h3>3. Payments</h3>
+        <p>We use <strong>Razorpay</strong> as our secure payment gateway. We accept UPI, Credit/Debit Cards, Net Banking, and other supported methods. By completing a purchase, you agree to provide accurate payment information. We do not store your card details on our servers.</p>
+        <p>In the event of a payment failure, please retry or contact your bank before reaching out to us.</p>
+      </div>
+    </div>
+
+    <div class="policy-section">
+      <div class="policy-section-icon"><i class="fas fa-truck"></i></div>
+      <div>
+        <h3>4. Orders &amp; Delivery</h3>
+        <p>Placing an order constitutes an offer to purchase. We reserve the right to accept or decline any order. Orders are confirmed via email. Delivery timelines are estimates and may vary — see our <a href="{{ url_for('shop.shipping') }}">Shipping Policy</a> for full details.</p>
+      </div>
+    </div>
+
+    <div class="policy-section">
+      <div class="policy-section-icon"><i class="fas fa-undo-alt"></i></div>
+      <div>
+        <h3>5. Returns &amp; Refunds</h3>
+        <p>Our returns and refunds are governed by our <a href="{{ url_for('shop.refund') }}">Cancellation &amp; Refund Policy</a>. We accept returns within 7 days of delivery for damaged, defective, or incorrect items only. Opened or unsealed supplements cannot be returned for hygiene reasons.</p>
+      </div>
+    </div>
+
+    <div class="policy-section">
+      <div class="policy-section-icon"><i class="fas fa-copyright"></i></div>
+      <div>
+        <h3>6. Intellectual Property</h3>
+        <p>All content on this website — including logos, text, graphics, images, product photos, and software — is the exclusive property of Curve Sports &amp; Nutrition and is protected by applicable copyright and trademark laws. You may not reproduce, distribute, or use any content without prior written permission.</p>
+      </div>
+    </div>
+
+    <div class="policy-section">
+      <div class="policy-section-icon"><i class="fas fa-exclamation-triangle"></i></div>
+      <div>
+        <h3>7. Limitation of Liability</h3>
+        <p>Curve Sports &amp; Nutrition shall not be liable for any direct, indirect, incidental, special, or consequential damages arising from the use of, or inability to use, our website or products purchased from it. Our liability is limited to the purchase price of the product in question.</p>
+      </div>
+    </div>
+
+    <div class="policy-section">
+      <div class="policy-section-icon"><i class="fas fa-balance-scale"></i></div>
+      <div>
+        <h3>8. Governing Law</h3>
+        <p>These Terms are governed by the laws of India. Any disputes shall be subject to the exclusive jurisdiction of the courts in Gorakhpur, Uttar Pradesh.</p>
+      </div>
+    </div>
+
+    <div class="policy-section">
+      <div class="policy-section-icon"><i class="fas fa-sync-alt"></i></div>
+      <div>
+        <h3>9. Changes to Terms</h3>
+        <p>We reserve the right to update these Terms at any time. Continued use of the website after changes are posted constitutes your acceptance of the revised Terms.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="policy-crosslinks">
+    <a href="{{ url_for('shop.privacy') }}"><i class="fas fa-shield-alt"></i> Privacy Policy</a>
+    <a href="{{ url_for('shop.refund') }}"><i class="fas fa-undo"></i> Refund Policy</a>
+    <a href="{{ url_for('shop.shipping') }}"><i class="fas fa-shipping-fast"></i> Shipping Policy</a>
+    <a href="{{ url_for('shop.contact') }}"><i class="fas fa-headset"></i> Contact Us</a>
   </div>
 </div>
 {% endblock %}

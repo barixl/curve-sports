@@ -1,50 +1,132 @@
 {% extends 'base.html' %}
-{% block title %}Contact Us - Curve Sports{% endblock %}
+{% block title %}Contact Us — Curve Sports & Nutrition{% endblock %}
+
 {% block content %}
-<div class="container" style="padding: 40px 15px;">
-  <div class="card" style="padding: 40px; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.05);">
-    <h1 style="margin-bottom: 20px; font-size: 32px; font-weight: 700;">Contact Us</h1>
-    <div style="line-height: 1.8; color: #555; font-size: 16px;">
-      <p>We're here to help! Whether you have a question about our products, need assistance with an order, or just want to share feedback, we'd love to hear from you.</p>
-      
-      <div style="display: flex; flex-wrap: wrap; gap: 30px; margin-top: 30px;">
-        <div style="flex: 1; min-width: 250px;">
-          <h3 style="color: #222; font-size: 20px; margin-bottom: 10px;"><i class="fas fa-building" style="color: var(--primary); margin-right: 8px;"></i> Amisha Office</h3>
-          <p style="margin-bottom: 5px;"><strong>Email:</strong> <a href="mailto:support@curvesports.com" style="color: var(--primary); text-decoration: none;">support@curvesports.com</a></p>
-          <p><strong>Phone:</strong> <a href="tel:+918840042734" style="color: var(--primary); text-decoration: none;">+91-8840042734</a></p>
-        </div>
-
-        <div style="flex: 1; min-width: 250px;">
-          <h3 style="color: #222; font-size: 20px; margin-bottom: 10px;"><i class="fas fa-truck" style="color: var(--primary); margin-right: 8px;"></i> Sujeet Logistics</h3>
-          <p style="margin-bottom: 5px;"><strong>Phone 1:</strong> <a href="tel:+918090920261" style="color: var(--primary); text-decoration: none;">+91-8090920261</a></p>
-          <p><strong>Phone 2:</strong> <a href="tel:+917275520261" style="color: var(--primary); text-decoration: none;">+91-7275520261</a></p>
-        </div>
-        
-        <div style="flex: 1; min-width: 250px;">
-          <h3 style="color: #222; font-size: 20px; margin-bottom: 10px;"><i class="fas fa-clock" style="color: var(--primary); margin-right: 8px;"></i> Business Hours</h3>
-          <p style="margin-bottom: 5px;">Monday - Saturday: 10:00 AM - 7:00 PM (IST)</p>
-          <p>Sunday: Closed</p>
-        </div>
-        
-        <div style="flex: 1; min-width: 250px;">
-          <h3 style="color: #222; font-size: 20px; margin-bottom: 10px;"><i class="fas fa-map-marker-alt" style="color: var(--primary); margin-right: 8px;"></i> Our Address & Details</h3>
-          <p style="margin-bottom: 5px;"><strong>Curve Sports & Nutrition</strong></p>
-          <p style="margin-bottom: 5px;">140 F, Kharaiya Pokhara, Basharatpur, Medical College road, Near Anand Mashroom, Gorakhpur, Uttar Pradesh 273004</p>
-          <p style="margin-bottom: 5px;"><strong>GSTIN:</strong> 09AJOPA9239L3ZK</p>
-          <p><strong>FSSAI Number:</strong> 22725625000292</p>
-        </div>
+<!-- PAGE HERO -->
+<section class="policy-hero">
+  <div class="container">
+    <div class="policy-hero-inner">
+      <div class="breadcrumb" style="margin-bottom:12px">
+        <a href="{{ url_for('shop.index') }}">Home</a>
+        <i class="fas fa-chevron-right fa-xs"></i>
+        <span>Contact Us</span>
       </div>
-
-      <div style="margin-top: 40px; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
-        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3554.264997049186!2d83.26922887454683!3d27.021791076582335!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3996b53ae285dbcd%3A0x1df4df9beadb5355!2sCurve%20Sports%20%26%20Nutrition!5e0!3m2!1sen!2sde!4v1780263975582!5m2!1sen!2sde" width="100%" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
-      </div>
-
-      <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee;">
-        <h3 style="color: #222; font-size: 20px; margin-bottom: 10px;">Communication Policy</h3>
-        <p style="margin-bottom: 10px;"><strong>To Communicate with You:</strong> We may use your information to respond to your inquiries, provide customer service support, send you important information about the services, and marketing communications (with your consent) via different channels, including but not limited to SMS, Email, RCS, WhatsApp, and Voice.</p>
-        <p>For more details on how we handle your data, please read our full <a href="{{ url_for('shop.privacy') }}" style="color: var(--primary); text-decoration: underline; font-weight: 500;">Privacy Policy</a>.</p>
-      </div>
+      <h1><i class="fas fa-headset" style="color:var(--primary);margin-right:12px"></i>Contact Us</h1>
+      <p>We're here to help — reach out via phone, WhatsApp, or visit us at our stores.</p>
     </div>
   </div>
+</section>
+
+<div class="container policy-container">
+
+  <!-- CONTACT CARDS ROW -->
+  <div class="contact-cards-grid">
+
+    <!-- Sales Head -->
+    <div class="contact-card">
+      <div class="contact-card-icon" style="background:linear-gradient(135deg,var(--primary),#ff6b35)">
+        <i class="fas fa-user-tie"></i>
+      </div>
+      <h3>Sales Head</h3>
+      <p class="contact-card-label">For orders & product enquiries</p>
+      <a href="tel:+917838351574" class="contact-card-link">
+        <i class="fas fa-phone-alt"></i> +91 78383 51574
+      </a>
+      <a href="https://wa.me/917838351574?text=Hi%2C%20I%20want%20to%20enquire%20about%20a%20product" target="_blank" rel="noopener" class="contact-card-wa">
+        <i class="fab fa-whatsapp"></i> WhatsApp
+      </a>
+    </div>
+
+    <!-- Complaint & Enquiry -->
+    <div class="contact-card">
+      <div class="contact-card-icon" style="background:linear-gradient(135deg,#2d6a4f,#40916c)">
+        <i class="fas fa-comments"></i>
+      </div>
+      <h3>Complaint & Enquiry</h3>
+      <p class="contact-card-label">For complaints & general enquiries</p>
+      <a href="tel:+919312110022" class="contact-card-link">
+        <i class="fas fa-phone-alt"></i> +91 93121 10022
+      </a>
+      <a href="tel:+919810227504" class="contact-card-link">
+        <i class="fas fa-phone-alt"></i> +91 98102 27504
+      </a>
+    </div>
+
+    <!-- Email & Hours -->
+    <div class="contact-card">
+      <div class="contact-card-icon" style="background:linear-gradient(135deg,#1a1a2e,#16213e)">
+        <i class="fas fa-envelope-open-text"></i>
+      </div>
+      <h3>Email & Hours</h3>
+      <p class="contact-card-label">Write to us anytime</p>
+      <a href="mailto:support@curvesports.com" class="contact-card-link">
+        <i class="fas fa-envelope"></i> support@curvesports.com
+      </a>
+      <p class="contact-card-hours"><i class="fas fa-clock"></i> Mon–Sat: 10 AM – 7 PM IST</p>
+    </div>
+
+  </div>
+
+  <!-- BRANCHES -->
+  <div class="branches-grid">
+
+    <!-- Main Branch -->
+    <div class="branch-card">
+      <div class="branch-badge">Main Branch</div>
+      <h3><i class="fas fa-map-marker-alt" style="color:var(--primary)"></i> Gorakhpur Store</h3>
+      <p class="branch-address">
+        140 F, Kharaiya Pokhara, Basharatpur,<br>
+        Medical College Road, Near Anand Mashroom,<br>
+        Gorakhpur, Uttar Pradesh — 273004
+      </p>
+      <div class="branch-meta">
+        <span><i class="fas fa-id-card"></i> GSTIN: 09AJOPA9239L3ZK</span>
+        <span><i class="fas fa-certificate"></i> FSSAI: 22725625000292</span>
+      </div>
+      <div class="branch-map">
+        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3561.8988950400517!2d83.3834229!3d26.779492599999998!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x399145cfd21f0daf%3A0x4d456f43e849321e!2sCurve%20Sports%20%26%20Nutrition!5e0!3m2!1sen!2sde!4v1780425764883!5m2!1sen!2sde"
+          width="100%" height="280" style="border:0;" allowfullscreen="" loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade" title="Curve Sports Gorakhpur"></iframe>
+      </div>
+    </div>
+
+    <!-- Second Branch -->
+    <div class="branch-card">
+      <div class="branch-badge" style="background:var(--dark)">Branch 2</div>
+      <h3><i class="fas fa-map-marker-alt" style="color:var(--primary)"></i> Campierganj Store</h3>
+      <p class="branch-address">
+        Curve Sports & Nutrition,<br>
+        Block Road, Campierganj,<br>
+        Gorakhpur, Uttar Pradesh — 273158
+      </p>
+      <div class="branch-meta">
+        <span><i class="fas fa-store"></i> Open Mon–Sat: 10 AM – 7 PM</span>
+      </div>
+      <div class="branch-map">
+        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3554.264997049186!2d83.26922887454683!3d27.021791076582335!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3996b53ae285dbcd%3A0x1df4df9beadb5355!2sCurve%20Sports%20%26%20Nutrition!5e0!3m2!1sen!2sde!4v1780426105344!5m2!1sen!2sde"
+          width="100%" height="280" style="border:0;" allowfullscreen="" loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade" title="Curve Sports Campierganj"></iframe>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- COMMUNICATION POLICY NOTE -->
+  <div class="policy-note-box">
+    <i class="fas fa-info-circle" style="color:var(--primary);font-size:20px;flex-shrink:0"></i>
+    <div>
+      <strong>Communication Policy:</strong> We may use your contact information to respond to your enquiries, provide customer support, send order updates, and marketing communications (with your consent) via SMS, Email, WhatsApp, and Voice.
+      For details, see our <a href="{{ url_for('shop.privacy') }}">Privacy Policy</a>.
+    </div>
+  </div>
+
+  <!-- POLICY LINKS -->
+  <div class="policy-crosslinks">
+    <a href="{{ url_for('shop.shipping') }}"><i class="fas fa-shipping-fast"></i> Shipping Policy</a>
+    <a href="{{ url_for('shop.refund') }}"><i class="fas fa-undo"></i> Refund Policy</a>
+    <a href="{{ url_for('shop.privacy') }}"><i class="fas fa-shield-alt"></i> Privacy Policy</a>
+    <a href="{{ url_for('shop.terms') }}"><i class="fas fa-file-alt"></i> Terms & Conditions</a>
+  </div>
+
 </div>
 {% endblock %}

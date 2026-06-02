@@ -227,30 +227,63 @@
         </ul>
         <div class="footer-contact">
           <p><i class="fas fa-envelope"></i> support@curvesports.com</p>
-          <p><i class="fas fa-phone"></i> +91-9312110022, +91-9810227504</p>
+          <p><i class="fas fa-phone"></i> +91 93121 10022</p>
+          <p><i class="fas fa-phone"></i> +91 98102 27504</p>
         </div>
       </div>
     </div>
 
-    <!-- GOOGLE MAP -->
+    <!-- GOOGLE MAPS — TWO BRANCHES -->
     <div class="footer-map">
-      <h4>Find Us</h4>
-      <div class="footer-map-frame">
-        <iframe
-          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3561.898895770245!2d83.38084797453652!3d26.779492576726785!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x399145cfd21f0daf%3A0x4d456f43e849321e!2sCurve%20Sports%20%26%20Nutrition!5e0!3m2!1sen!2sde!4v1777214217373!5m2!1sen!2sde"
-          width="100%" height="220" style="border:0;" allowfullscreen="" loading="lazy"
-          referrerpolicy="no-referrer-when-downgrade" title="Curve Sports and Nutrition location">
-        </iframe>
+      <h4>Our Stores</h4>
+      <div class="footer-maps-grid">
+        <div class="footer-map-item">
+          <div class="footer-map-label">
+            <i class="fas fa-map-marker-alt"></i>
+            <div>
+              <strong>Main Branch — Gorakhpur</strong>
+              <span>Medical College Road, Basharatpur, Gorakhpur, UP 273004</span>
+            </div>
+          </div>
+          <div class="footer-map-frame">
+            <iframe
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3561.8988950400517!2d83.3834229!3d26.779492599999998!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x399145cfd21f0daf%3A0x4d456f43e849321e!2sCurve%20Sports%20%26%20Nutrition!5e0!3m2!1sen!2sde!4v1780425764883!5m2!1sen!2sde"
+              width="100%" height="200" style="border:0;" allowfullscreen="" loading="lazy"
+              referrerpolicy="no-referrer-when-downgrade" title="Curve Sports Gorakhpur Main Branch">
+            </iframe>
+          </div>
+        </div>
+        <div class="footer-map-item">
+          <div class="footer-map-label">
+            <i class="fas fa-map-marker-alt"></i>
+            <div>
+              <strong>Branch 2 — Campierganj</strong>
+              <span>Block Road, Campierganj, Gorakhpur, UP 273158</span>
+            </div>
+          </div>
+          <div class="footer-map-frame">
+            <iframe
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3554.264997049186!2d83.26922887454683!3d27.021791076582335!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3996b53ae285dbcd%3A0x1df4df9beadb5355!2sCurve%20Sports%20%26%20Nutrition!5e0!3m2!1sen!2sde!4v1780426105344!5m2!1sen!2sde"
+              width="100%" height="200" style="border:0;" allowfullscreen="" loading="lazy"
+              referrerpolicy="no-referrer-when-downgrade" title="Curve Sports Campierganj Branch">
+            </iframe>
+          </div>
+        </div>
       </div>
     </div>
     <div class="footer-bottom">
-      <p>&copy; 2024 Curve Sports. Built with Flask.</p>
+      <p>&copy; 2026 Curve Sports &amp; Nutrition. India's Authentic Supplement Store.</p>
       <div class="payment-icons">
         <span>VISA</span><span>MC</span><span>UPI</span><span>COD</span>
       </div>
     </div>
   </div>
 </footer>
+
+<!-- WHATSAPP FLOAT -->
+<a href="https://wa.me/919312110022?text=Hi%20Curve%20Sports%2C%20I%20need%20help!" class="whatsapp-float" target="_blank" rel="noopener" aria-label="Chat on WhatsApp">
+  <i class="fab fa-whatsapp"></i>
+</a>
 
 <!-- MOBILE BOTTOM NAV -->
 <div class="mobile-bottom-nav">
@@ -261,6 +294,10 @@
   <a href="{{ url_for('shop.products') }}" class="mobile-nav-item">
     <i class="fas fa-shopping-bag"></i>
     <span>Shop</span>
+  </a>
+  <a href="{{ url_for('shop.products', offers=1) }}" class="mobile-nav-item mobile-nav-offers">
+    <i class="fas fa-tag"></i>
+    <span>Offers</span>
   </a>
   <a href="{{ url_for('cart.cart') }}" class="mobile-nav-item relative-icon">
     <i class="fas fa-shopping-cart"></i>

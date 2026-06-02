@@ -1,20 +1,130 @@
 {% extends 'base.html' %}
-{% block title %}Cancellation & Refund Policy - Curve Sports{% endblock %}
+{% block title %}Cancellation & Refund Policy — Curve Sports & Nutrition{% endblock %}
+
 {% block content %}
-<div class="container" style="padding: 40px 15px;">
-  <div class="card" style="padding: 40px; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.05);">
-    <h1 style="margin-bottom: 20px; font-size: 32px; font-weight: 700;">Cancellation & Refund Policy</h1>
-    <div style="line-height: 1.8; color: #555; font-size: 16px;">
-      <p>We want you to be completely satisfied with your purchase. Please read our cancellation and refund policy carefully to understand your rights and options.</p>
-      <h3 style="margin-top: 25px; color: #222; font-size: 20px;">1. Order Cancellation</h3>
-      <p>You may cancel your order at any time before it has been processed and shipped. To cancel, please contact our support team immediately. Once the order has been dispatched, cancellation requests can no longer be processed, and you will need to follow the return process.</p>
-      <h3 style="margin-top: 25px; color: #222; font-size: 20px;">2. Returns</h3>
-      <p>We accept returns within 7 days of delivery, provided that the product is damaged, defective, or incorrect. The returned product must be unused, sealed, and in its original packaging with all tags and labels intact. To initiate a return, contact us with your order details and photos of the item.</p>
-      <h3 style="margin-top: 25px; color: #222; font-size: 20px;">3. Refunds</h3>
-      <p>Once your return is received and inspected, we will notify you of the approval or rejection of your refund. If approved, the refund will be processed and automatically credited to your original method of payment (e.g., credit card, UPI, bank account) within 5-7 business days.</p>
-      <h3 style="margin-top: 25px; color: #222; font-size: 20px;">4. Non-returnable Items</h3>
-      <p>For health and safety reasons, certain items are strictly non-returnable and non-refundable. These include opened or unsealed nutritional supplements, perishable goods, and gift cards.</p>
+<section class="policy-hero">
+  <div class="container">
+    <div class="policy-hero-inner">
+      <div class="breadcrumb" style="margin-bottom:12px">
+        <a href="{{ url_for('shop.index') }}">Home</a>
+        <i class="fas fa-chevron-right fa-xs"></i>
+        <span>Refund Policy</span>
+      </div>
+      <h1><i class="fas fa-undo-alt" style="color:var(--primary);margin-right:12px"></i>Cancellation &amp; Refund Policy</h1>
+      <p>Last updated: June 2025 &nbsp;·&nbsp; We want you to be 100% satisfied with every purchase.</p>
     </div>
+  </div>
+</section>
+
+<div class="container policy-container">
+
+  <!-- QUICK SUMMARY BADGES -->
+  <div class="policy-badges">
+    <div class="policy-badge">
+      <i class="fas fa-clock"></i>
+      <span>Cancel before dispatch</span>
+    </div>
+    <div class="policy-badge">
+      <i class="fas fa-box-open"></i>
+      <span>7-day return window</span>
+    </div>
+    <div class="policy-badge">
+      <i class="fas fa-rupee-sign"></i>
+      <span>Refund in 5–7 days</span>
+    </div>
+    <div class="policy-badge">
+      <i class="fas fa-headset"></i>
+      <span>Easy support process</span>
+    </div>
+  </div>
+
+  <div class="policy-card">
+
+    <p class="policy-intro">We stand behind the quality of every product we sell. If something isn't right, we're committed to making it right — quickly and fairly.</p>
+
+    <div class="policy-section">
+      <div class="policy-section-icon"><i class="fas fa-ban"></i></div>
+      <div>
+        <h3>1. Order Cancellation</h3>
+        <p>You may cancel your order <strong>before it has been dispatched</strong>. To cancel:</p>
+        <ul>
+          <li>Call us immediately at <a href="tel:+919312110022">+91 93121 10022</a> or <a href="tel:+919810227504">+91 98102 27504</a></li>
+          <li>Or WhatsApp us at <a href="https://wa.me/919312110022" target="_blank" rel="noopener">+91 93121 10022</a></li>
+        </ul>
+        <p>Once an order has been dispatched, cancellation is no longer possible. You will need to follow the return process after delivery.</p>
+      </div>
+    </div>
+
+    <div class="policy-section">
+      <div class="policy-section-icon"><i class="fas fa-exchange-alt"></i></div>
+      <div>
+        <h3>2. Returns</h3>
+        <p>We accept returns within <strong>7 days of delivery</strong> only in the following cases:</p>
+        <ul>
+          <li>Product received is damaged or defective</li>
+          <li>Wrong product delivered (different from what was ordered)</li>
+          <li>Product is expired</li>
+        </ul>
+        <p><strong>Conditions for a valid return:</strong></p>
+        <ul>
+          <li>The product must be unused, sealed, and in its original packaging</li>
+          <li>All tags, labels, and accessories must be intact</li>
+          <li>Proof of purchase (order ID) is required</li>
+          <li>Clear photos of the damage/defect must be shared</li>
+        </ul>
+        <p>To initiate a return, contact us at <a href="mailto:support@curvesports.com">support@curvesports.com</a> with your order ID and photos within 7 days of delivery.</p>
+      </div>
+    </div>
+
+    <div class="policy-section">
+      <div class="policy-section-icon"><i class="fas fa-rupee-sign"></i></div>
+      <div>
+        <h3>3. Refunds</h3>
+        <p>Once your return is received and inspected, we will notify you by email or phone within <strong>2 business days</strong>. If approved:</p>
+        <ul>
+          <li>Refunds are credited to your original payment method (UPI, Card, Net Banking)</li>
+          <li>Processing time: <strong>5–7 business days</strong> after approval</li>
+          <li>Bank processing times may add 1–3 additional days depending on your bank</li>
+        </ul>
+        <p>For Cash on Delivery orders, refunds are processed via bank transfer — please share your bank details when contacting us.</p>
+      </div>
+    </div>
+
+    <div class="policy-section">
+      <div class="policy-section-icon"><i class="fas fa-times-circle"></i></div>
+      <div>
+        <h3>4. Non-Returnable Items</h3>
+        <p>For health and safety reasons, the following items <strong>cannot be returned or refunded</strong>:</p>
+        <ul>
+          <li>Opened, unsealed, or partially used nutritional supplements</li>
+          <li>Perishable goods or items with broken seals</li>
+          <li>Gift cards or promotional vouchers</li>
+          <li>Items damaged due to misuse or negligence</li>
+          <li>Products returned after the 7-day window</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="policy-section">
+      <div class="policy-section-icon"><i class="fas fa-headset"></i></div>
+      <div>
+        <h3>5. How to Reach Us</h3>
+        <p>For cancellations, returns, or refund queries, contact our support team:</p>
+        <ul>
+          <li><strong>Phone/WhatsApp:</strong> <a href="tel:+919312110022">+91 93121 10022</a> &nbsp;|&nbsp; <a href="tel:+919810227504">+91 98102 27504</a></li>
+          <li><strong>Email:</strong> <a href="mailto:support@curvesports.com">support@curvesports.com</a></li>
+          <li><strong>Hours:</strong> Monday – Saturday, 10:00 AM – 7:00 PM IST</li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="policy-crosslinks">
+    <a href="{{ url_for('shop.shipping') }}"><i class="fas fa-shipping-fast"></i> Shipping Policy</a>
+    <a href="{{ url_for('shop.privacy') }}"><i class="fas fa-shield-alt"></i> Privacy Policy</a>
+    <a href="{{ url_for('shop.terms') }}"><i class="fas fa-file-alt"></i> Terms &amp; Conditions</a>
+    <a href="{{ url_for('shop.contact') }}"><i class="fas fa-headset"></i> Contact Us</a>
   </div>
 </div>
 {% endblock %}
