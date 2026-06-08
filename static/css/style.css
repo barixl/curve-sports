@@ -228,6 +228,11 @@ input, button, select, textarea { font-family: inherit; }
 .carousel-btn:hover { background: var(--primary); color: white; }
 .carousel-btn-prev { left: 20px; }
 .carousel-btn-next { right: 20px; }
+@media (max-width: 768px) {
+  .carousel-btn { opacity: 1; width: 32px; height: 32px; }
+  .carousel-btn-prev { left: 8px; }
+  .carousel-btn-next { right: 8px; }
+}
 
 .carousel-dots { position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; z-index: 5; }
 .carousel-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.4); border: none; cursor: pointer; transition: all 0.2s; }
