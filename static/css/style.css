@@ -235,6 +235,7 @@ input, button, select, textarea { font-family: inherit; }
 
 .middle-banner { margin: 40px 0; border-radius: 12px; overflow: hidden; box-shadow: var(--shadow); }
 .middle-banner img { width: 100%; display: block; object-fit: cover; aspect-ratio: 16 / 5.5; }
+.middle-carousel { margin: 40px 0; }
 
 /* ── BUTTONS ───────────────────────────────────────── */
 .btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 28px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; border: none; transition: all 0.2s; }
@@ -1787,8 +1788,10 @@ tr:hover td { background: #fafafa; }
 }
 .footer-map-frame iframe { display: block; }
 @media (max-width: 600px) {
-  .footer-maps-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
-  .footer-map-frame iframe { height: 150px !important; }
+  .footer-maps-grid { grid-template-columns: 1fr 1fr; gap: 12px; align-items: stretch; }
+  .footer-map-item { justify-content: space-between; }
+  .footer-map-frame iframe { height: 140px !important; }
+  .footer-map-label { min-height: 72px; }
   .footer-map-label strong { font-size: 12px; }
   .footer-map-label span { font-size: 11px; }
 }

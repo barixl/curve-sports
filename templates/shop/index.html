@@ -296,12 +296,63 @@ startAutoSlide();
 </section>
 {% endif %}
 
-<!-- MIDDLE BANNER 1 -->
+<!-- MIDDLE BANNER CAROUSEL -->
 <div class="container">
-  <div class="middle-banner">
-    <img src="{{ url_for('static', filename='images/banner/banner_4.webp') }}" alt="Special Offer" loading="lazy">
+  <div class="carousel-container middle-carousel" id="middleCarousel">
+    <div class="carousel-wrapper" id="middleCarouselWrapper">
+      <div class="carousel-slide">
+        <img src="{{ url_for('static', filename='images/banner/banner_4.webp') }}" alt="Special Offer" loading="lazy">
+      </div>
+      <div class="carousel-slide">
+        <img src="{{ url_for('static', filename='images/banner/banner_5.webp') }}" alt="Promotional Banner" loading="lazy">
+      </div>
+    </div>
+    <button class="carousel-btn carousel-btn-prev" onclick="moveMidSlide(-1)"><i class="fas fa-chevron-left"></i></button>
+    <button class="carousel-btn carousel-btn-next" onclick="moveMidSlide(1)"><i class="fas fa-chevron-right"></i></button>
+    <div class="carousel-dots" id="middleCarouselDots">
+      <button class="carousel-dot active" onclick="goToMidSlide(0)"></button>
+      <button class="carousel-dot" onclick="goToMidSlide(1)"></button>
+    </div>
   </div>
 </div>
+<script>
+(function () {
+  let midSlide = 0;
+  const midWrapper = document.getElementById('middleCarouselWrapper');
+  const midDots = document.querySelectorAll('#middleCarouselDots .carousel-dot');
+  const midTotal = 2;
+  let midInterval;
+
+  function updateMid() {
+    midWrapper.style.transform = 'translateX(-' + (midSlide * 100) + '%)';
+    midDots.forEach(function (d, i) { d.classList.toggle('active', i === midSlide); });
+  }
+
+  window.moveMidSlide = function (dir) {
+    midSlide = (midSlide + dir + midTotal) % midTotal;
+    updateMid();
+    resetMid();
+  };
+
+  window.goToMidSlide = function (i) {
+    midSlide = i;
+    updateMid();
+    resetMid();
+  };
+
+  function resetMid() {
+    clearInterval(midInterval);
+    midInterval = setInterval(tick, 3000);
+  }
+
+  function tick() {
+    midSlide = (midSlide + 1) % midTotal;
+    updateMid();
+  }
+
+  midInterval = setInterval(tick, 3000);
+})();
+</script>
 
 <!-- FEATURED PRODUCTS -->
 {% if featured %}
@@ -320,12 +371,6 @@ startAutoSlide();
 </section>
 {% endif %}
 
-<!-- MIDDLE BANNER 2 -->
-<div class="container">
-  <div class="middle-banner">
-    <img src="{{ url_for('static', filename='images/banner/banner_5.webp') }}" alt="Promotional Banner" loading="lazy">
-  </div>
-</div>
 
 <!-- NEW ARRIVALS -->
 {% if new_arrivals %}
