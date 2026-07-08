@@ -18,4 +18,4 @@ six==1.17.0
 cloudinary==1.40.0
 psycopg2-binary==2.9.11
 Flask-Compress==1.24
-Flask-Caching==2.4.0
+Flask-Caching==2.3.1
