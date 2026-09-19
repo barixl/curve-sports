@@ -182,10 +182,10 @@ def add_review(product_id):
     review = Review(product_id=product_id, user_id=current_user.id,
                     rating=rating, title=title, body=body)
     db.session.add(review)
+    db.session.flush()  # the query below already includes this review — don't count it twice
     all_reviews = Review.query.filter_by(product_id=product_id).all()
-    total = sum(r.rating for r in all_reviews) + rating
-    product.rating = round(total / (len(all_reviews) + 1), 1)
-    product.review_count = len(all_reviews) + 1
+    product.rating = round(sum(r.rating for r in all_reviews) / len(all_reviews), 1)
+    product.review_count = len(all_reviews)
     db.session.commit()
     flash('Review submitted successfully!', 'success')
     return redirect(url_for('shop.product_detail', slug=product.slug))

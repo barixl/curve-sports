@@ -233,6 +233,7 @@ class Review(db.Model):
     body       = db.Column(db.Text)
     is_verified = db.Column(db.Boolean, default=False)
     created_at  = db.Column(db.DateTime, default=datetime.utcnow)
+    user        = db.relationship('User', backref='reviews')
 
 
 class Wishlist(db.Model):
