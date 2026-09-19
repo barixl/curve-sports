@@ -138,7 +138,8 @@ startAutoSlide();
   </div>
 </section>
 
-<!-- SHOP BY BRAND -->
+<!-- SHOP BY BRAND (only brands with a logo are passed in; hide the slider when there are none) -->
+{% if brands %}
 <section class="brands-section section-compact" style="background:#fafafa;">
   <div class="container">
     <div class="section-header">
@@ -173,6 +174,7 @@ startAutoSlide();
     </div>
   </div>
 </section>
+{% endif %}
 
 <script>
 (function () {

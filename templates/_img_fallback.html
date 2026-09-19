@@ -1,0 +1,10 @@
+<script>
+  // Swap any image that fails to load (missing upload, dead link) for a neutral placeholder.
+  // Registered in <head> with capture, so it catches errors from every <img> on the page.
+  document.addEventListener('error', function (e) {
+    var img = e.target;
+    if (img.tagName !== 'IMG' || img.dataset.fallback) return;
+    img.dataset.fallback = '1';
+    img.src = "{{ url_for('static', filename='images/placeholder.svg') }}";
+  }, true);
+</script>
