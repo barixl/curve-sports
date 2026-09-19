@@ -51,6 +51,19 @@ def save_image(file, folder):
     return None
 
 
+# to_char and CAST(... AS DATE) are PostgreSQL semantics; SQLite (local dev) needs its own.
+def month_of(col):
+    if db.engine.dialect.name == 'sqlite':
+        return func.strftime('%Y-%m', col)
+    return func.to_char(col, 'YYYY-MM')
+
+
+def date_of(col):
+    if db.engine.dialect.name == 'sqlite':
+        return func.date(col)
+    return func.cast(col, db.Date)
+
+
 # ─── DASHBOARD ───────────────────────────────────────────────────────────────
 
 @admin_bp.route('/')
@@ -65,9 +78,9 @@ def dashboard():
     total_users = User.query.filter_by(is_admin=False).count()
     total_products = Product.query.filter_by(is_active=True).count()
 
-    today_orders = Order.query.filter(func.cast(Order.created_at, db.Date) == today).count()
+    today_orders = Order.query.filter(date_of(Order.created_at) == today).count()
     today_revenue = db.session.query(func.sum(Order.final_amount)).filter(
-        func.cast(Order.created_at, db.Date) == today).scalar() or 0
+        date_of(Order.created_at) == today).scalar() or 0
 
     recent_orders = Order.query.order_by(Order.created_at.desc()).limit(10).all()
     low_stock = Product.query.filter(Product.stock < 20, Product.is_active == True).all()
@@ -76,7 +89,7 @@ def dashboard():
     for i in range(6):
         d = datetime.utcnow() - timedelta(days=30 * i)
         rev = db.session.query(func.sum(Order.final_amount)).filter(
-            func.to_char(Order.created_at, 'YYYY-MM') == d.strftime('%Y-%m')
+            month_of(Order.created_at) == d.strftime('%Y-%m')
         ).scalar() or 0
         monthly_revenue.append({'month': d.strftime('%b %Y'), 'revenue': float(rev)})
     monthly_revenue.reverse()
@@ -706,12 +719,16 @@ def reports():
     ).join(Product, Product.category_id == Category.id).join(
         OrderItem, OrderItem.product_id == Product.id
     ).group_by(Category.id).all()
+    # Convert Row objects to lists for JSON serialization
+    revenue_by_cat = [list(r) for r in revenue_by_cat]
 
     monthly = db.session.query(
-        func.to_char(Order.created_at, 'YYYY-MM').label('month'),
+        month_of(Order.created_at).label('month'),
         func.count(Order.id).label('orders'),
         func.sum(Order.final_amount).label('revenue')
     ).group_by('month').order_by('month').limit(12).all()
+    # Convert Row objects to lists for JSON serialization
+    monthly = [list(r) for r in monthly]
 
     return render_template('admin/reports.html', top_products=top_products,
                            revenue_by_cat=revenue_by_cat, monthly=monthly)
