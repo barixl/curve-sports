@@ -4,9 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{% block title %}Curve Sports - India's Authentic Supplement Store{% endblock %}</title>
-<link rel="stylesheet" href="{{ url_for('static', filename='css/gfonts.css') }}">
+<link rel="preload" href="{{ url_for('static', filename='fonts/rubik-latin.woff2') }}" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/gfonts.css') }}?v=2">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/fontawesome.min.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=8">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=9">
 <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='images/favicons/apple-touch-icon.png') }}">
 <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/favicons/favicon-32x32.png') }}">
 <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='images/favicons/favicon-16x16.png') }}">
@@ -15,39 +16,33 @@
 {% block extra_css %}{% endblock %}
 </head>
 <body>
-
-<!-- TOP BAR -->
-<div class="top-bar">
-  <div class="container">
-    <div class="top-bar-inner" id="topBarTicker">
-      <span class="ticker-item active"><i class="fas fa-shield-alt"></i> 100% Authentic Products</span>
-      <span class="ticker-item"><i class="fas fa-truck"></i> Free Delivery on orders above ₹499</span>
-      <span class="ticker-item"><i class="fas fa-tag"></i> Use code CURVE5 for 5% off</span>
-    </div>
-  </div>
-</div>
+{% macro chevron() %}<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>{% endmacro %}
 
 <!-- HEADER -->
 <header class="header">
   <div class="container">
     <div class="header-inner">
-      <button class="mobile-toggle" id="mobileToggle"><i class="fas fa-bars"></i></button>
-      
-      <a href="{{ url_for('shop.index') }}" class="logo" style="display:flex; align-items:center; gap:12px">
-        <img src="https://res.cloudinary.com/dqnckehnu/image/upload/v1777143823/curve-sports/curve-logo.png" alt="Logo" style="height:56px; width:auto">
-        <span class="logo-text" style="font-size:22px; line-height:1.15">Curve Sports<br><span style="color:var(--primary)">& Nutrition</span></span><span class="logo-dot">™</span>
+      <button class="mobile-toggle" id="mobileToggle" aria-label="Open menu"><i class="fas fa-bars"></i></button>
+
+      <a href="{{ url_for('shop.index') }}" class="logo">
+        <img src="{{ url_for('static', filename='images/curve-logo.webp') }}" alt="Curve Sports &amp; Nutrition">
+        <span class="logo-text">Curve Sports<span>&amp; Nutrition</span></span>
       </a>
 
-      <form class="search-bar" action="{{ url_for('shop.search') }}" method="get">
-        <input type="text" name="q" placeholder="Search for products, brands..." 
+      <form class="search-bar" action="{{ url_for('shop.search') }}" method="get" role="search">
+        <button type="submit" aria-label="Search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.6-3.6"/></svg>
+        </button>
+        <input type="text" name="q" placeholder="Search" aria-label="Search products and brands"
                value="{{ request.args.get('q','') }}" autocomplete="off">
-        <button type="submit"><i class="fas fa-search"></i></button>
       </form>
 
       <nav class="header-actions">
         {% if current_user.is_authenticated %}
           <div class="dropdown">
-            <a href="{{ url_for('auth.profile') }}" class="action-btn"><i class="fas fa-user"></i> <span class="hide-mobile">{{ current_user.name.split()[0] }} <i class="fas fa-chevron-down fa-xs"></i></span></a>
+            <a href="{{ url_for('auth.profile') }}" class="action-btn" aria-label="My account" title="{{ current_user.name }}">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg>
+            </a>
             <div class="dropdown-menu">
               <a href="{{ url_for('auth.profile') }}"><i class="fas fa-user-circle"></i> My Profile</a>
               <a href="{{ url_for('auth.profile') }}#orders"><i class="fas fa-box"></i> My Orders</a>
@@ -60,11 +55,15 @@
             </div>
           </div>
         {% else %}
-          <a href="{{ url_for('auth.login') }}" class="action-btn"><i class="fas fa-user"></i> <span class="hide-mobile">Login / Register</span></a>
+          <a href="{{ url_for('auth.login') }}" class="action-btn" aria-label="Login or register" title="Login / Register">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg>
+          </a>
         {% endif %}
-        <a href="{{ url_for('shop.wishlist') }}" class="action-btn hide-mobile"><i class="fas fa-heart"></i></a>
-        <a href="{{ url_for('cart.cart') }}" class="action-btn cart-btn">
-          <i class="fas fa-shopping-cart"></i>
+        <a href="{{ url_for('shop.wishlist') }}" class="action-btn wish-btn" aria-label="Wishlist" title="Wishlist">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20.5s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.6a4.3 4.3 0 0 1 7.5 2.7c0 5.6-7.5 10.2-7.5 10.2z"/></svg>
+        </a>
+        <a href="{{ url_for('cart.cart') }}" class="action-btn cart-btn" aria-label="Cart" title="Cart">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h14l1 12.5a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 20.5L5 8z"/><path d="M8.5 8V6.5a3.5 3.5 0 0 1 7 0V8"/></svg>
           <span class="cart-count" id="cart-count">0</span>
         </a>
       </nav>
@@ -75,27 +74,36 @@
   <div class="mobile-overlay" id="mobileOverlay"></div>
   <aside class="mobile-sidebar" id="mobileSidebar">
     <div class="sidebar-header">
-      <div class="logo" style="display:flex; align-items:center; gap:10px">
-        <img src="https://res.cloudinary.com/dqnckehnu/image/upload/v1777143823/curve-sports/curve-logo.png" alt="Logo" style="height:38px; width:auto">
-        <span style="font-size:18px; font-weight:700; line-height:1.2">Curve Sports<br><span style="color:var(--primary)">& Nutrition</span></span><span class="logo-dot">™</span>
+      <div class="logo">
+        <img src="{{ url_for('static', filename='images/curve-logo.webp') }}" alt="Curve Sports &amp; Nutrition">
+        <span class="logo-text">Curve Sports<span>&amp; Nutrition</span></span>
       </div>
-      <button class="close-btn" id="closeSidebar"><i class="fas fa-times"></i></button>
+      <button class="close-btn" id="closeSidebar" aria-label="Close menu"><i class="fas fa-times"></i></button>
     </div>
     <div class="sidebar-content">
       <form class="mobile-search" action="{{ url_for('shop.search') }}" method="get">
         <input type="text" name="q" placeholder="Search products..." autocomplete="off">
-        <button type="submit"><i class="fas fa-search"></i></button>
+        <button type="submit" aria-label="Search"><i class="fas fa-search"></i></button>
       </form>
       <nav class="sidebar-nav-links">
         <a href="{{ url_for('shop.index') }}"><i class="fas fa-home"></i> Home</a>
-        <a href="{{ url_for('shop.products') }}"><i class="fas fa-shopping-bag"></i> Shop</a>
-        <a href="{{ url_for('shop.products') }}"><i class="fas fa-th-large"></i> All Categories</a>
-        {% for cat in categories_nav %}
-        <a href="{{ url_for('shop.products', category=cat.slug) }}"><i class="fas fa-tag"></i> {{ cat.name }}</a>
+        <a href="{{ url_for('shop.products') }}"><i class="fas fa-shopping-bag"></i> All Products</a>
+        {% for menu in nav_menu %}
+          {% if menu.children %}
+          <details class="sidebar-group">
+            <summary><i class="fas fa-tag"></i> {{ menu.name }} <i class="fas fa-chevron-down sidebar-chev"></i></summary>
+            <a href="{{ url_for('shop.products', category=menu.slug) }}">All {{ menu.name }}</a>
+            {% for child in menu.children %}
+            <a href="{{ url_for('shop.products', category=child.slug) }}">{{ child.name }}</a>
+            {% endfor %}
+          </details>
+          {% else %}
+          <a href="{{ url_for('shop.products', category=menu.slug) }}"><i class="fas fa-tag"></i> {{ menu.name }}</a>
+          {% endif %}
         {% endfor %}
         <hr>
         <a href="{{ url_for('shop.products', sort='newest') }}"><i class="fas fa-star"></i> New Arrivals</a>
-        <a href="{{ url_for('shop.products') }}?bestseller=1"><i class="fas fa-fire"></i> Bestsellers</a>
+        <a href="{{ url_for('shop.products', offers=1) }}"><i class="fas fa-fire"></i> Offers</a>
         <hr>
         {% if current_user.is_authenticated %}
         <a href="{{ url_for('auth.profile') }}"><i class="fas fa-user"></i> My Account</a>
@@ -109,61 +117,60 @@
 
   <!-- NAV BAR -->
   <nav class="main-nav">
-    <div class="container" style="position: relative;">
+    <div class="container">
       <ul class="nav-list">
-        <li><a href="{{ url_for('shop.products') }}">Shop</a></li>
-        <li class="nav-item has-mega">
-          <a href="{{ url_for('shop.products') }}">Categories <i class="fas fa-chevron-down fa-xs"></i></a>
-          <div class="mega-menu categories-mega">
-            <div class="mega-inner categories-mega-inner">
-              {% for cat in categories_nav %}
-              <a href="{{ url_for('shop.products', category=cat.slug) }}" class="mega-item">
-                <div class="mega-icon-wrap">
-                  {% if cat.image %}
-                    <img src="{{ cat.image | img_url('categories') }}" alt="{{ cat.name }}" loading="lazy">
-                  {% else %}
-                    <i class="fas fa-tag"></i>
+        <li class="nav-item">
+          <a href="{{ url_for('shop.products') }}">Brands {{ chevron() }}</a>
+          <div class="mega-menu brands-mega">
+            <div class="brands-mega-inner">
+              {% for char in alphabet %}
+              <div class="brand-group">
+                <div class="brand-group-title">{{ char }}</div>
+                {% for brand in grouped_brands[char] %}
+                <a href="{{ url_for('shop.products', brand=brand.slug) }}" class="brand-mega-item">
+                  {% if brand.logo %}
+                  <img src="{{ brand.logo | img_url('brands') }}" alt="" loading="lazy">
                   {% endif %}
-                </div>
-                <span class="mega-name">{{ cat.name }}</span>
-              </a>
+                  <span>{{ brand.name }}</span>
+                </a>
+                {% endfor %}
+              </div>
               {% endfor %}
             </div>
           </div>
         </li>
-        <li class="nav-item has-mega">
-          <a href="#">Brands <i class="fas fa-chevron-down fa-xs"></i></a>
-          <div class="mega-menu brands-mega">
-            <div class="mega-inner brands-mega-inner">
-                {% for char in alphabet %}
-                <div class="brand-group">
-                  <div class="brand-group-title">
-                    {{ char }}
-                  </div>
-                  {% for brand in grouped_brands[char] %}
-                  <a href="{{ url_for('shop.products', brand=brand.slug) }}" class="mega-item brand-mega-item">
-                    <div class="mega-icon-wrap brand-icon-wrap">
-                      {% if brand.logo %}
-                        <img src="{{ brand.logo | img_url('brands') }}" alt="{{ brand.name }}" loading="lazy">
-                      {% else %}
-                        <i class="fas fa-certificate"></i>
-                      {% endif %}
-                    </div>
-                    <span class="mega-name brand-mega-name">{{ brand.name }}</span>
-                  </a>
-                  {% endfor %}
-                </div>
-                {% endfor %}
-            </div>
+        {% for menu in nav_menu %}
+        <li class="nav-item">
+          <a href="{{ url_for('shop.products', category=menu.slug) }}">{{ menu.name }}{% if menu.children %} {{ chevron() }}{% endif %}</a>
+          {% if menu.children %}
+          <div class="nav-drop{{ ' cols-2' if menu.children|length > 6 }}">
+            <a href="{{ url_for('shop.products', category=menu.slug) }}" class="drop-all">All {{ menu.name }}</a>
+            {% for child in menu.children %}
+            <a href="{{ url_for('shop.products', category=child.slug) }}">{{ child.name }}</a>
+            {% endfor %}
           </div>
+          {% endif %}
         </li>
-        <li><a href="{{ url_for('shop.products', sort='newest') }}">New Arrivals</a></li>
-        <li><a href="{{ url_for('shop.products') }}?bestseller=1">Bestsellers</a></li>
-        <li><a href="{{ url_for('shop.products', sort='price_asc') }}">Offers</a></li>
+        {% endfor %}
+        <li class="nav-item nav-offers"><a href="{{ url_for('shop.products', offers=1) }}">Offers</a></li>
       </ul>
     </div>
   </nav>
 </header>
+
+<!-- TRUST STRIP (the chip set repeats so the scroll loops without a gap) -->
+<div class="trust-strip">
+  <div class="trust-track">
+    {% for _ in range(4) %}
+    <span class="trust-chip"{% if not loop.first %} aria-hidden="true"{% endif %}><i class="fas fa-shield-alt"></i> 100% Authentic Products</span>
+    <span class="trust-chip"{% if not loop.first %} aria-hidden="true"{% endif %}><i class="fas fa-truck"></i> Free Delivery Above ₹499</span>
+    <span class="trust-chip"{% if not loop.first %} aria-hidden="true"{% endif %}><i class="fas fa-tag"></i> Extra 5% Off With Code CURVE5</span>
+    <span class="trust-chip"{% if not loop.first %} aria-hidden="true"{% endif %}><i class="fas fa-undo"></i> 7-Day Easy Returns</span>
+    <span class="trust-chip"{% if not loop.first %} aria-hidden="true"{% endif %}><i class="fas fa-shipping-fast"></i> Dispatched Within 24 Hours</span>
+    <span class="trust-chip"{% if not loop.first %} aria-hidden="true"{% endif %}><i class="fas fa-store"></i> Two Stores in Gorakhpur</span>
+    {% endfor %}
+  </div>
+</div>
 
 <!-- FLASH MESSAGES -->
 {% with messages = get_flashed_messages(with_categories=true) %}
@@ -187,9 +194,9 @@
   <div class="container">
     <div class="footer-grid">
       <div class="footer-col">
-        <div class="footer-logo" style="display:flex; align-items:center; gap:10px; margin-bottom:15px">
-          <img src="{{ url_for('static', filename='images/curve-logo.webp') }}" alt="Logo" style="height:48px; width:auto" loading="lazy">
-          <span style="font-size:20px; font-weight:700; line-height:1.2">Curve Sports<br><span style="color:var(--primary)">& Nutrition</span></span>™
+        <div class="logo footer-logo">
+          <img src="{{ url_for('static', filename='images/curve-logo.webp') }}" alt="Curve Sports &amp; Nutrition" loading="lazy">
+          <span class="logo-text">Curve Sports<span>&amp; Nutrition</span></span>
         </div>
         <p>India's most trusted authentic supplement store. We guarantee 100% genuine products sourced directly from manufacturers.</p>
         <div class="social-links">
@@ -354,15 +361,12 @@ updateCartCount();
 setTimeout(() => {
   document.querySelectorAll('.flash').forEach(el => el.remove());
 }, 5000);
-// Top Bar Ticker
-const tickerItems = document.querySelectorAll('.ticker-item');
-if (tickerItems.length > 1) {
-  let currentIdx = 0;
-  setInterval(() => {
-    tickerItems[currentIdx].classList.remove('active');
-    currentIdx = (currentIdx + 1) % tickerItems.length;
-    tickerItems[currentIdx].classList.add('active');
-  }, 4000);
+
+// Wishlist heart on product cards (pages can override this for their own behaviour)
+async function toggleWishlist(productId, btn) {
+  const resp = await fetch(`/wishlist/toggle/${productId}`, { method: 'POST' });
+  const data = await resp.json();
+  btn.querySelector('i').style.color = data.status === 'added' ? 'var(--danger)' : 'var(--text-3)';
 }
 </script>
 {% block extra_js %}{% endblock %}

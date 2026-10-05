@@ -3,6 +3,9 @@ from extensions import db, login_manager
 from flask_login import UserMixin
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
+import re
+
+LB_PER_KG = 2.20462
 
 
 @login_manager.user_loader
@@ -83,11 +86,14 @@ class Product(db.Model):
     brand_id     = db.Column(db.Integer, db.ForeignKey('brands.id'))
     
     product_type = db.Column(db.String(20), default='simple') # 'simple' | 'variable'
-    
+    option_label = db.Column(db.String(50), default='Pack')   # heading above the variation cards
+
     order_items  = db.relationship('OrderItem', backref='product', lazy=True)
     reviews      = db.relationship('Review',    backref='product', lazy=True)
     images       = db.relationship('ProductImage', backref='product', lazy=True, cascade="all, delete-orphan")
-    variations   = db.relationship('ProductVariation', backref='product', lazy=True, cascade="all, delete-orphan")
+    # Smallest pack first, on the product page and in the admin table
+    variations   = db.relationship('ProductVariation', backref='product', lazy=True, cascade="all, delete-orphan",
+                                   order_by='ProductVariation.price, ProductVariation.id')
 
     def discount_percent(self):
         if self.original_price and self.original_price > self.price:
@@ -123,8 +129,50 @@ class ProductVariation(db.Model):
     sku        = db.Column(db.String(100), unique=True)
     image      = db.Column(db.String(200))
     is_primary = db.Column(db.Boolean, default=False)
-    
+    name           = db.Column(db.String(100))   # shown on the pack card, e.g. "2 LBS"
+    original_price = db.Column(db.Float)
+    badge          = db.Column(db.String(30))    # e.g. "BEST SELLER"
+
     values = db.relationship('AttributeValue', secondary='variation_value_link', backref='variations')
+
+    def _values(self):
+        return sorted(self.values, key=lambda v: v.attribute_id)
+
+    def label(self):
+        """The pack as written in the cart and on orders: '2 LBS', or '5 lbs / Double Chocolate'."""
+        return self.name or ' / '.join(v.value for v in self._values())
+
+    def card_label(self):
+        """Label for the pack card: attribute values shared by every pack are left out ('5 lbs')."""
+        shared = set(self.values).intersection(*(v.values for v in self.product.variations))
+        distinct = ' / '.join(v.value for v in self._values() if v not in shared)
+        return self.name or distinct or self.label()
+
+    def discount_percent(self):
+        if self.original_price and self.original_price > self.price:
+            return int(((self.original_price - self.price) / self.original_price) * 100)
+        return 0
+
+    def weight(self):
+        """(kilograms, unit) parsed from a label like '2 LBS', '1.8KG' or '500 g'; None if it isn't a weight."""
+        m = re.search(r'(\d+(?:\.\d+)?)\s*(kgs?|lbs?|gms?|g)\b', self.label(), re.I)
+        if not m or float(m.group(1)) <= 0:
+            return None
+        qty, unit = float(m.group(1)), m.group(2).lower()
+        if unit.startswith('lb'):
+            return qty / LB_PER_KG, 'lb'
+        return (qty, 'kg') if unit.startswith('kg') else (qty / 1000, 'kg')
+
+    def per_unit_label(self):
+        """Price per lb/kg for the pack card, in the primary pack's unit so every card compares like for like."""
+        mine = self.weight()
+        if not mine or not self.price:
+            return ''
+        packs = self.product.variations
+        lead = next((v for v in packs if v.is_primary), packs[0]).weight() or mine
+        if lead[1] == 'lb':
+            return f'₹{self.price / (mine[0] * LB_PER_KG):,.0f}/lb'
+        return f'₹{self.price / mine[0]:,.0f}/kg'
 
 
 variation_value_link = db.Table('variation_value_link',
@@ -185,6 +233,7 @@ class OrderItem(db.Model):
     price      = db.Column(db.Float,   nullable=False)
     total      = db.Column(db.Float,   nullable=False)
     variation_id = db.Column(db.Integer, db.ForeignKey('product_variations.id'))
+    variation_name = db.Column(db.String(100))   # snapshot, so the order still reads right if the pack is later removed
     variation = db.relationship('ProductVariation')
 
 

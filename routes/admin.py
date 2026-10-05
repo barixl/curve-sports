@@ -64,6 +64,53 @@ def date_of(col):
     return func.cast(col, db.Date)
 
 
+def sync_variations(product):
+    """
+    Bring the product's pack options in line with the submitted form rows.
+    Existing packs are updated in place (carts and past orders point at their ids);
+    rows removed from the form are deleted, and orders keep their variation_name.
+    """
+    form = request.form
+    prices = form.getlist('var_price[]')
+    primary_uid = form.get('primary_variation')
+
+    def col(field, i):
+        values = form.getlist(field)
+        return values[i].strip() if i < len(values) else ''
+
+    existing = {v.id: v for v in product.variations}
+    kept = []
+    for i in range(len(prices)):
+        row_id = col('var_id[]', i)
+        pv = existing.pop(int(row_id), None) if row_id else None
+        if pv is None:
+            pv = ProductVariation(product_id=product.id, sku=f"{product.slug}-{i}-{uuid.uuid4().hex[:4]}")
+            db.session.add(pv)
+        pv.name = col('var_name[]', i) or None
+        pv.price = float(prices[i]) if prices[i] else product.price
+        pv.original_price = float(col('var_mrp[]', i) or 0) or None
+        pv.stock = int(col('var_stock[]', i) or 0)
+        pv.badge = col('var_badge[]', i) or None
+        # Use set() to ensure unique value IDs per variation to avoid IntegrityError
+        ids = list(set([int(vid) for vid in col('var_values[]', i).split(',') if vid]))  # "1,5"
+        pv.values = AttributeValue.query.filter(AttributeValue.id.in_(ids)).all() if ids else []
+        pv.is_primary = (col('variation_uid[]', i) == primary_uid)
+        kept.append(pv)
+
+    for pv in existing.values():
+        OrderItem.query.filter_by(variation_id=pv.id).update({'variation_id': None})
+        db.session.delete(pv)
+
+    if kept:
+        primary = next((v for v in kept if v.is_primary), kept[0])
+        for v in kept:
+            v.is_primary = (v is primary)
+        # The listing shows the primary pack's price; stock is the total across packs
+        product.price = primary.price
+        product.original_price = primary.original_price
+        product.stock = sum(v.stock for v in kept)
+
+
 # ─── DASHBOARD ───────────────────────────────────────────────────────────────
 
 @admin_bp.route('/')
@@ -159,7 +206,8 @@ def add_product():
             bestseller=request.form.get('bestseller') == 'on',
             is_active=request.form.get('is_active') == 'on',
             image=img_name,
-            product_type=request.form.get('product_type', 'simple')
+            product_type=request.form.get('product_type', 'simple'),
+            option_label=request.form.get('option_label', '').strip() or 'Pack'
         )
         db.session.add(p)
         db.session.flush() # To get product id
@@ -175,36 +223,7 @@ def add_product():
 
         # Handle Variations if Variable
         if p.product_type == 'variable':
-            var_prices = request.form.getlist('var_price[]')
-            var_stocks = request.form.getlist('var_stock[]')
-            var_value_ids = request.form.getlist('var_values[]') # Comma separated IDs "1,5"
-            variation_uids = request.form.getlist('variation_uid[]')
-            primary_variation_uid = request.form.get('primary_variation')
-            created_variations = []
-
-            for i in range(len(var_prices)):
-                pv = ProductVariation(
-                    product_id=p.id,
-                    price=float(var_prices[i]) if var_prices[i] else p.price,
-                    stock=int(var_stocks[i]) if var_stocks[i] else 0,
-                    sku=f"{p.slug}-{i}-{uuid.uuid4().hex[:4]}"
-                )
-                if var_value_ids[i]:
-                    # Use set() to ensure unique value IDs per variation
-                    ids = list(set([int(vid) for vid in var_value_ids[i].split(',') if vid]))
-                    vals = AttributeValue.query.filter(AttributeValue.id.in_(ids)).all()
-                    pv.values = vals
-                pv.is_primary = (i < len(variation_uids) and variation_uids[i] == primary_variation_uid)
-                db.session.add(pv)
-                created_variations.append(pv)
-
-            if created_variations:
-                primary_variation = next((v for v in created_variations if v.is_primary), created_variations[0])
-                for v in created_variations:
-                    v.is_primary = (v == primary_variation)
-                p.price = primary_variation.price
-                if p.original_price is None:
-                    p.original_price = primary_variation.price
+            sync_variations(p)
 
         db.session.commit()
         flash('Product added successfully!', 'success')
@@ -233,6 +252,7 @@ def edit_product(id):
         product.bestseller = request.form.get('bestseller') == 'on'
         product.is_active = request.form.get('is_active') == 'on'
         product.product_type = request.form.get('product_type', product.product_type)
+        product.option_label = request.form.get('option_label', '').strip() or 'Pack'
 
         # Multiple Images
         images_files = request.files.getlist('gallery')
@@ -245,41 +265,7 @@ def edit_product(id):
 
         # Sync Variations
         if product.product_type == 'variable':
-            # Use session delete to trigger cascades correctly
-            for v in product.variations[:]:
-                db.session.delete(v)
-            db.session.flush() # Ensure deletions are processed before insertions
-            
-            var_prices = request.form.getlist('var_price[]')
-            var_stocks = request.form.getlist('var_stock[]')
-            var_value_ids = request.form.getlist('var_values[]')
-            variation_uids = request.form.getlist('variation_uid[]')
-            primary_variation_uid = request.form.get('primary_variation')
-            created_variations = []
-
-            for i in range(len(var_prices)):
-                pv = ProductVariation(
-                    product_id=product.id,
-                    price=float(var_prices[i]) if var_prices[i] else product.price,
-                    stock=int(var_stocks[i]) if var_stocks[i] else 0,
-                    sku=f"{product.slug}-{i}-{uuid.uuid4().hex[:4]}"
-                )
-                if var_value_ids[i]:
-                    # Use set() to ensure unique value IDs per variation to avoid IntegrityError
-                    ids = list(set([int(vid) for vid in var_value_ids[i].split(',') if vid]))
-                    vals = AttributeValue.query.filter(AttributeValue.id.in_(ids)).all()
-                    pv.values = vals
-                pv.is_primary = (i < len(variation_uids) and variation_uids[i] == primary_variation_uid)
-                db.session.add(pv)
-                created_variations.append(pv)
-
-            if created_variations:
-                primary_variation = next((v for v in created_variations if v.is_primary), created_variations[0])
-                for v in created_variations:
-                    v.is_primary = (v == primary_variation)
-                product.price = primary_variation.price
-                if product.original_price is None:
-                    product.original_price = primary_variation.price
+            sync_variations(product)
 
         db.session.commit()
         flash('Product updated!', 'success')

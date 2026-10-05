@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify, abort
 from flask_login import current_user, login_required
 from extensions import db
-from models import Product, Order, OrderItem, Address, Coupon, Setting
+from models import Product, ProductVariation, Order, OrderItem, Address, Coupon, Setting
 import json, os, hmac, hashlib
 import razorpay
 import razorpay.errors
@@ -10,6 +10,9 @@ cart_bp = Blueprint('cart', __name__)
 
 
 # ── Session helpers ───────────────────────────────────────────────────────────
+
+# Cart lines are keyed "<product_id>", or "<product_id>:<variation_id>" for a
+# product sold in packs, so each pack of the same product is its own line.
 
 def get_cart():
     return session.get('cart', {})
@@ -20,13 +23,37 @@ def save_cart(cart):
     session.modified = True
 
 
-def cart_total(cart):
-    total = 0
-    for pid, item in cart.items():
-        p = Product.query.get(int(pid))
-        if p and p.is_active:
-            total += p.price * item['qty']
-    return total
+def cart_key(product_id, variation_id=None):
+    return f'{product_id}:{variation_id}' if variation_id else str(product_id)
+
+
+def cart_line(key):
+    """Resolve a cart key to (product, variation); (None, None) if it can no longer be sold."""
+    pid, _, vid = key.partition(':')
+    product = Product.query.get(int(pid))
+    if not product or not product.is_active:
+        return None, None
+    variation = ProductVariation.query.get(int(vid)) if vid else None
+    if vid and (not variation or variation.product_id != product.id):
+        return None, None
+    if product.product_type == 'variable' and not variation:
+        return None, None
+    return product, variation
+
+
+def cart_lines(in_stock_only=False):
+    """Return (lines, subtotal) for the session cart, priced per pack where one was chosen."""
+    lines, subtotal = [], 0
+    for key, data in get_cart().items():
+        product, variation = cart_line(key)
+        source = variation or product
+        if not product or (in_stock_only and source.stock <= 0):
+            continue
+        total = source.price * data['qty']
+        subtotal += total
+        lines.append({'key': key, 'product': product, 'variation': variation, 'qty': data['qty'],
+                      'price': source.price, 'original_price': source.original_price, 'total': total})
+    return lines, subtotal
 
 
 # ── Settings helpers ──────────────────────────────────────────────────────────
@@ -66,16 +93,11 @@ def cod_enabled():
 
 # ── Internal cart utilities ───────────────────────────────────────────────────
 
-def _build_cart_items():
-    """Return (items list, subtotal) from the current session cart."""
-    items, subtotal = [], 0
-    for pid, data in get_cart().items():
-        p = Product.query.get(int(pid))
-        if p and p.is_active and p.in_stock():
-            item_total = p.price * data['qty']
-            subtotal  += item_total
-            items.append({'product': p, 'qty': data['qty'], 'total': item_total})
-    return items, subtotal
+def _deduct_stock(order):
+    """Take a confirmed order's quantities out of stock — from the pack where one was bought."""
+    for item in order.items:
+        source = item.variation or item.product
+        source.stock = max(0, source.stock - item.quantity)
 
 
 def _clear_checkout_session():
@@ -89,14 +111,10 @@ def _clear_checkout_session():
 
 @cart_bp.route('/cart')
 def cart():
-    cart = get_cart()
-    items, subtotal = [], 0
-    for pid, data in cart.items():
-        p = Product.query.get(int(pid))
-        if p and p.is_active:
-            item_total = p.price * data['qty']
-            subtotal  += item_total
-            items.append({'product': p, 'qty': data['qty'], 'total': item_total})
+    items, subtotal = cart_lines()
+    # Forget lines that can no longer be sold, so the header count matches what is listed
+    if len(items) != len(get_cart()):
+        save_cart({item['key']: {'qty': item['qty']} for item in items})
     delivery        = get_shipping_cost(subtotal)
     coupon_discount = session.get('coupon_discount', 0)
     coupon_code     = session.get('coupon_code', '')
@@ -109,17 +127,24 @@ def cart():
 @cart_bp.route('/cart/add', methods=['POST'])
 def add_to_cart():
     product_id = request.form.get('product_id', type=int)
-    qty        = request.form.get('qty', 1, type=int)
+    qty        = max(1, request.form.get('qty', 1, type=int))
     product    = Product.query.get_or_404(product_id)
-    if not product.in_stock():
+
+    variation = None
+    if product.product_type == 'variable':
+        variation = ProductVariation.query.filter_by(
+            id=request.form.get('variation_id', type=int), product_id=product.id).first()
+        if not variation:
+            flash(f'Please choose a {(product.option_label or "pack").lower()} first.', 'warning')
+            return redirect(url_for('shop.product_detail', slug=product.slug))
+
+    stock = (variation or product).stock
+    if stock <= 0:
         flash('Product is out of stock.', 'danger')
         return redirect(request.referrer or url_for('shop.index'))
     cart = get_cart()
-    pid  = str(product_id)
-    if pid in cart:
-        cart[pid]['qty'] = min(cart[pid]['qty'] + qty, product.stock)
-    else:
-        cart[pid] = {'qty': qty}
+    key  = cart_key(product.id, variation.id if variation else None)
+    cart[key] = {'qty': min(cart.get(key, {}).get('qty', 0) + qty, stock)}
     save_cart(cart)
     flash(f'"{product.name}" added to cart!', 'success')
     return redirect(request.referrer or url_for('cart.cart'))
@@ -127,23 +152,23 @@ def add_to_cart():
 
 @cart_bp.route('/cart/update', methods=['POST'])
 def update_cart():
-    product_id = str(request.form.get('product_id', type=int))
-    qty        = request.form.get('qty', 1, type=int)
+    key  = request.form.get('key', '')
+    qty  = request.form.get('qty', 1, type=int)
     cart = get_cart()
-    if product_id in cart:
-        if qty <= 0:
-            del cart[product_id]
+    if key in cart:
+        product, variation = cart_line(key)
+        if qty <= 0 or not product:
+            del cart[key]
         else:
-            p = Product.query.get(int(product_id))
-            cart[product_id]['qty'] = min(qty, p.stock if p else qty)
+            cart[key]['qty'] = max(1, min(qty, (variation or product).stock))
     save_cart(cart)
     return redirect(url_for('cart.cart'))
 
 
-@cart_bp.route('/cart/remove/<int:product_id>')
-def remove_from_cart(product_id):
+@cart_bp.route('/cart/remove/<key>')
+def remove_from_cart(key):
     cart = get_cart()
-    cart.pop(str(product_id), None)
+    cart.pop(key, None)
     save_cart(cart)
     flash('Item removed from cart.', 'info')
     return redirect(url_for('cart.cart'))
@@ -152,7 +177,7 @@ def remove_from_cart(product_id):
 @cart_bp.route('/cart/apply-coupon', methods=['POST'])
 def apply_coupon():
     code    = request.form.get('coupon_code', '').strip().upper()
-    subtotal = cart_total(get_cart())
+    _, subtotal = cart_lines()
     coupon  = Coupon.query.filter_by(code=code).first()
     if not coupon:
         flash('Invalid coupon code.', 'danger')
@@ -193,7 +218,7 @@ def checkout():
         flash('Your cart is empty.', 'warning')
         return redirect(url_for('cart.cart'))
 
-    items, subtotal = _build_cart_items()
+    items, subtotal = cart_lines(in_stock_only=True)
     if not items:
         flash('No in-stock items in your cart.', 'warning')
         return redirect(url_for('cart.cart'))
@@ -273,20 +298,22 @@ def checkout():
         db.session.flush()
 
         for item in items:
+            variation = item['variation']
             db.session.add(OrderItem(
                 order_id  = order.id,
                 product_id= item['product'].id,
                 quantity  = item['qty'],
-                price     = item['product'].price,
+                price     = item['price'],
                 total     = item['total'],
+                variation_id   = variation.id if variation else None,
+                variation_name = variation.label() if variation else None,
             ))
 
         # ── COD path ──────────────────────────────────────────────────────────
         if payment_method == 'COD':
             order.status         = 'Confirmed'
             order.payment_status = 'COD'
-            for item in items:
-                item['product'].stock = max(0, item['product'].stock - item['qty'])
+            _deduct_stock(order)
             if session.get('coupon_id'):
                 c = Coupon.query.get(session['coupon_id'])
                 if c:
@@ -398,8 +425,7 @@ def verify_payment():
     order.payment_status      = 'Paid'
     order.razorpay_payment_id = rzp_payment_id
 
-    for item in order.items:
-        item.product.stock = max(0, item.product.stock - item.quantity)
+    _deduct_stock(order)
 
     if order.coupon_code:
         c = Coupon.query.filter_by(code=order.coupon_code).first()
@@ -452,8 +478,7 @@ def razorpay_webhook():
                 order.status              = 'Confirmed'
                 order.payment_status      = 'Paid'
                 order.razorpay_payment_id = rzp_payment_id
-                for item in order.items:
-                    item.product.stock = max(0, item.product.stock - item.quantity)
+                _deduct_stock(order)
                 if order.coupon_code:
                     c = Coupon.query.filter_by(code=order.coupon_code).first()
                     if c:

@@ -37,7 +37,7 @@
               <label>Selling Price (₹) *</label>
               <input type="number" name="price" class="form-control" 
                      value="{{ product.price if product else 0 }}" step="0.01" required>
-              <small style="color:var(--text-3); display:block; margin-top:5px">For variable products, this acts as the <strong>Base Price</strong>.</small>
+              <small style="color:var(--text-3); display:block; margin-top:5px">For products with pack options, the <strong>primary pack's</strong> price and MRP are shown in listings.</small>
             </div>
             <div class="form-group">
               <label>Original / MRP (₹)</label>
@@ -61,27 +61,37 @@
             <label>Product Type</label>
             <select name="product_type" id="productType" class="form-control" onchange="toggleProductType()">
               <option value="simple" {{ 'selected' if product and product.product_type == 'simple' }}>Simple Product</option>
-              <option value="variable" {{ 'selected' if product and product.product_type == 'variable' }}>Variable Product</option>
+              <option value="variable" {{ 'selected' if product and product.product_type == 'variable' }}>Product with Pack Options</option>
             </select>
           </div>
           
           <!-- VARIABLE PRODUCT SECTION -->
           <div id="variableSection" style="display: {{ 'block' if product and product.product_type == 'variable' else 'none' }}; margin-top: 20px; border-top: 1px solid var(--border); padding-top: 20px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-              <h4 style="margin:0">Product Variations</h4>
-              <button type="button" class="btn btn-sm" onclick="addVariationRow()" style="background:var(--primary); color:white"><i class="fas fa-plus"></i> Add Variation</button>
+            <div class="form-group" style="max-width:320px; margin-bottom:18px">
+              <label>Option heading</label>
+              <input type="text" name="option_label" class="form-control" maxlength="50"
+                     value="{{ product.option_label if product and product.option_label else 'Pack' }}" placeholder="Pack">
+              <small style="color:var(--text-3); display:block; margin-top:5px">Shown above the options on the product page, e.g. Pack, Size, Flavour.</small>
             </div>
-            
+
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+              <h4 style="margin:0">Pack Options</h4>
+              <button type="button" class="btn btn-sm" onclick="addVariationRow()" style="background:var(--primary); color:white"><i class="fas fa-plus"></i> Add Pack</button>
+            </div>
+
             <div class="table-container" style="border:1px solid var(--border); border-radius:8px; overflow-x:auto">
-              <table style="margin:0; min-width:800px">
+              <table style="margin:0; min-width:920px">
                 <thead style="background:#f8f9fa">
                   <tr>
                     <th style="width:80px">Primary</th>
+                    <th style="min-width:150px">Variant Name</th>
                     {% for attr in attributes %}
                     <th style="min-width:150px">{{ attr.name }}</th>
                     {% endfor %}
-                    <th style="width:120px">Price (₹)</th>
+                    <th style="width:140px">Price (₹)</th>
+                    <th style="width:140px">MRP (₹)</th>
                     <th style="width:100px">Stock</th>
+                    <th style="width:150px">Badge</th>
                     <th style="width:40px"></th>
                   </tr>
                 </thead>
@@ -90,9 +100,12 @@
                     {% for var in product.variations %}
                     <tr class="variation-row">
                       <td style="text-align:center; vertical-align:middle">
-                        <input type="radio" name="primary_variation" value="var-{{ loop.index0 }}" {{ 'checked' if var.is_primary or loop.first }}>
+                        <input type="radio" name="primary_variation" value="var-{{ loop.index0 }}" {{ 'checked' if var.is_primary }}>
+                        <input type="hidden" name="variation_uid[]" value="var-{{ loop.index0 }}">
+                        <input type="hidden" name="var_id[]" value="{{ var.id }}">
+                        <input type="hidden" name="var_values[]" value="{{ var.values|map(attribute='id')|join(',') }}">
                       </td>
-                      <input type="hidden" name="variation_uid[]" value="var-{{ loop.index0 }}">
+                      <td><input type="text" name="var_name[]" class="form-control" value="{{ var.name or '' }}" placeholder="e.g. 2 LBS" maxlength="100"></td>
                       {% for attr in attributes %}
                       <td>
                         <select class="form-control attr-select" onchange="syncVarValues(this)">
@@ -103,9 +116,10 @@
                         </select>
                       </td>
                       {% endfor %}
-                      <input type="hidden" name="var_values[]" value="{{ var.values|map(attribute='id')|join(',') }}">
                       <td><input type="number" name="var_price[]" class="form-control" value="{{ var.price }}" step="0.01"></td>
+                      <td><input type="number" name="var_mrp[]" class="form-control" value="{{ var.original_price or '' }}" step="0.01" placeholder="MRP"></td>
                       <td><input type="number" name="var_stock[]" class="form-control" value="{{ var.stock }}"></td>
+                      <td><input type="text" name="var_badge[]" class="form-control" value="{{ var.badge or '' }}" placeholder="BEST SELLER" maxlength="30"></td>
                       <td><button type="button" class="btn-icon danger" onclick="this.closest('tr').remove()"><i class="fas fa-times"></i></button></td>
                     </tr>
                     {% endfor %}
@@ -113,12 +127,12 @@
                 </tbody>
               </table>
             </div>
-            <p style="font-size:12px; color:var(--text-3); margin-top:10px"><i class="fas fa-info-circle"></i> Each row represents a unique combination (e.g. Chocolate + 1kg).</p>
-            <p style="font-size:12px; color:var(--text-3); margin-top:6px"><i class="fas fa-star"></i> Choose one primary variation. Its price will be shown as the main product price.</p>
+            <p style="font-size:12px; color:var(--text-3); margin-top:10px"><i class="fas fa-info-circle"></i> Each row is one pack the customer can pick, with its own price and stock. A weight in the name (2 LBS, 1.8KG, 500 g) also shows the price per lb / kg on the card.</p>
+            <p style="font-size:12px; color:var(--text-3); margin-top:6px"><i class="fas fa-star"></i> Choose one primary pack. It is selected by default and its price is shown as the main product price.</p>
           </div>
         </div>
       </div>
-      
+
       <div class="card">
         <div class="card-header"><h3>Classification</h3></div>
         <div class="card-body">
@@ -267,12 +281,16 @@ function addVariationRow() {
   row.innerHTML = `
     <td style="text-align:center; vertical-align:middle">
       <input type="radio" name="primary_variation" value="${uid}" ${container.children.length === 0 ? 'checked' : ''}>
+      <input type="hidden" name="variation_uid[]" value="${uid}">
+      <input type="hidden" name="var_id[]" value="">
+      <input type="hidden" name="var_values[]" value="">
     </td>
-    <input type="hidden" name="variation_uid[]" value="${uid}">
+    <td><input type="text" name="var_name[]" class="form-control" placeholder="e.g. 2 LBS" maxlength="100"></td>
     ${attrColumns}
-    <input type="hidden" name="var_values[]" value="">
     <td><input type="number" name="var_price[]" class="form-control" placeholder="Price" step="0.01"></td>
+    <td><input type="number" name="var_mrp[]" class="form-control" placeholder="MRP" step="0.01"></td>
     <td><input type="number" name="var_stock[]" class="form-control" placeholder="Stock"></td>
+    <td><input type="text" name="var_badge[]" class="form-control" placeholder="BEST SELLER" maxlength="30"></td>
     <td><button type="button" class="btn-icon danger" onclick="this.closest('tr').remove()"><i class="fas fa-times"></i></button></td>
   `;
   container.appendChild(row);

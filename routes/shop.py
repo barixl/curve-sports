@@ -2,7 +2,8 @@ from collections import defaultdict
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import current_user, login_required
 from extensions import db
-from models import Product, Category, Brand, Review, Wishlist, Banner
+from models import Product, Category, Brand, Review, Wishlist, Banner, OrderItem
+from sqlalchemy import func
 from sqlalchemy.orm import joinedload
 
 shop_bp = Blueprint('shop', __name__)
@@ -17,13 +18,31 @@ def index():
     banners = Banner.query.filter_by(is_active=True).order_by(Banner.position).all()
     brands = Brand.query.filter(Brand.is_active==True, Brand.logo.isnot(None)).all()
 
-    # Build a section for every active parent that has 2+ active subcategories
+    # Build a section for every active parent that has 2+ active subcategories with products
+    stocked = {cid for (cid,) in db.session.query(Product.category_id).filter(Product.is_active == True).distinct()}
     category_sections = []
     all_parents = Category.query.options(joinedload(Category.children)).filter_by(is_active=True, parent_id=None).order_by(Category.id.asc()).all()
     for parent in all_parents:
-        active_children = [c for c in parent.children if c.is_active]
+        active_children = [c for c in parent.children if c.is_active and c.id in stocked]
         if len(active_children) >= 2:
             category_sections.append({'parent': parent, 'children': active_children})
+
+    # "What's selling now" tabs: categories ranked by units sold, then by range size
+    sold = func.coalesce(func.sum(OrderItem.quantity), 0)
+    top_cats = (db.session.query(Category)
+                .join(Product, Product.category_id == Category.id)
+                .outerjoin(OrderItem, OrderItem.product_id == Product.id)
+                .filter(Category.is_active == True, Product.is_active == True)
+                .group_by(Category.id)
+                .order_by(sold.desc(), func.count(func.distinct(Product.id)).desc())
+                .limit(7).all())
+    selling_tabs = [{
+        'category': cat,
+        'products': Product.query.options(joinedload(Product.brand), joinedload(Product.variations))
+                    .filter_by(category_id=cat.id, is_active=True)
+                    .order_by(Product.bestseller.desc(), Product.review_count.desc(), Product.id.asc())
+                    .limit(10).all(),
+    } for cat in top_cats]
 
     testimonials = [
         {
@@ -60,7 +79,8 @@ def index():
 
     return render_template('shop/index.html', featured=featured, bestsellers=bestsellers,
                            categories=categories, new_arrivals=new_arrivals, banners=banners, brands=brands,
-                           category_sections=category_sections, testimonials=testimonials)
+                           category_sections=category_sections, selling_tabs=selling_tabs,
+                           testimonials=testimonials)
 
 
 @shop_bp.route('/products')
@@ -85,7 +105,10 @@ def products():
     if category_slugs:
         selected_cats = Category.query.filter(Category.slug.in_(category_slugs)).all()
         if selected_cats:
-            query = query.filter(Product.category_id.in_([c.id for c in selected_cats]))
+            # A parent category also covers everything in its subcategories
+            cat_ids = {c.id for c in selected_cats}
+            cat_ids |= {c.id for parent in selected_cats for c in parent.children if c.is_active}
+            query = query.filter(Product.category_id.in_(cat_ids))
 
     selected_brands = []
     if brand_slugs:
@@ -161,8 +184,18 @@ def product_detail(slug):
     in_wishlist = False
     if current_user.is_authenticated:
         in_wishlist = Wishlist.query.filter_by(user_id=current_user.id, product_id=product.id).first() is not None
+
+    # Pack shown as selected on load: the primary one, or the first that is in stock
+    selected_variation = None
+    can_buy = product.stock > 0
+    if product.product_type == 'variable':
+        in_stock = [v for v in product.variations if v.stock > 0]
+        selected_variation = next((v for v in in_stock if v.is_primary), in_stock[0] if in_stock else None)
+        can_buy = selected_variation is not None
+
     return render_template('shop/product_detail.html', product=product,
-                           related=related, reviews=reviews, in_wishlist=in_wishlist)
+                           related=related, reviews=reviews, in_wishlist=in_wishlist,
+                           selected_variation=selected_variation, can_buy=can_buy)
 
 
 @shop_bp.route('/product/<int:product_id>/review', methods=['POST'])

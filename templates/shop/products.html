@@ -5,9 +5,9 @@
 
 {% block content %}
 <!-- SHOP BANNER -->
-<section class="shop-banner" style="background:var(--bg); padding:30px 0; border-bottom:1px solid var(--border)">
+<section class="shop-banner" style="padding:22px 0 8px">
   <div class="container">
-    <div style="background: linear-gradient(135deg, var(--primary), #000); border-radius:15px; padding:40px; color:white; display:flex; justify-content:space-between; align-items:center; overflow:hidden; position:relative">
+    <div style="background: linear-gradient(135deg, var(--dark-2), #111); border-radius:15px; padding:40px; color:white; display:flex; justify-content:space-between; align-items:center; overflow:hidden; position:relative">
       <div style="position:relative; z-index:2">
         <h1 style="font-family:var(--font-head); font-size:36px; margin-bottom:10px">Shop Premium Supplements</h1>
         <p style="font-size:16px; opacity:0.9">Authentic Nutrition for peak performance. Sourced directly for you.</p>
@@ -45,11 +45,11 @@
     <!-- FILTERS SIDEBAR -->
     <aside class="filter-sidebar" id="filterSidebar">
       <div class="sidebar-header hide-desktop" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; padding-bottom:10px; border-bottom:1px solid #eee">
-        <h3 style="margin:0"><i class="fas fa-sliders-h" style="color:var(--primary)"></i> Filters</h3>
+        <h3 style="margin:0"><i class="fas fa-sliders-h" style="color:var(--primary-ink)"></i> Filters</h3>
         <button type="button" id="closeFilter" style="background:none; border:none; font-size:20px; color:#999"><i class="fas fa-times"></i></button>
       </div>
       <h3 class="hide-mobile" style="font-family:var(--font-head);font-size:20px;margin-bottom:20px;display:flex;align-items:center;gap:8px">
-        <i class="fas fa-sliders-h" style="color:var(--primary)"></i> Filters
+        <i class="fas fa-sliders-h" style="color:var(--primary-ink)"></i> Filters
       </h3>
 
       <form method="get" id="filterForm">
@@ -58,10 +58,10 @@
 
         <!-- Offers / Deals -->
         <div class="filter-section">
-          <label class="filter-item" style="background: #fff5f5; border-color: #feb2b2; padding: 10px; border-radius: 8px;">
+          <label class="filter-item" style="background: var(--primary-tint); border-color: #f3cf93; padding: 10px; border-radius: 8px;">
             <input type="checkbox" name="offers" value="1" {{ 'checked' if request.args.get('offers') == '1' }}
                    onchange="document.getElementById('filterForm').submit()">
-            <span style="color: #c53030; font-weight: 700;"><i class="fas fa-tag"></i> Special Offers</span>
+            <span style="color: var(--primary-ink); font-weight: 700;"><i class="fas fa-tag"></i> Special Offers</span>
           </label>
         </div>
 
@@ -70,7 +70,7 @@
           <h4>Category
             {% if selected_cat_slugs %}
             <button type="button" onclick="clearFilter('category')"
-                    style="font-size:11px;font-weight:normal;color:var(--primary);background:none;border:none;cursor:pointer;padding:0">
+                    style="font-size:11px;font-weight:normal;color:var(--primary-ink);background:none;border:none;cursor:pointer;padding:0">
               Clear
             </button>
             {% endif %}
@@ -138,7 +138,7 @@
             Brand
             {% if selected_brand_slugs %}
             <button type="button" onclick="clearFilter('brand')"
-                    style="font-size:11px;font-weight:normal;color:var(--primary);background:none;border:none;cursor:pointer;padding:0">
+                    style="font-size:11px;font-weight:normal;color:var(--primary-ink);background:none;border:none;cursor:pointer;padding:0">
               Clear
             </button>
             {% endif %}
@@ -157,7 +157,7 @@
 
           <div class="brands-filter-list" style="max-height:300px; overflow-y:auto; padding-right:5px">
             {% for char in alphabet %}
-            <div id="brand-{{ char }}" style="font-size:12px; font-weight:800; color:var(--primary); padding:4px 0; margin-top:8px; border-bottom:1px solid #f0f0f0">
+            <div id="brand-{{ char }}" style="font-size:12px; font-weight:800; color:var(--primary-ink); padding:4px 0; margin-top:8px; border-bottom:1px solid #f0f0f0">
               {{ char }}
             </div>
             {% for brand in grouped_brands[char] %}

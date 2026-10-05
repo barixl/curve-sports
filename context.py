@@ -1,6 +1,8 @@
 import json
 import time
-from models import Category, Brand
+from sqlalchemy import func
+from extensions import db
+from models import Category, Brand, Product
 
 # Simple in-process cache: holds the navbar data for 60 seconds
 _nav_cache = {'data': None, 'expires': 0}
@@ -19,7 +21,23 @@ def _build_nav():
         grouped_brands[first].append(b)
 
     alphabet = sorted(grouped_brands.keys())
-    return dict(categories_nav=cats, brands_nav=brands, grouped_brands=grouped_brands, alphabet=alphabet)
+
+    # Header menus: one per top-level category, biggest range first; the dropdown
+    # lists its subcategories that actually have products. Plain dicts, because
+    # this is cached across requests and ORM objects would outlive their session.
+    counts = dict(db.session.query(Product.category_id, func.count(Product.id))
+                  .filter(Product.is_active == True).group_by(Product.category_id).all())
+    children = {}
+    for c in Category.query.filter(Category.is_active == True, Category.parent_id.isnot(None)) \
+                           .order_by(Category.name.asc()).all():
+        if counts.get(c.id):
+            children.setdefault(c.parent_id, []).append({'name': c.name, 'slug': c.slug})
+            counts[c.parent_id] = counts.get(c.parent_id, 0) + counts[c.id]
+    nav_menu = [{'name': c.name, 'slug': c.slug, 'children': children.get(c.id, [])} for c in
+                sorted(cats, key=lambda c: -counts.get(c.id, 0))]
+
+    return dict(categories_nav=cats, brands_nav=brands, grouped_brands=grouped_brands,
+                alphabet=alphabet, nav_menu=nav_menu)
 
 
 def invalidate_nav_cache():

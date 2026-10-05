@@ -2,119 +2,93 @@
 {% block title %}Curve Sports™ — India's Authentic Supplement Store{% endblock %}
 
 {% block content %}
-<!-- HERO SECTION WITH CAROUSEL -->
+<!-- HERO CAROUSEL (banners from Admin → Banners; the bundled images are the fallback) -->
+{% set hero_banners = banners | selectattr('image') | list %}
 <section class="hero-section">
   <div class="container">
-    <div class="carousel-container" id="mainCarousel">
-      <div class="carousel-wrapper" id="carouselWrapper">
-        <div class="carousel-slide">
-          <img src="{{ url_for('static', filename='images/banner/banner_1.webp') }}" alt="Banner 1" fetchpriority="high">
+    <div class="carousel" data-carousel>
+      <div class="carousel-container">
+        <div class="carousel-wrapper">
+          {% if hero_banners %}
+            {% for banner in hero_banners %}
+            <a class="carousel-slide" href="{{ banner.link or url_for('shop.products') }}">
+              <img src="{{ banner.image | img_url('banners') }}" alt="{{ banner.title or 'Offer' }}" {{ 'fetchpriority="high"' | safe if loop.first else 'loading="lazy"' | safe }}>
+            </a>
+            {% endfor %}
+          {% else %}
+            {% for n in range(1, 4) %}
+            <a class="carousel-slide" href="{{ url_for('shop.products') }}">
+              <img src="{{ url_for('static', filename='images/banner/banner_' ~ n ~ '.webp') }}" alt="Banner {{ n }}" {{ 'fetchpriority="high"' | safe if loop.first else 'loading="lazy"' | safe }}>
+            </a>
+            {% endfor %}
+          {% endif %}
         </div>
-        <div class="carousel-slide">
-          <img src="{{ url_for('static', filename='images/banner/banner_2.webp') }}" alt="Banner 2" loading="lazy">
-        </div>
-        <div class="carousel-slide">
-          <img src="{{ url_for('static', filename='images/banner/banner_3.webp') }}" alt="Banner 3" loading="lazy">
+        <div class="carousel-dots">
+          {% for _ in range(hero_banners | length or 3) %}
+          <button class="carousel-dot{{ ' active' if loop.first }}" aria-label="Go to slide {{ loop.index }}"></button>
+          {% endfor %}
         </div>
       </div>
-      
-      <!-- Navigation Buttons -->
-      <button class="carousel-btn carousel-btn-prev" onclick="moveSlide(-1)">
-        <i class="fas fa-chevron-left"></i>
-      </button>
-      <button class="carousel-btn carousel-btn-next" onclick="moveSlide(1)">
-        <i class="fas fa-chevron-right"></i>
-      </button>
-      
-      <!-- Dots Indicator -->
-      <div class="carousel-dots" id="carouselDots">
-        <button class="carousel-dot active" onclick="goToSlide(0)"></button>
-        <button class="carousel-dot" onclick="goToSlide(1)"></button>
-        <button class="carousel-dot" onclick="goToSlide(2)"></button>
-      </div>
+      <button class="carousel-btn carousel-btn-prev" aria-label="Previous slide"><i class="fas fa-chevron-left"></i></button>
+      <button class="carousel-btn carousel-btn-next" aria-label="Next slide"><i class="fas fa-chevron-right"></i></button>
     </div>
   </div>
 </section>
 
-<script>
-let currentSlide = 0;
-const wrapper = document.getElementById('carouselWrapper');
-const dots = document.querySelectorAll('.carousel-dot');
-const totalSlides = 3;
-let autoSlideInterval;
-
-function updateCarousel() {
-    wrapper.style.transform = `translateX(-${currentSlide * 100}%)`;
-    dots.forEach((dot, index) => {
-        dot.classList.toggle('active', index === currentSlide);
-    });
-}
-
-function moveSlide(direction) {
-    currentSlide = (currentSlide + direction + totalSlides) % totalSlides;
-    updateCarousel();
-    resetAutoSlide();
-}
-
-function goToSlide(index) {
-    currentSlide = index;
-    updateCarousel();
-    resetAutoSlide();
-}
-
-function startAutoSlide() {
-    autoSlideInterval = setInterval(() => {
-        currentSlide = (currentSlide + 1) % totalSlides;
-        updateCarousel();
-    }, 3000);
-}
-
-function resetAutoSlide() {
-    clearInterval(autoSlideInterval);
-    startAutoSlide();
-}
-
-// Initialize
-startAutoSlide();
-</script>
-
-<!-- TRUST BAR -->
-<div class="trust-bar">
+<!-- WHAT'S SELLING NOW (one tab per top-selling category) -->
+{% if selling_tabs %}
+<section class="section section-compact">
   <div class="container">
-    <div class="trust-bar-grid">
-      <div class="trust-item">
-        <i class="fas fa-shield-alt"></i>
-        <div class="trust-content">
-          <div class="trust-title">100% Authentic</div>
-          <div class="trust-desc">Verified products</div>
-        </div>
+    <div class="section-header">
+      <h2 class="section-title caps">What's Selling Now!!</h2>
+    </div>
+    <div class="tabs" role="tablist">
+      {% for tab in selling_tabs %}
+      <button type="button" class="tab{{ ' active' if loop.first }}" role="tab" aria-selected="{{ 'true' if loop.first else 'false' }}"
+              data-panel="selling-{{ loop.index }}">{{ tab.category.name }}</button>
+      {% endfor %}
+    </div>
+    <div class="rail-wrap">
+      <button type="button" class="rail-btn rail-prev" aria-label="Previous products"><i class="fas fa-chevron-left"></i></button>
+      {% for tab in selling_tabs %}
+      <div class="product-rail" id="selling-{{ loop.index }}" role="tabpanel" {{ 'hidden' if not loop.first }}>
+        {% for p in tab.products %}
+        {% include 'shop/_product_card.html' %}
+        {% endfor %}
       </div>
-      <div class="trust-item">
-        <i class="fas fa-truck"></i>
-        <div class="trust-content">
-          <div class="trust-title">Free Delivery</div>
-          <div class="trust-desc">Orders above ₹499</div>
-        </div>
-      </div>
-      <div class="trust-item">
-        <i class="fas fa-undo"></i>
-        <div class="trust-content">
-          <div class="trust-title">Easy Returns</div>
-          <div class="trust-desc">7-day return policy</div>
-        </div>
-      </div>
-      <div class="trust-item">
-        <i class="fas fa-headset"></i>
-        <div class="trust-content">
-          <div class="trust-title">24/7 Support</div>
-          <div class="trust-desc">Always here to help</div>
-        </div>
-      </div>
+      {% endfor %}
+      <button type="button" class="rail-btn rail-next" aria-label="More products"><i class="fas fa-chevron-right"></i></button>
     </div>
   </div>
-</div>
+</section>
+{% endif %}
 
-<!-- SHOP BY CATEGORY -->
+<!-- CATEGORY SECTIONS (any parent with 2+ stocked subcategories) -->
+{% for section in category_sections %}
+<section class="section section-compact">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">{{ section.parent.name }}</h2>
+      <a href="{{ url_for('shop.products', category=section.parent.slug) }}" class="view-all">View All</a>
+    </div>
+    <div class="home-cat-grid">
+      {% for sc in section.children %}
+      <a href="{{ url_for('shop.products', category=sc.slug) }}" class="home-cat-card">
+        <div class="home-cat-thumb">
+          {% if sc.image %}
+          <img src="{{ sc.image | img_url('categories') }}" alt="{{ sc.name }}" loading="lazy">
+          {% else %}
+          <i class="fas fa-layer-group"></i>
+          {% endif %}
+        </div>
+        <div class="home-cat-name">{{ sc.name }}</div>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% else %}
+<!-- SHOP BY CATEGORY (flat catalogue: no parent has subcategories yet) -->
 <section class="section section-compact">
   <div class="container">
     <div class="section-header">
@@ -137,6 +111,7 @@ startAutoSlide();
     </div>
   </div>
 </section>
+{% endfor %}
 
 <!-- SHOP BY BRAND (only brands with a logo are passed in; hide the slider when there are none) -->
 {% if brands %}
@@ -214,31 +189,90 @@ startAutoSlide();
 })();
 </script>
 
-<!-- DYNAMIC CATEGORY SECTIONS (any parent with 2+ active subcategories) -->
-{% for section in category_sections %}
+<!-- BESTSELLERS -->
+{% if bestsellers %}
 <section class="section section-compact">
   <div class="container">
     <div class="section-header">
-      <h2 class="section-title">{{ section.parent.name }}</h2>
-      <a href="{{ url_for('shop.products', category=section.parent.slug) }}" class="view-all">View All</a>
+      <h2 class="section-title">Bestsellers</h2>
+      <a href="{{ url_for('shop.products') }}" class="view-all">View All</a>
     </div>
-    <div class="home-cat-grid">
-      {% for sc in section.children %}
-      <a href="{{ url_for('shop.products', category=sc.slug) }}" class="home-cat-card">
-        <div class="home-cat-thumb">
-          {% if sc.image %}
-          <img src="{{ sc.image | img_url('categories') }}" alt="{{ sc.name }}" loading="lazy">
-          {% else %}
-          <i class="fas fa-layer-group"></i>
-          {% endif %}
-        </div>
-        <div class="home-cat-name">{{ sc.name }}</div>
-      </a>
-      {% endfor %}
+    <div class="rail-wrap">
+      <button type="button" class="rail-btn rail-prev" aria-label="Previous products"><i class="fas fa-chevron-left"></i></button>
+      <div class="product-rail">
+        {% for p in bestsellers %}
+        {% include 'shop/_product_card.html' %}
+        {% endfor %}
+      </div>
+      <button type="button" class="rail-btn rail-next" aria-label="More products"><i class="fas fa-chevron-right"></i></button>
     </div>
   </div>
 </section>
-{% endfor %}
+{% endif %}
+
+<!-- MIDDLE BANNER CAROUSEL -->
+<div class="container">
+  <div class="carousel middle-carousel" data-carousel>
+    <div class="carousel-container">
+      <div class="carousel-wrapper">
+        <div class="carousel-slide">
+          <img src="{{ url_for('static', filename='images/banner/banner_4.webp') }}" alt="Special Offer" loading="lazy">
+        </div>
+        <div class="carousel-slide">
+          <img src="{{ url_for('static', filename='images/banner/banner_5.webp') }}" alt="Promotional Banner" loading="lazy">
+        </div>
+      </div>
+      <div class="carousel-dots">
+        <button class="carousel-dot active" aria-label="Go to slide 1"></button>
+        <button class="carousel-dot" aria-label="Go to slide 2"></button>
+      </div>
+    </div>
+    <button class="carousel-btn carousel-btn-prev" aria-label="Previous slide"><i class="fas fa-chevron-left"></i></button>
+    <button class="carousel-btn carousel-btn-next" aria-label="Next slide"><i class="fas fa-chevron-right"></i></button>
+  </div>
+</div>
+
+<!-- FEATURED PRODUCTS -->
+{% if featured %}
+<section class="section section-compact">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">Featured Products</h2>
+      <a href="{{ url_for('shop.products') }}" class="view-all">View All</a>
+    </div>
+    <div class="rail-wrap">
+      <button type="button" class="rail-btn rail-prev" aria-label="Previous products"><i class="fas fa-chevron-left"></i></button>
+      <div class="product-rail">
+        {% for p in featured %}
+        {% include 'shop/_product_card.html' %}
+        {% endfor %}
+      </div>
+      <button type="button" class="rail-btn rail-next" aria-label="More products"><i class="fas fa-chevron-right"></i></button>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- NEW ARRIVALS -->
+{% if new_arrivals %}
+<section class="section section-compact">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">New Launches!!</h2>
+      <a href="{{ url_for('shop.products', sort='newest') }}" class="view-all">View All</a>
+    </div>
+    <div class="rail-wrap">
+      <button type="button" class="rail-btn rail-prev" aria-label="Previous products"><i class="fas fa-chevron-left"></i></button>
+      <div class="product-rail">
+        {% for p in new_arrivals %}
+        {% include 'shop/_product_card.html' %}
+        {% endfor %}
+      </div>
+      <button type="button" class="rail-btn rail-next" aria-label="More products"><i class="fas fa-chevron-right"></i></button>
+    </div>
+  </div>
+</section>
+{% endif %}
 
 <!-- WHY CHOOSE US — TRUST FEATURES -->
 <section class="trust-features-section">
@@ -281,116 +315,6 @@ startAutoSlide();
   </div>
 </section>
 
-<!-- BESTSELLERS -->
-{% if bestsellers %}
-<section class="section" style="background:white;padding:60px 0">
-  <div class="container">
-    <div class="section-header">
-      <h2 class="section-title">Bestsellers 🔥</h2>
-      <a href="{{ url_for('shop.products') }}" class="view-all">View All</a>
-    </div>
-    <div class="products-grid">
-      {% for p in bestsellers %}
-      {% include 'shop/_product_card.html' %}
-      {% endfor %}
-    </div>
-  </div>
-</section>
-{% endif %}
-
-<!-- MIDDLE BANNER CAROUSEL -->
-<div class="container">
-  <div class="carousel-container middle-carousel" id="middleCarousel">
-    <div class="carousel-wrapper" id="middleCarouselWrapper">
-      <div class="carousel-slide">
-        <img src="{{ url_for('static', filename='images/banner/banner_4.webp') }}" alt="Special Offer" loading="lazy">
-      </div>
-      <div class="carousel-slide">
-        <img src="{{ url_for('static', filename='images/banner/banner_5.webp') }}" alt="Promotional Banner" loading="lazy">
-      </div>
-    </div>
-    <button class="carousel-btn carousel-btn-prev" onclick="moveMidSlide(-1)"><i class="fas fa-chevron-left"></i></button>
-    <button class="carousel-btn carousel-btn-next" onclick="moveMidSlide(1)"><i class="fas fa-chevron-right"></i></button>
-    <div class="carousel-dots" id="middleCarouselDots">
-      <button class="carousel-dot active" onclick="goToMidSlide(0)"></button>
-      <button class="carousel-dot" onclick="goToMidSlide(1)"></button>
-    </div>
-  </div>
-</div>
-<script>
-(function () {
-  let midSlide = 0;
-  const midWrapper = document.getElementById('middleCarouselWrapper');
-  const midDots = document.querySelectorAll('#middleCarouselDots .carousel-dot');
-  const midTotal = 2;
-  let midInterval;
-
-  function updateMid() {
-    midWrapper.style.transform = 'translateX(-' + (midSlide * 100) + '%)';
-    midDots.forEach(function (d, i) { d.classList.toggle('active', i === midSlide); });
-  }
-
-  window.moveMidSlide = function (dir) {
-    midSlide = (midSlide + dir + midTotal) % midTotal;
-    updateMid();
-    resetMid();
-  };
-
-  window.goToMidSlide = function (i) {
-    midSlide = i;
-    updateMid();
-    resetMid();
-  };
-
-  function resetMid() {
-    clearInterval(midInterval);
-    midInterval = setInterval(tick, 3000);
-  }
-
-  function tick() {
-    midSlide = (midSlide + 1) % midTotal;
-    updateMid();
-  }
-
-  midInterval = setInterval(tick, 3000);
-})();
-</script>
-
-<!-- FEATURED PRODUCTS -->
-{% if featured %}
-<section class="section">
-  <div class="container">
-    <div class="section-header">
-      <h2 class="section-title">Featured Products</h2>
-      <a href="{{ url_for('shop.products') }}" class="view-all">View All</a>
-    </div>
-    <div class="products-grid">
-      {% for p in featured %}
-      {% include 'shop/_product_card.html' %}
-      {% endfor %}
-    </div>
-  </div>
-</section>
-{% endif %}
-
-
-<!-- NEW ARRIVALS -->
-{% if new_arrivals %}
-<section class="section" style="background:white;padding:60px 0">
-  <div class="container">
-    <div class="section-header">
-      <h2 class="section-title">New Arrivals ✨</h2>
-      <a href="{{ url_for('shop.products', sort='newest') }}" class="view-all">View All</a>
-    </div>
-    <div class="products-grid">
-      {% for p in new_arrivals %}
-      {% include 'shop/_product_card.html' %}
-      {% endfor %}
-    </div>
-  </div>
-</section>
-{% endif %}
-
 <!-- WHATSAPP CTA -->
 <section class="whatsapp-cta-section">
   <div class="container">
@@ -413,7 +337,7 @@ startAutoSlide();
       <div class="whatsapp-cta-action">
         <div class="whatsapp-cta-card">
           <p>Our experts are ready to help you right now!</p>
-          <a href="https://wa.me/919999999999?text=Hi%20Curve%20Sports%20and%20Nutrition%2C%20I%20want%20to%20place%20an%20order!"
+          <a href="https://wa.me/919312110022?text=Hi%20Curve%20Sports%20and%20Nutrition%2C%20I%20want%20to%20place%20an%20order!"
              class="whatsapp-btn" target="_blank" rel="noopener">
             <i class="fab fa-whatsapp"></i>
             Order Now on WhatsApp
@@ -430,14 +354,14 @@ startAutoSlide();
 </section>
 
 <!-- PROMO BANNER (COUPON SECTION) -->
-<div style="background:linear-gradient(135deg,var(--primary),#ff6b35);padding:60px 0;margin:0">
+<div style="background:var(--primary-tint);padding:56px 0;margin:0">
   <div class="container" style="text-align:center">
-    <h2 style="font-family:var(--font-head);font-size:38px;font-weight:700;color:white;margin-bottom:8px">New User Offer</h2>
-    <p style="color:rgba(255,255,255,0.9);font-size:18px;margin-bottom:24px">Get 5% off your first order. Use code at checkout.</p>
-    <div style="display:inline-flex;align-items:center;gap:12px;background:rgba(255,255,255,0.15);border:2px dashed rgba(255,255,255,0.6);border-radius:12px;padding:12px 28px">
-      <span style="font-family:var(--font-head);font-size:26px;font-weight:700;color:white;letter-spacing:4px">CURVE5</span>
+    <h2 style="font-family:var(--font-head);font-size:36px;font-weight:700;color:var(--text);margin-bottom:8px">New User Offer</h2>
+    <p style="color:var(--text-2);font-size:18px;margin-bottom:24px">Get 5% off your first order. Use code at checkout.</p>
+    <div style="display:inline-flex;align-items:center;gap:12px;background:white;border:2px dashed var(--accent);border-radius:12px;padding:12px 28px">
+      <span style="font-family:var(--font-head);font-size:26px;font-weight:700;color:var(--text);letter-spacing:4px">CURVE5</span>
       <button onclick="navigator.clipboard.writeText('CURVE5').then(()=>alert('Copied!'))"
-              style="background:white;color:var(--primary);border:none;padding:6px 14px;border-radius:6px;font-weight:700;cursor:pointer;font-size:13px">
+              style="background:var(--primary);color:var(--on-primary);border:none;padding:6px 14px;border-radius:6px;font-weight:700;cursor:pointer;font-size:13px">
         COPY
       </button>
     </div>
@@ -537,6 +461,54 @@ startAutoSlide();
     </div>
   </div>
 </section>
+
+<script>
+// Banner carousels: arrows, dots and auto-advance
+document.querySelectorAll('[data-carousel]').forEach(carousel => {
+  const wrapper = carousel.querySelector('.carousel-wrapper');
+  const dots = carousel.querySelectorAll('.carousel-dot');
+  const total = wrapper.children.length;
+  let current = 0, timer;
+
+  const show = index => {
+    current = (index + total) % total;
+    wrapper.style.transform = `translateX(-${current * 100}%)`;
+    dots.forEach((dot, i) => dot.classList.toggle('active', i === current));
+  };
+  const restart = () => {
+    clearInterval(timer);
+    timer = setInterval(() => show(current + 1), 4000);
+  };
+
+  carousel.querySelector('.carousel-btn-prev').addEventListener('click', () => { show(current - 1); restart(); });
+  carousel.querySelector('.carousel-btn-next').addEventListener('click', () => { show(current + 1); restart(); });
+  dots.forEach((dot, i) => dot.addEventListener('click', () => { show(i); restart(); }));
+  restart();
+});
+
+// Category tabs: show the picked panel, hide the rest
+document.querySelectorAll('.tabs').forEach(tabs => {
+  tabs.addEventListener('click', e => {
+    const picked = e.target.closest('.tab');
+    if (!picked) return;
+    tabs.querySelectorAll('.tab').forEach(tab => {
+      tab.classList.toggle('active', tab === picked);
+      tab.setAttribute('aria-selected', tab === picked);
+      document.getElementById(tab.dataset.panel).hidden = tab !== picked;
+    });
+  });
+});
+
+// Product rails: the arrows scroll whichever rail is currently visible
+document.querySelectorAll('.rail-wrap').forEach(wrap => {
+  const scroll = direction => {
+    const rail = wrap.querySelector('.product-rail:not([hidden])');
+    rail.scrollBy({ left: direction * rail.clientWidth * 0.8, behavior: 'smooth' });
+  };
+  wrap.querySelector('.rail-prev').addEventListener('click', () => scroll(-1));
+  wrap.querySelector('.rail-next').addEventListener('click', () => scroll(1));
+});
+</script>
 
 <script>
 const testimonialsTrack = document.getElementById('testimonialsTrack');

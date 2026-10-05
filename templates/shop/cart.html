@@ -2,9 +2,9 @@
 {% block title %}Shopping Cart — Curve Sports{% endblock %}
 
 {% block content %}
-<div class="container" style="padding:32px 0">
+<div class="container" style="padding-top:32px;padding-bottom:32px">
   <h1 style="font-family:var(--font-head);font-size:32px;margin-bottom:24px">
-    <i class="fas fa-shopping-cart" style="color:var(--primary)"></i> Shopping Cart
+    <i class="fas fa-shopping-cart" style="color:var(--primary-ink)"></i> Shopping Cart
   </h1>
 
   {% if items %}
@@ -30,10 +30,12 @@
             <div class="cart-item-name">
               <a href="{{ url_for('shop.product_detail', slug=item.product.slug) }}">{{ item.product.name }}</a>
             </div>
-            <div class="cart-item-meta">{{ item.product.flavor }}{% if item.product.flavor and item.product.weight %} · {% endif %}{{ item.product.weight }}</div>
+            {% if item.variation %}
+            <div class="cart-item-meta">{{ item.product.option_label or 'Pack' }}: {{ item.variation.label() }}</div>
+            {% endif %}
             <div class="cart-qty">
               <form action="{{ url_for('cart.update_cart') }}" method="post" style="display:flex;align-items:center;gap:6px">
-                <input type="hidden" name="product_id" value="{{ item.product.id }}">
+                <input type="hidden" name="key" value="{{ item.key }}">
                 <button type="submit" name="qty" value="{{ item.qty - 1 }}"
                         style="width:28px;height:28px;border:1px solid var(--border);background:white;border-radius:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--dark)">
                   <i class="fas fa-minus" style="font-size:10px"></i>
@@ -44,7 +46,7 @@
                   <i class="fas fa-plus" style="font-size:10px"></i>
                 </button>
               </form>
-              <a href="{{ url_for('cart.remove_from_cart', product_id=item.product.id) }}"
+              <a href="{{ url_for('cart.remove_from_cart', key=item.key) }}"
                  class="cart-remove" style="margin-left:12px">
                 <i class="fas fa-trash-alt"></i> Remove
               </a>
@@ -54,9 +56,9 @@
           <!-- Price -->
           <div class="cart-item-price">
             <div class="price">₹{{ "{:,.0f}".format(item.total) }}</div>
-            {% if item.product.original_price and item.product.original_price > item.product.price %}
+            {% if item.original_price and item.original_price > item.price %}
             <div style="font-size:12px;color:var(--text-3);text-decoration:line-through">
-              ₹{{ "{:,.0f}".format(item.product.original_price * item.qty) }}
+              ₹{{ "{:,.0f}".format(item.original_price * item.qty) }}
             </div>
             {% endif %}
           </div>
@@ -83,7 +85,7 @@
         <span>{{ '₹' + "{:,.0f}".format(delivery) if delivery > 0 else '<span class="green">FREE</span>' | safe }}</span>
       </div>
       {% if delivery > 0 %}
-      <div style="background:#fff5f5;border-radius:6px;padding:10px;font-size:13px;margin-bottom:12px;color:var(--primary)">
+      <div style="background:var(--primary-tint);border-radius:6px;padding:10px;font-size:13px;margin-bottom:12px;color:var(--primary-ink)">
         <i class="fas fa-info-circle"></i> Add ₹{{ "{:,.0f}".format(499 - subtotal) }} more for FREE delivery!
       </div>
       {% endif %}

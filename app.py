@@ -1,7 +1,8 @@
 from flask import Flask
 from extensions import db, login_manager, mail, oauth
 from config import Config
-from seed_data import seed_data, seed_gym_accessories, cleanup_gym_duplicates, migrate_performance_nutrition
+from seed_data import (seed_data, seed_gym_accessories, cleanup_gym_duplicates,
+                       migrate_performance_nutrition, group_categories_for_nav)
 import os
 import cloudinary
 from sqlalchemy import text
@@ -76,22 +77,37 @@ def create_app():
         with app.app_context():
             try:
                 db.create_all()
+
+                # Add new columns if they don't exist yet (before the seeds, which query these tables)
+                new_cols = [
+                    ('orders',             'razorpay_order_id',   'VARCHAR(100)'),
+                    ('orders',             'razorpay_payment_id', 'VARCHAR(100)'),
+                    ('products',           'option_label',        "VARCHAR(50) DEFAULT 'Pack'"),
+                    ('product_variations', 'name',                'VARCHAR(100)'),
+                    ('product_variations', 'original_price',      'FLOAT'),
+                    ('product_variations', 'badge',               'VARCHAR(30)'),
+                    ('order_items',        'variation_name',      'VARCHAR(100)'),
+                ]
+                for table, col, col_type in new_cols:
+                    try:
+                        db.session.execute(text(f'ALTER TABLE {table} ADD COLUMN {col} {col_type}'))
+                        db.session.commit()
+                    except Exception:
+                        db.session.rollback()
+                        continue
+                    if (table, col) == ('product_variations', 'original_price'):
+                        # Packs had no MRP of their own until now: the primary pack takes the product's
+                        db.session.execute(text(
+                            'UPDATE product_variations SET original_price = '
+                            '(SELECT original_price FROM products WHERE products.id = product_variations.product_id) '
+                            'WHERE is_primary'))
+                        db.session.commit()
+
                 seed_data()
                 migrate_performance_nutrition()
                 seed_gym_accessories()
                 cleanup_gym_duplicates()
-                
-                # Add new Order columns if they don't exist yet
-                new_cols = [
-                    ('razorpay_order_id',   'VARCHAR(100)'),
-                    ('razorpay_payment_id', 'VARCHAR(100)'),
-                ]
-                for col, col_type in new_cols:
-                    try:
-                        db.session.execute(text(f'ALTER TABLE orders ADD COLUMN {col} {col_type}'))
-                        db.session.commit()
-                    except Exception:
-                        db.session.rollback()
+                group_categories_for_nav()
             except Exception as e:
                 print(f"⚠️ Database initialization skipped or failed: {e}")
                 db.session.rollback()

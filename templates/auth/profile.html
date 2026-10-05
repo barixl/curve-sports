@@ -2,7 +2,7 @@
 {% block title %}My Profile — Curve Sports{% endblock %}
 
 {% block content %}
-<div class="container" style="padding:32px 0">
+<div class="container" style="padding-top:32px;padding-bottom:32px">
   <div class="profile-grid">
 
     <!-- Sidebar -->
@@ -27,7 +27,7 @@
       <!-- Profile Info Card -->
       <div id="profile" style="background:white;border-radius:var(--radius);padding:28px;box-shadow:var(--shadow);margin-bottom:24px">
         <h2 style="font-family:var(--font-head);font-size:22px;margin-bottom:20px;display:flex;align-items:center;gap:10px">
-          <i class="fas fa-user" style="color:var(--primary)"></i> Profile Information
+          <i class="fas fa-user" style="color:var(--primary-ink)"></i> Profile Information
         </h2>
         <form method="post">
           <div class="form-grid">
@@ -73,7 +73,7 @@
       <!-- Orders -->
       <div id="orders" style="background:white;border-radius:var(--radius);padding:28px;box-shadow:var(--shadow);margin-bottom:24px">
         <h2 style="font-family:var(--font-head);font-size:22px;margin-bottom:20px;display:flex;align-items:center;gap:10px">
-          <i class="fas fa-box" style="color:var(--primary)"></i> My Orders
+          <i class="fas fa-box" style="color:var(--primary-ink)"></i> My Orders
         </h2>
 
         {% if orders %}
@@ -87,11 +87,11 @@
             <tbody>
               {% for order in orders %}
               <tr>
-                <td><strong style="color:var(--primary)">{{ order.order_number }}</strong></td>
+                <td><strong style="color:var(--primary-ink)">{{ order.order_number }}</strong></td>
                 <td style="color:var(--text-3);font-size:13px">{{ order.created_at.strftime('%d %b %Y') }}</td>
                 <td>
                   {% for item in order.items[:2] %}
-                  <div style="font-size:13px">{{ item.product.name[:30] }}{% if item.product.name|length > 30 %}...{% endif %} ×{{ item.quantity }}</div>
+                  <div style="font-size:13px">{{ item.product.name[:30] }}{% if item.product.name|length > 30 %}...{% endif %}{% if item.variation_name %} ({{ item.variation_name }}){% endif %} ×{{ item.quantity }}</div>
                   {% endfor %}
                   {% if order.items|length > 2 %}
                   <div style="font-size:12px;color:var(--text-3)">+{{ order.items|length - 2 }} more</div>
@@ -117,7 +117,7 @@
       <div id="addresses" style="background:white;border-radius:var(--radius);padding:28px;box-shadow:var(--shadow)">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
           <h2 style="font-family:var(--font-head);font-size:22px;display:flex;align-items:center;gap:10px;margin:0">
-            <i class="fas fa-map-marker-alt" style="color:var(--primary)"></i> Saved Addresses
+            <i class="fas fa-map-marker-alt" style="color:var(--primary-ink)"></i> Saved Addresses
           </h2>
           <button onclick="document.getElementById('addAddrForm').style.display='block';this.style.display='none'" class="btn btn-primary btn-sm">
             <i class="fas fa-plus"></i> Add Address
@@ -175,7 +175,7 @@
           {% for addr in addresses %}
           <div style="border:2px solid {{ 'var(--primary)' if addr.is_default else 'var(--border)' }};border-radius:var(--radius);padding:16px;position:relative">
             {% if addr.is_default %}
-            <span style="position:absolute;top:10px;right:10px;background:var(--primary);color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px">DEFAULT</span>
+            <span style="position:absolute;top:10px;right:10px;background:var(--primary);color:var(--on-primary);font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px">DEFAULT</span>
             {% endif %}
             <p style="font-weight:700;margin-bottom:6px">{{ addr.full_name }}</p>
             <p style="font-size:13px;color:var(--text-2);line-height:1.7">

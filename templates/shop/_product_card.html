@@ -32,7 +32,7 @@
           <rect width="160" height="160" rx="16" fill="url(#g{{ p.id }})"/>
           <rect x="50" y="30" width="60" height="80" rx="8" fill="rgba(255,255,255,0.3)"/>
           <rect x="55" y="35" width="50" height="70" rx="6" fill="rgba(255,255,255,0.15)"/>
-          <text x="80" y="78" text-anchor="middle" fill="white" font-size="10" font-family="sans-serif" font-weight="700">{{ p.weight or '1kg' }}</text>
+          <text x="80" y="78" text-anchor="middle" fill="white" font-size="9" font-family="sans-serif" font-weight="700">{{ p.category.name[:14] if p.category else 'Product' }}</text>
           <text x="80" y="92" text-anchor="middle" fill="rgba(255,255,255,0.8)" font-size="8" font-family="sans-serif">{{ p.brand.name[:12] if p.brand else 'BRAND' }}</text>
           <rect x="55" y="120" width="50" height="4" rx="2" fill="rgba(255,255,255,0.4)"/>
           <rect x="60" y="127" width="40" height="3" rx="1.5" fill="rgba(255,255,255,0.25)"/>
@@ -47,19 +47,15 @@
     <a href="{{ url_for('shop.product_detail', slug=p.slug) }}">
       <div class="product-name">{{ p.name }}</div>
     </a>
-    {% if p.flavor or p.weight %}
-    <div class="product-meta">{{ p.flavor }}{% if p.flavor and p.weight %} · {% endif %}{{ p.weight }}</div>
-    {% endif %}
 
     <!-- Rating -->
     <div class="product-rating">
-      <div class="stars">
-        {% for i in range(5) %}
-          {% if i < p.rating | int %}★{% else %}☆{% endif %}
-        {% endfor %}
-      </div>
-      <span style="font-weight:600;font-size:13px">{{ p.rating }}</span>
+      {% if p.rating %}
+      <span class="rating-chip"><i class="fas fa-star"></i> {{ p.rating }}</span>
+      {% endif %}
+      {% if p.review_count %}
       <span class="rating-count">({{ p.review_count }})</span>
+      {% endif %}
     </div>
 
     <!-- Price -->
@@ -70,8 +66,14 @@
       {% endif %}
     </div>
 
-    <!-- Add to Cart -->
-    {% if p.in_stock() %}
+    <!-- Add to Cart (a product sold in packs needs a pack chosen on its page first) -->
+    {% if not p.in_stock() %}
+    <button class="btn btn-sm btn-block btn-soldout" disabled>Out of Stock</button>
+    {% elif p.product_type == 'variable' %}
+    <a href="{{ url_for('shop.product_detail', slug=p.slug) }}" class="btn btn-primary btn-sm btn-block">
+      Choose {{ p.option_label or 'Pack' }}
+    </a>
+    {% else %}
     <form action="{{ url_for('cart.add_to_cart') }}" method="post">
       <input type="hidden" name="product_id" value="{{ p.id }}">
       <input type="hidden" name="qty" value="1">
@@ -79,10 +81,6 @@
         <i class="fas fa-cart-plus"></i> Add to Cart
       </button>
     </form>
-    {% else %}
-    <button class="btn btn-sm btn-block" style="background:var(--bg);color:var(--text-3);cursor:not-allowed">
-      Out of Stock
-    </button>
     {% endif %}
   </div>
 </div>

@@ -2,9 +2,9 @@
 {% block title %}Checkout — Curve Sports{% endblock %}
 
 {% block content %}
-<div class="container" style="padding:32px 0">
+<div class="container" style="padding-top:32px;padding-bottom:32px">
   <h1 style="font-family:var(--font-head);font-size:32px;margin-bottom:8px">
-    <i class="fas fa-lock" style="color:var(--primary)"></i> Checkout
+    <i class="fas fa-lock" style="color:var(--primary-ink)"></i> Checkout
   </h1>
   <p style="color:var(--text-3);margin-bottom:28px">Complete your order securely</p>
 
@@ -15,7 +15,7 @@
       <!-- 1. Delivery Address -->
       <div class="form-card">
         <h3>
-          <span style="background:var(--primary);color:white;width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:14px">1</span>
+          <span style="background:var(--primary);color:var(--on-primary);width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:14px">1</span>
           Delivery Address
         </h3>
 
@@ -42,7 +42,7 @@
           {% endfor %}
         </div>
         <div style="margin-bottom:12px">
-          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:600;color:var(--primary)">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:600;color:var(--primary-ink)">
             <input type="checkbox" name="new_address" id="newAddrToggle" value="on"
                    onchange="toggleNewAddr(this)">
             <i class="fas fa-plus-circle"></i> Add a new address
@@ -97,7 +97,7 @@
       <!-- 2. Payment Method -->
       <div class="form-card">
         <h3>
-          <span style="background:var(--primary);color:white;width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:14px">2</span>
+          <span style="background:var(--primary);color:var(--on-primary);width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:14px">2</span>
           Payment Method
         </h3>
 
@@ -156,7 +156,7 @@
             <div style="font-size:13px;font-weight:600">
               {{ item.product.name[:38] }}{% if item.product.name|length > 38 %}…{% endif %}
             </div>
-            <div style="font-size:12px;color:var(--text-3)">Qty: {{ item.qty }}</div>
+            <div style="font-size:12px;color:var(--text-3)">{% if item.variation %}{{ item.variation.label() }} · {% endif %}Qty: {{ item.qty }}</div>
           </div>
           <div style="font-weight:700;font-size:14px">₹{{ "{:,.0f}".format(item.total) }}</div>
         </div>

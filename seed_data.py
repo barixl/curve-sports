@@ -1,6 +1,6 @@
 from sqlalchemy import text
 from extensions import db
-from models import User, Category, Brand, Product
+from models import User, Category, Brand, Product, Setting
 from werkzeug.security import generate_password_hash
 
 
@@ -105,6 +105,57 @@ def seed_gym_accessories():
         db.session.add(gym_acc)
         db.session.commit()
         print('✅ Gym Accessories parent category created.')
+
+
+# Storefront menu groups: (name, slug, slugs of the top-level categories that move under it)
+NAV_GROUPS = [
+    ('Sports Nutrition', 'sports-nutrition',
+     ['whey-protein', 'all-proteins', 'creatine', 'pre-workout', 'mass-gainer', 'bcaa', 'fat-burner']),
+    ('Vitamins & Supplements', 'vitamins-supplements',
+     ['multivitamins', 'single-vitamins', 'fish-oil', 'magnesium', 'shilajit', 'collagen',
+      'ashwagandha', 'pre-probiotics', 'apple-cider-vinegar']),
+    ('Benefits/Concern', 'benefits-concern',
+     ['weight-loss', 'bone-joints', 'skin-hair', 'digestion', 'liver-kidney', 'vitality', 'sleep']),
+    ('Healthy Snacking', 'healthy-snacking',
+     ['protein-bars', 'protein-oats', 'peanut-butter']),
+]
+
+
+def group_categories_for_nav():
+    """
+    Nest the flat top-level categories under the storefront menu groups, so the
+    header shows a handful of menus instead of one link per category.
+    Runs once (recorded in settings) so later changes made in the admin are kept.
+    """
+    if Setting.query.filter_by(key='nav_groups_v1').first():
+        return
+
+    for name, slug, child_slugs in NAV_GROUPS:
+        parent = Category.query.filter_by(slug=slug).first()
+        if not parent:
+            parent = Category(name=name, slug=slug)
+            db.session.add(parent)
+            db.session.flush()
+        Category.query.filter(
+            Category.slug.in_(child_slugs), Category.parent_id.is_(None)
+        ).update({'parent_id': parent.id}, synchronize_session=False)
+        db.session.flush()
+
+        # Grouping can put two same-named categories side by side (e.g. the empty
+        # "perf-" copies of Whey Protein, Creatine); hide the copy with no products.
+        by_name = {}
+        for child in Category.query.filter_by(parent_id=parent.id, is_active=True).all():
+            by_name.setdefault(child.name.strip().lower(), []).append(child)
+        for twins in by_name.values():
+            if len(twins) > 1:
+                stocked = [c for c in twins if c.product_count()]
+                for c in twins:
+                    if stocked and c not in stocked:
+                        c.is_active = False
+
+    db.session.add(Setting(key='nav_groups_v1', value='done'))
+    db.session.commit()
+    print('✅ Categories grouped under storefront menus.')
 
 
 def seed_data():
