@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, current_app
 from flask_login import login_required, current_user
 from functools import wraps
 from extensions import db
@@ -33,22 +33,60 @@ def allowed_file(filename):
 
 import cloudinary
 import cloudinary.uploader
+from PIL import Image, ImageOps, UnidentifiedImageError
+
+RASTER_EXTENSIONS = {'png', 'jpg', 'jpeg', 'webp'}   # re-encoded to WebP; gif/svg are kept as uploaded
+MAX_IMAGE_SIDE = 1600
+
+
+def cloudinary_configured():
+    return all(current_app.config.get(key) for key in
+               ('CLOUDINARY_CLOUD_NAME', 'CLOUDINARY_API_KEY', 'CLOUDINARY_API_SECRET'))
+
 
 def save_image(file, folder):
-    if file and allowed_file(file.filename):
+    """
+    Store an uploaded image and return what the database should keep: a Cloudinary URL
+    when Cloudinary is configured, otherwise a filename under static/images/<folder>/
+    (the img_url filter resolves both). Returns None, after flashing why, if it can't be saved.
+    """
+    if not (file and file.filename):
+        return None
+    if not allowed_file(file.filename):
+        flash(f'"{file.filename}" was not saved: please use a PNG, JPG, WebP, GIF or SVG file.', 'warning')
+        return None
+
+    if cloudinary_configured():
         try:
-            # Upload to Cloudinary
-            result = cloudinary.uploader.upload(
-                file, 
-                folder=folder,
-                resource_type="auto"
-            )
-            # Return the secure URL from Cloudinary
+            result = cloudinary.uploader.upload(file, folder=folder, resource_type="auto")
             return result.get('secure_url')
         except Exception as e:
-            print(f"Cloudinary upload error: {e}")
-            return None
-    return None
+            current_app.logger.warning('Cloudinary upload failed, saving to disk instead: %s', e)
+            file.stream.seek(0)
+
+    stem, ext = os.path.splitext(secure_filename(file.filename))
+    ext = ext.lower().lstrip('.')
+    target_dir = os.path.join(current_app.static_folder, 'images', folder)
+    name = f'{(stem[:60] or "image").lower()}-{uuid.uuid4().hex[:8]}'
+    try:
+        os.makedirs(target_dir, exist_ok=True)
+        if ext in RASTER_EXTENSIONS:
+            # Re-encode: shrinks phone photos, fixes their rotation, and drops anything that isn't pixels
+            image = ImageOps.exif_transpose(Image.open(file.stream))
+            image.thumbnail((MAX_IMAGE_SIDE, MAX_IMAGE_SIDE))
+            if image.mode not in ('RGB', 'RGBA'):
+                image = image.convert('RGBA' if image.mode == 'P' or 'A' in image.getbands() else 'RGB')
+            name += '.webp'
+            image.save(os.path.join(target_dir, name), 'WEBP', quality=85)
+        else:
+            name += f'.{ext}'
+            file.stream.seek(0)
+            file.save(os.path.join(target_dir, name))
+        return name
+    except (OSError, UnidentifiedImageError, ValueError) as e:
+        current_app.logger.error('Could not save upload %s: %s', file.filename, e)
+        flash(f'"{file.filename}" could not be saved. Please try another file.', 'danger')
+        return None
 
 
 # to_char and CAST(... AS DATE) are PostgreSQL semantics; SQLite (local dev) needs its own.
@@ -240,7 +278,7 @@ def edit_product(id):
     if request.method == 'POST':
         img_file = request.files.get('image')
         if img_file and img_file.filename:
-            product.image = save_image(img_file, 'products')
+            product.image = save_image(img_file, 'products') or product.image
         product.name = request.form.get('name', product.name)
         product.description = request.form.get('description', product.description)
         product.price = float(request.form.get('price', product.price))
@@ -291,6 +329,15 @@ def delete_product(id):
     return redirect(url_for('admin.products'))
 
 
+@admin_bp.route('/products/image/delete/<int:id>', methods=['POST'])
+@admin_required
+def delete_product_image(id):
+    img = ProductImage.query.get_or_404(id)
+    db.session.delete(img)
+    db.session.commit()
+    return jsonify({'success': True})
+
+
 @admin_bp.route('/products/toggle/<int:id>', methods=['POST'])
 @admin_required
 def toggle_product(id):
@@ -339,7 +386,7 @@ def edit_category(id):
         from slugify import slugify
         img_file = request.files.get('image')
         if img_file and img_file.filename:
-            cat.image = save_image(img_file, 'categories')
+            cat.image = save_image(img_file, 'categories') or cat.image
         cat.name = request.form.get('name', cat.name)
         cat.slug = slugify(cat.name)
         cat.description = request.form.get('description', cat.description)
@@ -404,7 +451,7 @@ def edit_brand(id):
         from slugify import slugify
         img_file = request.files.get('logo')
         if img_file and img_file.filename:
-            brand.logo = save_image(img_file, 'brands')
+            brand.logo = save_image(img_file, 'brands') or brand.logo
         brand.name = request.form.get('name', brand.name)
         brand.slug = slugify(brand.name)
         brand.description = request.form.get('description', brand.description)
@@ -644,7 +691,7 @@ def edit_banner(id):
     if request.method == 'POST':
         img_file = request.files.get('image')
         if img_file and img_file.filename:
-            banner.image = save_image(img_file, 'banners')
+            banner.image = save_image(img_file, 'banners') or banner.image
         banner.title = request.form.get('title', banner.title)
         banner.subtitle = request.form.get('subtitle', banner.subtitle)
         banner.link = request.form.get('link', banner.link)
